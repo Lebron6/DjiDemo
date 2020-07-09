@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/text_connection_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Status: No Product Connected"
+        android:textColor="@android:color/black"
+        android:textSize="20dp"
+        android:textStyle="bold"
+        android:layout_alignBottom="@+id/text_product_info"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="50dp" />
+
+    <TextView
+        android:id="@+id/text_product_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="150dp"
+        android:text="@string/product_information"
+        android:textColor="@android:color/black"
+        android:textSize="20dp"
+        android:gravity="center"
+        android:textStyle="bold"
+        />
+
+    <Button
+        android:id="@+id/btn_open"
+        android:layout_width="150dp"
+        android:layout_height="55dp"
+        android:layout_marginTop="350dp"
+        android:background="@drawable/round_btn"
+        android:text="takephoto"
+        android:layout_marginLeft="20dp"
+        android:textColor="@color/colorWhite"
+        android:textSize="20dp"
+        />
+    <Button
+        android:id="@+id/btn_download"
+        android:layout_width="150dp"
+        android:layout_height="55dp"
+        android:layout_marginTop="350dp"
+        android:background="@drawable/round_btn"
+        android:text="download"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="30dp"
+        android:textColor="@color/colorWhite"
+        android:textSize="20dp"
+        />
+
+    <Button
+        android:id="@+id/btn_gaode"
+        android:layout_width="150dp"
+        android:layout_height="55dp"
+        android:layout_marginTop="30dp"
+        android:background="@drawable/round_btn"
+        android:text="gaode"
+        android:layout_marginLeft="20dp"
+        android:layout_below="@+id/btn_open"
+        android:textColor="@color/colorWhite"
+        android:textSize="20dp"
+        />
+
+    <Button
+        android:id="@+id/btn_login"
+        android:layout_width="150dp"
+        android:layout_height="55dp"
+        android:layout_marginTop="30dp"
+        android:background="@drawable/round_btn"
+        android:text="登录大疆"
+        android:layout_marginLeft="20dp"
+        android:layout_below="@+id/btn_gaode"
+        android:textColor="@color/colorWhite"
+        android:textSize="20dp"
+        />
+
+    <Button
+        android:id="@+id/btn_simulator"
+        android:layout_below="@+id/btn_open"
+        android:layout_width="150dp"
+        android:layout_height="55dp"
+        android:layout_marginTop="30dp"
+        android:background="@drawable/round_btn"
+        android:text="simulator"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="30dp"
+        android:textColor="@color/colorWhite"
+        android:textSize="20dp"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="30dp"
+        android:text="@string/sdk_version"
+        android:textSize="15dp"
+        android:visibility="gone"
+        android:id="@+id/textView2" />
+
+    <TextureView
+        android:id="@+id/video_previewer_surface"
+        android:layout_below="@+id/btn_login"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@+id/linearLayout" />
+
+
+</RelativeLayout>
