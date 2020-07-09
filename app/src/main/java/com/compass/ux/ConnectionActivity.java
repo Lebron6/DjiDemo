@@ -114,7 +114,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
-
+//哈哈
 public class ConnectionActivity extends NettyActivity implements View.OnClickListener, TextureView.SurfaceTextureListener {
 
     private static final String TAG = ConnectionActivity.class.getName();
