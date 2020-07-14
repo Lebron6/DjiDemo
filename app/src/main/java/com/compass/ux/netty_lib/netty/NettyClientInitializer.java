@@ -2,6 +2,7 @@ package com.compass.ux.netty_lib.netty;
 
 
 import com.compass.ux.Constant;
+import com.compass.ux.MApplication;
 import com.compass.ux.netty_lib.zhang.Communication;
 import com.compass.ux.netty_lib.zhang.ConnectorIdleStateTrigger;
 import com.compass.ux.netty_lib.zhang.Decode;
@@ -54,7 +55,7 @@ public class NettyClientInitializer extends ChannelInitializer<SocketChannel> {
 
 //      pipeline.addLast(new NettyClientHandler(listener));
         pipeline.addLast(new ConnectorIdleStateTrigger());
-        pipeline.addLast(new HeartBeatClientHandler(Constant.APRONID,listener));
+        pipeline.addLast(new HeartBeatClientHandler(MApplication.EQUIPMENT_ID,listener));
         pipeline.addLast(new EventHandle(listener));
 
 

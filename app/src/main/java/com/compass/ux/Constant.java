@@ -17,6 +17,7 @@ public class Constant {
     public static final String WAYPOINT_PLAN="waypointPlan";
     public static final String WAYPOINT_FLY_START="waypointFlyStart";
     public static final String WAYPOINT_FLY_STOP="waypointFlyStop";
+    public static final String GO_HOME="goHome";
     public static String LINE_SEPARATOR=System.getProperty("line.separator");
 
     public static String SPEED = "speed";
@@ -24,7 +25,7 @@ public class Constant {
     public static String FINISHED_ACTION = "finishedAction";
     public static String HEADING_MODE = "headingMode";
     public static String WAY_POINTS = "wayPoints";
-    public static String APRONID = "Mobile_01";
+//    public static String APRONID = "Mobile_01";
     public static String FLIGHT_CONTROLLER_BEAN = "flightControllerBean";
     public static String BATTERY_STATE_BEAN = "batteryStateBean";
 

@@ -4,16 +4,23 @@ package com.compass.ux.utils;
  * Created by xhf on 2020-07-07
  */
 public class fastClick {
-    private static long lastClickTime;
-
-    public synchronized static boolean Click() {
+    private static long flightControllerlastClickTime;
+    public synchronized static boolean flightControllerClick() {
         long time = System.currentTimeMillis();
-        if (time - lastClickTime < 1000) {
-//            CommonUtil.showShortToast(context,"客官请慢点");
-            lastClickTime = time;
-            return false;
+        if (time - flightControllerlastClickTime > 1000) {
+            flightControllerlastClickTime = time;
+            return true;
         }
-        lastClickTime = time;
-        return true;
+        return false;
+    }
+
+    private static long batteryLastClickTime;
+    public synchronized static boolean batteryClick() {
+        long time = System.currentTimeMillis();
+        if (time - batteryLastClickTime > 1000) {
+            batteryLastClickTime = time;
+            return true;
+        }
+        return false;
     }
 }
