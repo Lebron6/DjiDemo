@@ -37,7 +37,9 @@ import dji.sdk.sdkmanager.LiveStreamManager;
 //https://xiaozhuanlan.com/topic/2138654079
 public class LiveStreamView extends Activity implements PresentableView, View.OnClickListener {
 
-    private String liveShowUrl = "please input your live show url here";
+//    private String liveShowUrl = "rtmp://172.16.16.1:1935/live/Mobile_01";
+    private String liveShowUrl = "rtmp://10.0.2.185:1935/live/Mobile_01";
+//    private String liveShowUrl = "rtmp://push.yunxi.tv/yunxi-host/test_3c961eddb61c4732b93025abc326b861?auth_key=1595475600-0-0-7f88f7aaab3ed4e849086f0886727f63";
 
     private VideoFeedView primaryVideoFeedView;
     private VideoFeedView fpvVideoFeedView;

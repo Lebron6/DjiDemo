@@ -67,7 +67,7 @@ public class GaodeMainActivity extends FragmentActivity implements View.OnClickL
     private AMap aMap;
 
     private Button locate, add, clear;
-    private Button config, upload, start, stop;
+    private Button config, upload, start, stop,pause,resume;
 
     private double droneLocationLat = 0.0, droneLocationLng = 0.0;
     private Marker droneMarker = null;
@@ -149,6 +149,8 @@ public class GaodeMainActivity extends FragmentActivity implements View.OnClickL
         upload = (Button) findViewById(R.id.upload);
         start = (Button) findViewById(R.id.start);
         stop = (Button) findViewById(R.id.stop);
+        pause=findViewById(R.id.pause);
+        resume=findViewById(R.id.resume);
 
         locate.setOnClickListener(this);
         add.setOnClickListener(this);
@@ -157,6 +159,8 @@ public class GaodeMainActivity extends FragmentActivity implements View.OnClickL
         upload.setOnClickListener(this);
         start.setOnClickListener(this);
         stop.setOnClickListener(this);
+        pause.setOnClickListener(this);
+        resume.setOnClickListener(this);
     }
 
     private void initMapView() {
@@ -425,6 +429,14 @@ public class GaodeMainActivity extends FragmentActivity implements View.OnClickL
                 stopWaypointMission();
                 break;
             }
+            case R.id.pause:{
+                pauseWaypointMission();
+                break;
+            }
+            case R.id.resume:{
+                resumeWaypointMission();
+                break;
+            }
             case R.id.config:{
                 showSettingDialog();
                 break;
@@ -591,6 +603,27 @@ public class GaodeMainActivity extends FragmentActivity implements View.OnClickL
             @Override
             public void onResult(DJIError error) {
                 setResultToToast("Mission Start: " + (error == null ? "Successfully" : error.getDescription()));
+            }
+        });
+
+    }
+    private void pauseWaypointMission(){
+
+        getWaypointMissionOperator().pauseMission(new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError error) {
+                setResultToToast("Mission pauseStart: " + (error == null ? "Successfully" : error.getDescription()));
+            }
+        });
+
+    }
+
+    private void resumeWaypointMission(){
+
+        getWaypointMissionOperator().resumeMission(new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError error) {
+                setResultToToast("Mission resumeStart: " + (error == null ? "Successfully" : error.getDescription()));
             }
         });
 

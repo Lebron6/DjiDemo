@@ -3,6 +3,10 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.2"
+
+//    packagingOptions(
+//            excludes: 'assets/*'
+//    )
     defaultConfig {
         applicationId "com.compass.ux"
         minSdkVersion 21
@@ -76,6 +80,8 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.2'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.0'
     implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
+    //地图转换
+//    implementation 'com.amap.api:map2d:6.0.0'
 
 //    implementation 'commons-codec:commons-codec:1.14'
 }

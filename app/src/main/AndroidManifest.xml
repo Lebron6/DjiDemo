@@ -17,6 +17,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
@@ -57,13 +58,6 @@
             android:required="false" />
         <activity android:name=".live.LiveMainActivity"></activity>
         <activity android:name=".simulator.SimulatorMainActivity">
-
-            <!-- <intent-filter> -->
-            <!-- <action android:name="android.intent.action.MAIN" /> -->
-
-
-            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
-            <!-- </intent-filter> -->
         </activity>
         <activity
             android:name=".TapFlyandActiveTrack.TrackingTestActivity"
@@ -92,6 +86,7 @@
         <activity
             android:name=".downloadpic.DefaultLayoutActivity"
             android:screenOrientation="landscape" />
+        <activity android:name=".live.live.LiveStreamView"/>
 
         <uses-library android:name="com.android.future.usb.accessory" />
 
@@ -119,13 +114,6 @@
             android:name=".MainActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait">
-
-            <!-- <intent-filter> -->
-            <!-- <action android:name="android.intent.action.MAIN" /> -->
-
-
-            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
-            <!-- </intent-filter> -->
         </activity>
         <activity
             android:name=".ConnectionActivity"
@@ -140,7 +128,6 @@
         <activity
             android:name=".takephoto.TakePhotoActivity"
             android:screenOrientation="landscape" />
-        <activity android:name=".live.live.LiveStreamView"/>
 
         <service
             android:name=".netty_lib.NettyService"

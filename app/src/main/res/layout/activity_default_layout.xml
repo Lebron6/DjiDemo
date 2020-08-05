@@ -44,6 +44,7 @@
             android:layout_height="22dp"/>
 
         <dji.ux.widget.RemoteControlSignalWidget
+            android:id="@+id/remoteControlSignalWidget"
             android:layout_width="38dp"
             android:layout_height="22dp"/>
 

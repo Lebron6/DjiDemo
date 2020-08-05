@@ -36,9 +36,11 @@ public class RsaUtil {
       PublicKey publicKey = keyFactory.generatePublic(x509EncodedKeySpec);
 
       encryptCipher = Cipher.getInstance("RSA/None/PKCS1Padding");
+//      encryptCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
       encryptCipher.init(Cipher.ENCRYPT_MODE, publicKey);
 
       decryptCipher = Cipher.getInstance("RSA/None/PKCS1Padding");
+//      decryptCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
       decryptCipher.init(Cipher.DECRYPT_MODE, publicKey);
 
     } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchPaddingException | InvalidKeyException e) {
@@ -54,12 +56,9 @@ public class RsaUtil {
    * @return String
    */
   public static String encrypt(String value) {
-
     try {
-
       byte[] result = encryptCipher.doFinal(value.getBytes());
       return Base64.encodeToString(result, android.util.Base64.NO_WRAP);
-
     } catch (Exception e) {
       Log.e("RsaUtil","RsaUtil encrypt 加密 error ，value={}"+ e);
     }
@@ -88,7 +87,7 @@ public class RsaUtil {
 
   public static void main(String[] args) {
 
-    String name = "register";
+    String name = "Mobile_01";
 
     System.out.println("加密结果=" + encrypt(name));
 

@@ -21,6 +21,7 @@ import java.io.File;
 public class MApplication extends Application {
 //    public static String EQUIPMENT_ID= RsaUtil.encrypt("Mobile_01");
     public static String EQUIPMENT_ID="";
+    public static String UPLOAD_URL="";
 
 
 

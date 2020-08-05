@@ -170,7 +170,60 @@ public class FlightControllerBean {
      */
     private int goHomeHeight;
 
+    /**
+     *
+     * 飞行模式
+     */
+    private String FlightModeString;
 
+
+
+    /**
+     * 风向
+     * WINDLESS(0),
+     * NORTH(1),
+     * NORTH_EAST(2),
+     * EAST(3),
+     * SOUTH_EAST(4),
+     * SOUTH(5),
+     * SOUTH_WEST(6),
+     * WEST(7),
+     * NORTH_WEST(8);
+     */
+    private int WindDirection;
+    /**
+     * 风速
+     */
+    private int WindSpeed;
+
+    public int getWindDirection() {
+        return WindDirection;
+    }
+
+    public void setWindDirection(int windDirection) {
+        WindDirection = windDirection;
+    }
+
+    public int getWindSpeed() {
+        return WindSpeed;
+    }
+
+    public void setWindSpeed(int windSpeed) {
+        WindSpeed = windSpeed;
+    }
+
+
+
+
+
+
+    public String getFlightModeString() {
+        return FlightModeString;
+    }
+
+    public void setFlightModeString(String flightModeString) {
+        FlightModeString = flightModeString;
+    }
 
 
     public boolean isAreMotorsOn() {

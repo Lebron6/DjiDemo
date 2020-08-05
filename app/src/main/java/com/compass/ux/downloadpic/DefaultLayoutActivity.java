@@ -1,6 +1,7 @@
 package com.compass.ux.downloadpic;
 
 import androidx.appcompat.app.AppCompatActivity;
+import dji.ux.widget.RemoteControlSignalWidget;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import com.compass.ux.R;
 public class DefaultLayoutActivity extends AppCompatActivity implements View.OnClickListener{
 
     private Button mMediaManagerBtn;
+    private RemoteControlSignalWidget remoteControlSignalWidget;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
