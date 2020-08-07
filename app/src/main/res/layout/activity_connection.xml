@@ -95,6 +95,20 @@
         android:textSize="20dp"
         />
 
+    <EditText
+        android:id="@+id/et_zoom"
+        android:layout_width="150dp"
+        android:layout_height="55dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="30dp"
+        android:background="@drawable/round_btn"
+        android:layout_marginLeft="20dp"
+        android:layout_below="@+id/btn_simulator"
+        android:layout_alignParentRight="true"
+        android:textColor="@color/colorWhite"
+        android:textSize="20dp"
+        />
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -23,4 +23,14 @@ public class fastClick {
         }
         return false;
     }
+
+    private static long perceptionlastClickTime;
+    public synchronized static boolean PerceptionClick() {
+        long time = System.currentTimeMillis();
+        if (time - perceptionlastClickTime > 1000) {
+            perceptionlastClickTime = time;
+            return true;
+        }
+        return false;
+    }
 }

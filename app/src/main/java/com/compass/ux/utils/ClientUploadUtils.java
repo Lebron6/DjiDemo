@@ -22,17 +22,16 @@ import okhttp3.ResponseBody;
 public class ClientUploadUtils {
 
     private static final MediaType MEDIA_TYPE_PNG = MediaType.parse("*/*");
-    public static ResponseBody upload(String url, String filePath, String fileName) throws Exception {
+    public static ResponseBody upload(String url, File file, String fileName) throws Exception {
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(60, TimeUnit.SECONDS)//设置连接超时时间
                 .readTimeout(60, TimeUnit.SECONDS)//设置读取超时时间
                 .build();
 
 
-        File addfile=new File(filePath);
 //        addfile.getName();
         //2.创建RequestBody
-        RequestBody fileBody = RequestBody.create(MEDIA_TYPE_PNG, addfile);
+        RequestBody fileBody = RequestBody.create(MEDIA_TYPE_PNG, file);
 ////3.构建MultipartBody
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)

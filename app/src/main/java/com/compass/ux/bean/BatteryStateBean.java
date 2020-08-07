@@ -188,4 +188,37 @@ public class BatteryStateBean {
         this.numberOfDischarges = numberOfDischarges;
     }
 
+
+    //电量
+//            FPVDemoApplication.getProductInstance().getBattery().setStateCallback(new BatteryState.Callback() {
+//                @Override
+//                public void onUpdate(BatteryState batteryState) {
+//                    Log.d("batteryState",batteryState.toString());
+//                    if (fastClick.batteryClick()) {
+//                        if (batteryStateBean == null) {
+//                            batteryStateBean = new BatteryStateBean();
+//                        }
+//                        batteryStateBean.setFullChargeCapacity(batteryState.getFullChargeCapacity());
+//                        batteryStateBean.setChargeRemaining(batteryState.getChargeRemaining());
+//                        batteryStateBean.setChargeRemainingInPercent(batteryState.getChargeRemainingInPercent());
+//                        batteryStateBean.setDesignCapacity(batteryState.getDesignCapacity());
+//                        batteryStateBean.setVoltage(batteryState.getVoltage());
+//                        batteryStateBean.setCurrent(batteryState.getCurrent());
+//                        batteryStateBean.setLifetimeRemaining(batteryState.getLifetimeRemaining());
+//                        batteryStateBean.setTemperature(batteryState.getTemperature());
+//                        batteryStateBean.setNumberOfDischarges(batteryState.getNumberOfDischarges());
+//
+//                        if (communication_battery == null) {
+//                            communication_battery = new Communication();
+//                        }
+//                        communication_battery.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                        communication_battery.setEquipmentId(MApplication.EQUIPMENT_ID);
+//                        communication_battery.setMethod(RsaUtil.encrypt("battery"));
+//                        communication_battery.setResult(gson.toJson(batteryStateBean, BatteryStateBean.class));
+////                        Log.d("NNNNN",communication_battery.toString());
+//                        NettyClient.getInstance().sendMessage(communication_battery, null);
+//                    }
+//                }
+//            });
+
 }

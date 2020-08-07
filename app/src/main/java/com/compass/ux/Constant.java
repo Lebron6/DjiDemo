@@ -46,6 +46,10 @@ public class Constant {
     public static final String SET_EXPOSURE_COM="setExposureCompensation";
     public static final String DIAGNOSTICS="diagnostics";
     public static final String BatteryPAV="batteryPersentAndVoltage";
+    public static final String SET_CAMERA_ZOOM="setCameraZoom";
+    public static final String PERCEPTION_DATA="perceptionData";
+    public static final String SET_FOCUS_MODE="setFocusMode";
+    public static final String LOCK_EXPOSURE="setLockExposure";
 
 
     public static String LINE_SEPARATOR=System.getProperty("line.separator");

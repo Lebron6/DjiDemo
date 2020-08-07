@@ -237,4 +237,44 @@ public class AggregationBatteryBean {
                 ", isCellDamaged=" + isCellDamaged +
                 '}';
     }
+
+
+
+    //聚合电量
+//            FPVDemoApplication.getProductInstance().getBattery().setAggregationStateCallback(new AggregationState.Callback() {
+//                @Override
+//                public void onUpdate(AggregationState aggregationState) {
+//                    Log.d("aggregationState", aggregationState.toString());
+//                    if (aggregationBatteryBean == null) {
+//                        aggregationBatteryBean = new AggregationBatteryBean();
+//                    }
+//                    aggregationBatteryBean.setNumberOfConnectedBatteries(aggregationState.getNumberOfConnectedBatteries());
+//                    aggregationBatteryBean.setCurrent(aggregationState.getCurrent());
+//                    aggregationBatteryBean.setVoltage(aggregationState.getVoltage());
+//                    aggregationBatteryBean.setLowCellVoltageDetected(aggregationState.isLowCellVoltageDetected());
+//                    aggregationBatteryBean.setFullChargeCapacity(aggregationState.getFullChargeCapacity());
+//                    aggregationBatteryBean.setChargeRemaining(aggregationState.getChargeRemaining());
+//                    aggregationBatteryBean.setChargeRemainingInPercent(aggregationState.getChargeRemainingInPercent());
+//                    aggregationBatteryBean.setHighestTemperature(aggregationState.getHighestTemperature());
+//                    aggregationBatteryBean.setFirmwareDifferenceDetected(aggregationState.isFirmwareDifferenceDetected());
+//                    AggregationBatteryBean.BatteryOverviewBean[] batteryOverviewBean = new AggregationBatteryBean.BatteryOverviewBean[aggregationState.getBatteryOverviews().length];
+//                    for (int i = 0; i < aggregationState.getBatteryOverviews().length; i++) {
+//                        batteryOverviewBean[i].setChargeRemainingInPercent(aggregationState.getBatteryOverviews()[i].getChargeRemainingInPercent());
+//                        batteryOverviewBean[i].setIndex(aggregationState.getBatteryOverviews()[i].getIndex());
+//                    }
+//                    aggregationBatteryBean.setBatteryOverviews(batteryOverviewBean);
+//                    aggregationBatteryBean.setAnyBatteryDisconnected(aggregationState.isAnyBatteryDisconnected());
+//                    aggregationBatteryBean.setVoltageDifferenceDetected(aggregationState.isVoltageDifferenceDetected());
+//                    aggregationBatteryBean.setCellDamaged(aggregationState.isCellDamaged());
+//                    Log.d("NNNNN", aggregationBatteryBean.toString());
+//                    if (communication_aggregation_battery == null) {
+//                        communication_aggregation_battery = new Communication();
+//                    }
+//                    communication_aggregation_battery.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                    communication_aggregation_battery.setEquipmentId(MApplication.EQUIPMENT_ID);
+//                    communication_aggregation_battery.setMethod(RsaUtil.encrypt("aggregationBattery"));
+//                    communication_aggregation_battery.setResult(gson.toJson(aggregationBatteryBean, AggregationBatteryBean.class));
+//                    NettyClient.getInstance().sendMessage(communication_aggregation_battery, null);
+//                }
+//            });
 }
