@@ -52,6 +52,7 @@ import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
 import com.compass.ux.R;
 import com.compass.ux.takephoto.FPVDemoApplication;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -582,7 +583,9 @@ public class GaodeMainActivity extends FragmentActivity implements View.OnClickL
     }
 
     private void uploadWayPointMission(){
-
+        Gson gson=new Gson();
+        String MSlist=gson.toJson(waypointList);
+        Log.d("MSlist",MSlist);
         getWaypointMissionOperator().uploadMission(new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError error) {

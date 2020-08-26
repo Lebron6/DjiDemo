@@ -44,12 +44,42 @@ public class Constant {
     public static final String SET_LED="setLed";
     public static final String SET_ISO="setISO";
     public static final String SET_EXPOSURE_COM="setExposureCompensation";
+    public static final String SET_EXPOSURE_MODE="setExposureMode";
+    public static final String SET_SHUTTER="setShutter";
     public static final String DIAGNOSTICS="diagnostics";
     public static final String BatteryPAV="batteryPersentAndVoltage";
     public static final String SET_CAMERA_ZOOM="setCameraZoom";
     public static final String PERCEPTION_DATA="perceptionData";
     public static final String SET_FOCUS_MODE="setFocusMode";
     public static final String LOCK_EXPOSURE="setLockExposure";
+    public static final String SET_THERMAL_DIGITAL_ZOOM="setThermalDigitalZoom";
+    public static final String OASS="obstacleAvoidanceSensorState";
+    public static final String STORAGE_STATE="storageState";
+    public static final String IS_FLYING="isFlying";
+
+
+    public static final String SET_GO_HOME_HEIGHT="setGoHomeHeight";
+    public static final String SET_MAX_HEIGHT="setMaxHeight";
+    public static final String SET_CONNECT_FAIL_BEHAVIOR="setConnectFailBehavior";
+    public static final String SET_GRAVITY_CENTER_STATE="setGravityCenterState";
+    public static final String SET_MFRL="setMaxFlightRadiusLimit";
+    public static final String START_IMU="startIMU";
+    public static final String GET_INITIALIZATION_DATA="getInitializationData";
+    public static final String IMU_STATUS="imu_status";
+    public static final String GET_LOW_BATTERY="lowBatteryData";
+    public static final String SET_LOW_BATTERY="setLowBattery";
+    public static final String SET_SERIOUS_LOW_BATTERY="setSeriousLowBattery";
+    public static final String SET_SMART_GOHOME="setSmartGohome";
+    public static final String SET_VISION_ASSISTED="setVisionAssistedPosition";
+    public static final String SET_PRECISION_LAND="setPrecisionLand";
+    public static final String SET_UPWARDS_AVOIDANCE="setUpwardsAvoidance";
+    public static final String SET_MAX_PERCEPTION_DISTANCE="setMaxPerceptionDistance";
+    public static final String SET_AVOIDANCE_DISTANCE="setAvoidanceDistance";
+    public static final String SET_ACTIVITY_OBSTACLE_AVOIDANCE="setActiveObstacleAvoidance";
+    public static final String SET_GIMBAL_SPEED="setGimbalSpeed";
+    public static final String START_CALIBRATION="startCalibration";
+    public static final String RESTORE_FACTORY="restoreFactorySettings";
+    public static final String SET_CONTROLLER_SMOOTHING="setControllerSmoothingFactor";
 
 
     public static String LINE_SEPARATOR=System.getProperty("line.separator");
@@ -57,6 +87,9 @@ public class Constant {
     public static String SPEED = "speed";
     public static String ANGLE = "angle";
     public static String TYPE = "type";
+    public static String UP = "up";
+    public static String DOWN = "down";
+    public static String VALUE = "value";
     public static String BEACONS = "beacons";
     public static String FRONT = "front";
     public static String REAR = "rear";
