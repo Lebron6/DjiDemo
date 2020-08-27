@@ -56,17 +56,16 @@ public class Constant {
     public static final String OASS="obstacleAvoidanceSensorState";
     public static final String STORAGE_STATE="storageState";
     public static final String IS_FLYING="isFlying";
-
+    public static final String SET_CONNECT_FAIL_BEHAVIOR="setConnectFailBehavior";
 
     public static final String SET_GO_HOME_HEIGHT="setGoHomeHeight";
     public static final String SET_MAX_HEIGHT="setMaxHeight";
-    public static final String SET_CONNECT_FAIL_BEHAVIOR="setConnectFailBehavior";
     public static final String SET_GRAVITY_CENTER_STATE="setGravityCenterState";
     public static final String SET_MFRL="setMaxFlightRadiusLimit";
     public static final String START_IMU="startIMU";
     public static final String GET_INITIALIZATION_DATA="getInitializationData";
     public static final String IMU_STATUS="imu_status";
-    public static final String GET_LOW_BATTERY="lowBatteryData";
+    public static final String GET_LOW_BATTERY="getSettingData";
     public static final String SET_LOW_BATTERY="setLowBattery";
     public static final String SET_SERIOUS_LOW_BATTERY="setSeriousLowBattery";
     public static final String SET_SMART_GOHOME="setSmartGohome";
@@ -87,8 +86,6 @@ public class Constant {
     public static String SPEED = "speed";
     public static String ANGLE = "angle";
     public static String TYPE = "type";
-    public static String UP = "up";
-    public static String DOWN = "down";
     public static String VALUE = "value";
     public static String BEACONS = "beacons";
     public static String FRONT = "front";

@@ -35,6 +35,47 @@ public class SettingValueBean {
     private String gimbal_pitch_speed;
     //云台偏航速度1——100
     private String gimbal_yaw_speed;
+    //带宽
+    private String channelBandwidth;
+    //工作频段 2.4g 5.8g 双频
+    private String frequencyBand;
+    //图传码率
+    private String transcodingDataRate;
+    //干扰功率范围为[-60，-100] dBm。较小的负值表示干扰较小，通信质量较好。所有中文自己根据值写一下
+    private String interferencePower;
+
+
+    public String getChannelBandwidth() {
+        return channelBandwidth;
+    }
+
+    public void setChannelBandwidth(String channelBandwidth) {
+        this.channelBandwidth = channelBandwidth;
+    }
+
+    public String getFrequencyBand() {
+        return frequencyBand;
+    }
+
+    public void setFrequencyBand(String frequencyBand) {
+        this.frequencyBand = frequencyBand;
+    }
+
+    public String getTranscodingDataRate() {
+        return transcodingDataRate;
+    }
+
+    public void setTranscodingDataRate(String transcodingDataRate) {
+        this.transcodingDataRate = transcodingDataRate;
+    }
+
+    public String getInterferencePower() {
+        return interferencePower;
+    }
+
+    public void setInterferencePower(String interferencePower) {
+        this.interferencePower = interferencePower;
+    }
 
     public String getGimbal_pitch_speed() {
         return gimbal_pitch_speed;

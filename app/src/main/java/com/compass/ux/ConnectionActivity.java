@@ -4,7 +4,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import dji.common.airlink.OcuSyncBandwidth;
+import dji.common.airlink.OcuSyncFrequencyBand;
 import dji.common.airlink.SignalQualityCallback;
+import dji.common.airlink.WifiChannelInterference;
 import dji.common.camera.CameraVideoStreamSource;
 import dji.common.camera.LaserMeasureInformation;
 import dji.common.camera.PhotoTimeLapseSettings;
@@ -46,6 +49,7 @@ import dji.common.mission.waypoint.WaypointMissionUploadEvent;
 import dji.common.product.Model;
 import dji.common.useraccount.UserAccountState;
 import dji.common.util.CommonCallbacks;
+import dji.keysdk.AirLinkKey;
 import dji.keysdk.BatteryKey;
 import dji.keysdk.DiagnosticsKey;
 import dji.keysdk.FlightControllerKey;
@@ -73,6 +77,8 @@ import dji.sdk.remotecontroller.RemoteController;
 import dji.sdk.sdkmanager.DJISDKInitEvent;
 import dji.sdk.sdkmanager.DJISDKManager;
 import dji.sdk.useraccount.UserAccountManager;
+import dji.sdksharedlib.keycatalog.airlink.AirLinkKeys;
+import dji.sdksharedlib.keycatalog.airlink.WifiLinkKeys;
 import dji.thirdparty.afinal.core.AsyncTask;
 import top.zibin.luban.Luban;
 import top.zibin.luban.OnCompressListener;
@@ -138,7 +144,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.compass.ux.Constant.GET_LOW_BATTERY;
 import static com.compass.ux.Constant.IMU_STATUS;
-import static com.compass.ux.Constant.UP;
 import static dji.common.camera.CameraVideoStreamSource.DEFAULT;
 import static dji.common.camera.CameraVideoStreamSource.INFRARED_THERMAL;
 import static dji.common.camera.CameraVideoStreamSource.WIDE;
@@ -161,6 +166,10 @@ import static dji.sdk.codec.DJICodecManager.VideoSource.CAMERA;
 import static dji.sdk.codec.DJICodecManager.VideoSource.FPV;
 
 public class ConnectionActivity extends NettyActivity implements View.OnClickListener, TextureView.SurfaceTextureListener, DJIDiagnostics.DiagnosticsInformationCallback {
+//    getChannelBandwidth 带宽
+//    getFrequencyBand 2.4 5.8那个
+//    getTranscodingDataRate 图传码率
+//    getPower 干扰信号强度
 
     private String liveShowUrl = "rtmp://172.16.16.1:1935/live/Mobile_01";
     //            private String liveShowUrl = "rtmp://118.179.93.254:21935/live/Mobile_01";
@@ -264,9 +273,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     FlightControllerKey flightControllerKey1 = FlightControllerKey.create(FlightControllerKey.VISION_ASSISTED_POSITIONING_ENABLED);
     FlightControllerKey flightControllerKey2 = FlightControllerKey.create(FlightControllerKey.PRECISION_LANDING_ENABLED);
     FlightControllerKey flightControllerKey3 = FlightControllerKey.create(FlightControllerKey.UPWARDS_AVOIDANCE_ENABLED);
+    AirLinkKey airLinkKey1=AirLinkKey.createWiFiLinkKey(AirLinkKey.CHANNEL_INTERFERENCE);
     String avoidanceDistanceUpward = "", avoidanceDistanceDownward = "", maxPerceptionDistanceUpward = "", maxPerceptionDistanceDownward = ""
     ,avoidanceDistanceHorizontal="",maxPerceptionDistanceHorizontal="";
     boolean activeObstacleAvoidance;
+    String channelBandwidth="",frequencyBand="",transcodingDataRate="",interferencePower="";;
 
     WebInitializationBean webInitializationBean = new WebInitializationBean();
     //这是获取左上角飞行状态的
@@ -395,7 +406,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //
 //                    }
 //                });
-
+                transcodingDataRate=VideoFeeder.getInstance().getTranscodingDataRate()+"";
             }
         }
 
@@ -495,13 +506,16 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //
 //                    }
 //                });
+                loginAccount();
                 break;
 
             }
             case R.id.btn_download: {
+
+                loginOut();
                 //去下载
-                Intent intent = new Intent(this, DefaultLayoutActivity.class);
-                startActivity(intent);
+//                Intent intent = new Intent(this, DefaultLayoutActivity.class);
+//                startActivity(intent);
 
 
 //                String aaa = "/storage/emulated/0/DjiMedia/DJI_0009.jpg";
@@ -926,6 +940,14 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 + error.getDescription());
                     }
                 });
+    }
+    private void loginOut(){
+        UserAccountManager.getInstance().loginOut(new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+
+            }
+        });
     }
 
 
@@ -1368,32 +1390,65 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 });
             }
 
-            mFlightController.setASBInformationCallback(new AirSenseSystemInformation.Callback() {
+            //带宽
+            FPVDemoApplication.getProductInstance().getAirLink().getOcuSyncLink().getChannelBandwidth(new CommonCallbacks.CompletionCallbackWith<OcuSyncBandwidth>() {
                 @Override
-                public void onUpdate(AirSenseSystemInformation information) {
-                    final StringBuffer sb = new StringBuffer();
-                    addLineToSB(sb, "ADSB Info", "");
-                    if (information.getWarningLevel() != null) {
-                        addLineToSB(sb, "WarningLevel", "" + information.getWarningLevel().name());
+                public void onSuccess(OcuSyncBandwidth ocuSyncBandwidth) {
+                    switch (ocuSyncBandwidth.value()){
+                        case 0:
+                            channelBandwidth="20MHz";
+                            break;
+                        case 1:
+                            channelBandwidth="10MHz";
+                            break;
+                        case 2:
+                            channelBandwidth="40MHz";
+                            break;
                     }
-                    if (information.getAirplaneStates() != null && information.getAirplaneStates().length > 0) {
-                        for (int i = 0; i < information.getAirplaneStates().length; i++) {
 
-                            AirSenseAirplaneState state = information.getAirplaneStates()[i];
-                            if (state != null) {
-                                addLineToSB(sb, "", "");
-                                addLineToSB(sb, "flight ID", "" + i);
-                                addLineToSB(sb, "ICAO Code", "" + state.getCode());
-                                addLineToSB(sb, "Heading", "" + state.getHeading());
-                                addLineToSB(sb, "Direction", "" + state.getRelativeDirection());
-                                addLineToSB(sb, "Distance", "" + state.getDistance());
-                                addLineToSB(sb, "Warning level", "" + state.getWarningLevel());
-                            }
-                        }
-                    }
-                    Log.d("adsbStateTV", sb.toString());
+                }
+                @Override
+                public void onFailure(DJIError djiError) {
+
                 }
             });
+            //工作频段 2.4g 5.8g 双频
+            FPVDemoApplication.getProductInstance().getAirLink().getOcuSyncLink().getFrequencyBand(new CommonCallbacks.CompletionCallbackWith<OcuSyncFrequencyBand>() {
+                @Override
+                public void onSuccess(OcuSyncFrequencyBand ocuSyncFrequencyBand) {
+                    switch (ocuSyncFrequencyBand.getValue()){
+                        case 0:
+                            frequencyBand="双频";
+                            break;
+                        case 1:
+                            frequencyBand="2.4G";
+                            break;
+                        case 2:
+                            frequencyBand="5.8G";
+                            break;
+                    }
+                }
+
+                @Override
+                public void onFailure(DJIError djiError) {
+
+                }
+            });
+            //干扰功率
+            KeyManager.getInstance().getValue(airLinkKey1, new GetCallback() {
+                @Override
+                public void onSuccess(Object o) {
+                    if(o instanceof WifiChannelInterference){
+                        interferencePower=((WifiChannelInterference) o).getPower()+"";
+                    }
+                }
+
+                @Override
+                public void onFailure(DJIError djiError) {
+
+                }
+            });
+
 
             //遥控器
             mRemoteController = aircraft.getRemoteController();
@@ -2050,7 +2105,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 if (fastClick.batteryClick()) {
                     battery_voltages_one = getMinVoltage(o1) + "";
                     if (o1 != null && o1 instanceof Integer[]) {
-                        battery_list_one.add((float) o1 * 1.0F / 1000.0F);
+                        for (int i = 0; i <((Integer[]) o1).length ; i++) {
+                            int aaa=((Integer[])o1)[i];
+                            battery_list_one.add((float) (aaa * 1.0F / 1000.0F));
+                        }
                     }
                     submitBatteryPersentAndV();
                 }
@@ -2063,7 +2121,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 if (fastClick.batteryClick()) {
                     battery_voltages_two = getMinVoltage(o1) + "";
                     if (o1 != null && o1 instanceof Integer[]) {
-                        battery_list_two.add((float) o1 * 1.0F / 1000.0F);
+                        for (int i = 0; i <((Integer[]) o1).length ; i++) {
+                            int aaa=((Integer[])o1)[i];
+                            battery_list_two.add((float) (aaa * 1.0F / 1000.0F));
+                        }
+
                     }
                     submitBatteryPersentAndV();
                 }
@@ -2666,6 +2728,22 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 communication_Initialization.setResult(gson.toJson(webInitializationBean, WebInitializationBean.class));
                 NettyClient.getInstance().sendMessage(communication_perception_data, null);
                 break;
+            //登录
+            case "login":
+                loginAccount();
+                break;
+            //注销
+            case "loginOut":
+                loginOut();
+                break;
+            //设置失控后飞机执行的操作
+            case Constant.SET_CONNECT_FAIL_BEHAVIOR:
+                setConnectionFailBehavior(communication);
+                break;
+
+
+
+
 
 
 
@@ -2678,10 +2756,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             case Constant.SET_MAX_HEIGHT:
                 setMaxHeight(communication);
                 break;
-            //设置失控后飞机执行的操作
-            case Constant.SET_CONNECT_FAIL_BEHAVIOR:
-                setConnectionFailBehavior(communication);
-                break;
+
             //设置重心校准
             case Constant.SET_GRAVITY_CENTER_STATE:
                 setGravityCenterState(communication);
@@ -3627,7 +3702,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         });
     }
 
-    //获取低电量严重低电量
+    //获取设置的一些值
     private void getSettingValue(Communication communication) {
         SettingValueBean settingValueBean = new SettingValueBean();
         settingValueBean.setLowBatteryWarning(lowBatteryWarning);
@@ -3645,7 +3720,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         settingValueBean.setMaxPerceptionDistanceHorizontal(maxPerceptionDistanceHorizontal);
         settingValueBean.setGimbal_pitch_speed(gimbal_pitch_speed);
         settingValueBean.setGimbal_yaw_speed(gimbal_yaw_speed);
-
+        settingValueBean.setChannelBandwidth(channelBandwidth);
+        settingValueBean.setFrequencyBand(frequencyBand);
+        settingValueBean.setInterferencePower(interferencePower);
+        settingValueBean.setTranscodingDataRate(transcodingDataRate);
         if (communication == null) {
             communication = new Communication();
         }
@@ -3872,6 +3950,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }
         });
     }
+
+
 
 
     //这四个 视频相关
