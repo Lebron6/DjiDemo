@@ -19,6 +19,23 @@ public class WayPointsBean {
     private String longitude;
     private String altitude;
     private String speed;
+    private String gimbalPitch;
+    private String cornerRadiusInMeters;
+    private String turnMode;
+
+
+    public String getTurnMode() {
+        return turnMode;
+    }
+
+    public void setTurnMode(String turnMode) {
+        this.turnMode = turnMode;
+    }
+
+
+
+
+
     private List<WayPointActionBean> wayPointAction;
 
     public String getLatitude() {
@@ -53,12 +70,31 @@ public class WayPointsBean {
         this.speed = speed;
     }
 
+
+    public String getGimbalPitch() {
+        return gimbalPitch;
+    }
+
+    public void setGimbalPitch(String gimbalPitch) {
+        this.gimbalPitch = gimbalPitch;
+    }
+
+
     public List<WayPointActionBean> getWayPointAction() {
         return wayPointAction;
     }
 
     public void setWayPointAction(List<WayPointActionBean> wayPointAction) {
         this.wayPointAction = wayPointAction;
+    }
+
+
+    public String getCornerRadiusInMeters() {
+        return cornerRadiusInMeters;
+    }
+
+    public void setCornerRadiusInMeters(String cornerRadiusInMeters) {
+        this.cornerRadiusInMeters = cornerRadiusInMeters;
     }
 
     public static class WayPointActionBean {

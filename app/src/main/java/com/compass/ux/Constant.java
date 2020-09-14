@@ -56,7 +56,10 @@ public class Constant {
     public static final String OASS="obstacleAvoidanceSensorState";
     public static final String STORAGE_STATE="storageState";
     public static final String IS_FLYING="isFlying";
-    public static final String SET_CONNECT_FAIL_BEHAVIOR="setConnectFailBehavior";
+    public static final String IS_DOWNLOAD="isDownload";
+    public static final String SET_CONNECT_FAIL_BEHAVIOR="setConnectionFailSafeBehavior";
+
+
 
     public static final String SET_GO_HOME_HEIGHT="setGoHomeHeight";
     public static final String SET_MAX_HEIGHT="setMaxHeight";
@@ -79,6 +82,15 @@ public class Constant {
     public static final String START_CALIBRATION="startCalibration";
     public static final String RESTORE_FACTORY="restoreFactorySettings";
     public static final String SET_CONTROLLER_SMOOTHING="setControllerSmoothingFactor";
+    public static final String FORMAT_SDCARD="formatSDCard";
+    public static final String SET_LED_AUTO_TURN_OFF="setBeaconAutoTurnOff";
+    public static final String SET_THERMAL_PALETTE="setThermalPalette";
+    public static final String SET_THERMAL_ISO_THERM_UNIT="setThermalIsothermUnit";
+    public static final String SET_WATER_MARK_SETTINGS="setWatermarkSettings";
+    public static final String CAMERA_RFS="cameraRFS";
+    public static final String START_LIVE="startLive";
+    public static final String STOP_LIVE="stopLive";
+    public static final String RESTART_APP="restartApp";
 
 
     public static String LINE_SEPARATOR=System.getProperty("line.separator");
@@ -87,16 +99,23 @@ public class Constant {
     public static String ANGLE = "angle";
     public static String TYPE = "type";
     public static String VALUE = "value";
+    public static String MIN_VALUE = "min_value";
+    public static String MAX_VALUE = "max_value";
     public static String BEACONS = "beacons";
     public static String FRONT = "front";
     public static String REAR = "rear";
     public static String STATUS_INDICATOR = "statusIndicator";
     public static String FINISHED_ACTION = "finishedAction";
     public static String HEADING_MODE = "headingMode";
+    public static String FLIGHT_PATH_MODE = "flightPathMode";
+    public static String GPRE = "gimbalPitchRotationEnabled";
     public static String WAY_POINTS = "wayPoints";
+    public static String GIMBAL_PITCH = "gimbalPitch";
+    public static String TURN_MODE = "turnMode";
 //    public static String APRONID = "Mobile_01";
     public static String FLIGHT_CONTROLLER_BEAN = "flightControllerBean";
     public static String BATTERY_STATE_BEAN = "batteryStateBean";
+    public static String flightController = "flightController";
 
 
     //无人机名字

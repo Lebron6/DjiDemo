@@ -30,7 +30,18 @@
         android:gravity="center"
         android:textStyle="bold"
         />
-
+    <EditText
+        android:id="@+id/et_url"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:layout_marginTop="230dp"
+        android:layout_marginLeft="20dp"
+        android:textColor="@color/colorWhite"
+        android:padding="5dp"
+        android:background="@drawable/round_btn"
+        android:hint="这里写推流地址"
+        android:textSize="20dp"
+        />
     <Button
         android:id="@+id/btn_open"
         android:layout_width="150dp"
@@ -42,13 +53,14 @@
         android:textColor="@color/colorWhite"
         android:textSize="20dp"
         />
+
     <Button
         android:id="@+id/btn_download"
         android:layout_width="150dp"
         android:layout_height="55dp"
         android:layout_marginTop="350dp"
         android:background="@drawable/round_btn"
-        android:text="download"
+        android:text="上传测试"
         android:layout_alignParentRight="true"
         android:layout_marginRight="30dp"
         android:textColor="@color/colorWhite"
@@ -74,7 +86,7 @@
         android:layout_height="55dp"
         android:layout_marginTop="30dp"
         android:background="@drawable/round_btn"
-        android:text="登录大疆"
+        android:text="推流结束"
         android:layout_marginLeft="20dp"
         android:layout_below="@+id/btn_gaode"
         android:textColor="@color/colorWhite"
@@ -88,7 +100,7 @@
         android:layout_height="55dp"
         android:layout_marginTop="30dp"
         android:background="@drawable/round_btn"
-        android:text="simulator"
+        android:text="推流开始"
         android:layout_alignParentRight="true"
         android:layout_marginRight="30dp"
         android:textColor="@color/colorWhite"

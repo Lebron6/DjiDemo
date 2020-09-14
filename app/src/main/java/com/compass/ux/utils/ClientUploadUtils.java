@@ -1,5 +1,7 @@
 package com.compass.ux.utils;
 
+import com.compass.ux.MApplication;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -22,10 +24,11 @@ import okhttp3.ResponseBody;
 public class ClientUploadUtils {
 
     private static final MediaType MEDIA_TYPE_PNG = MediaType.parse("*/*");
-    public static ResponseBody upload(String url, File file, String fileName) throws Exception {
+
+    public static ResponseBody upload(String url, File file, String fileName, String type) throws Exception {
         OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(60, TimeUnit.SECONDS)//设置连接超时时间
-                .readTimeout(60, TimeUnit.SECONDS)//设置读取超时时间
+                .connectTimeout(120, TimeUnit.SECONDS)//设置连接超时时间
+                .readTimeout(120, TimeUnit.SECONDS)//设置读取超时时间
                 .build();
 
 
@@ -36,14 +39,14 @@ public class ClientUploadUtils {
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
 //                .addFormDataPart("uavName","uav_1")
-                .addFormDataPart("type","image")
-                .addFormDataPart("uavName","uav_1")
+                .addFormDataPart("type", type)
+                .addFormDataPart("uavName", MApplication.EQUIPMENT_ID)
 //                .addFormDataPart("file", fileName, RequestBody.create(MediaType.parse("multipart/form-data"), addfile))
                 .addFormDataPart("file", fileName, fileBody)
                 .build();
 
         Request request = new Request.Builder()
-                .addHeader("Content-Type","multipart/form-data")
+                .addHeader("Content-Type", "multipart/form-data")
                 .url(url)
                 .post(requestBody)
                 .build();

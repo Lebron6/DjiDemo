@@ -6,6 +6,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import dji.common.airlink.OcuSyncBandwidth;
 import dji.common.airlink.OcuSyncFrequencyBand;
+import dji.common.airlink.PhysicalSource;
 import dji.common.airlink.SignalQualityCallback;
 import dji.common.airlink.WifiChannelInterference;
 import dji.common.camera.CameraVideoStreamSource;
@@ -13,6 +14,7 @@ import dji.common.camera.LaserMeasureInformation;
 import dji.common.camera.PhotoTimeLapseSettings;
 import dji.common.camera.SettingsDefinitions;
 import dji.common.camera.StorageState;
+import dji.common.camera.WatermarkSettings;
 import dji.common.error.DJIError;
 import dji.common.error.DJISDKError;
 import dji.common.flightcontroller.ConnectionFailSafeBehavior;
@@ -46,6 +48,7 @@ import dji.common.mission.waypoint.WaypointMissionFinishedAction;
 import dji.common.mission.waypoint.WaypointMissionFlightPathMode;
 import dji.common.mission.waypoint.WaypointMissionHeadingMode;
 import dji.common.mission.waypoint.WaypointMissionUploadEvent;
+import dji.common.mission.waypoint.WaypointTurnMode;
 import dji.common.product.Model;
 import dji.common.useraccount.UserAccountState;
 import dji.common.util.CommonCallbacks;
@@ -84,6 +87,8 @@ import top.zibin.luban.Luban;
 import top.zibin.luban.OnCompressListener;
 
 import android.Manifest;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -124,7 +129,9 @@ import com.compass.ux.netty_lib.netty.NettyClient;
 import com.compass.ux.netty_lib.zhang.Communication;
 import com.compass.ux.netty_lib.zhang.RsaUtil;
 import com.compass.ux.takephoto.FPVDemoApplication;
+import com.compass.ux.takephoto.TakePhotoActivity;
 import com.compass.ux.utils.ClientUploadUtils;
+import com.compass.ux.utils.DateTransformationUtils;
 import com.compass.ux.utils.FileUtils;
 import com.compass.ux.utils.MapConvertUtils;
 import com.compass.ux.utils.fastClick;
@@ -150,6 +157,7 @@ import static dji.common.camera.CameraVideoStreamSource.WIDE;
 import static dji.common.camera.CameraVideoStreamSource.ZOOM;
 import static dji.common.camera.SettingsDefinitions.ExposureMode.MANUAL;
 import static dji.common.camera.SettingsDefinitions.ExposureMode.PROGRAM;
+import static dji.common.camera.SettingsDefinitions.FlatCameraMode.PHOTO_SINGLE;
 import static dji.common.camera.SettingsDefinitions.ThermalDigitalZoomFactor.UNKNOWN;
 import static dji.common.camera.SettingsDefinitions.ThermalDigitalZoomFactor.X_1;
 import static dji.common.camera.SettingsDefinitions.ThermalDigitalZoomFactor.X_2;
@@ -171,7 +179,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //    getTranscodingDataRate 图传码率
 //    getPower 干扰信号强度
 
-    private String liveShowUrl = "rtmp://172.16.16.1:1935/live/Mobile_01";
+    //    private String liveShowUrl = "rtmp://172.16.16.1:1935/live/Mobile_01";
+//    private String liveShowUrl = "rtmp://10.0.0.33/myapp/luopan";
+//    private String liveShowUrl = "rtmp://192.168.31.221/myapp/luopan";
+    private String liveShowUrl = "rtmp://61.155.157.42:21935/myapp/luopan";
     //            private String liveShowUrl = "rtmp://118.179.93.254:21935/live/Mobile_01";
 //    private String liveShowUrl = "rtmp://172.16.16.80:21935/live/Mobile_01";
     //        private String liveShowUrl = "rtmp://push.yunxi.tv/yunxi-host/test_225f76ef74be4dc2810a8c1716cab20a?auth_key=1597209000-0-0-6ab0f55c962338d0c9945408d264615f";
@@ -183,6 +194,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private TextView mVersionTv;
     private Button mBtnOpen, btn_download, btn_gaode, btn_simulator, btn_login;
     private EditText et_zoom;
+    private EditText et_url;
 
     private FlightController mFlightController;
     private RemoteController mRemoteController;
@@ -196,16 +208,22 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private float mThrottle;
     private float altitude = 100.0f;//高度
     private float mSpeed = 10.0f;//速度
+    private float mGimbalPitch = 0.2f;//弧度
+    private String mTurnMode = "0";//旋转
     private SendVirtualStickDataTask mSendVirtualStickDataTask;
     private double droneLocationLat = 0.0, droneLocationLng = 0.0;
     private Marker droneMarker = null;
     private WaypointMissionFinishedAction mFinishedAction = WaypointMissionFinishedAction.NO_ACTION;
     private WaypointMissionHeadingMode mHeadingMode = WaypointMissionHeadingMode.AUTO;
+    private WaypointMissionFlightPathMode mFlightPathMode = WaypointMissionFlightPathMode.NORMAL;
     public static WaypointMission.Builder waypointMissionBuilder;
     private WaypointMissionOperator instance;
     private List<Waypoint> waypointList = new ArrayList<>();
     File file = new File(Environment.getExternalStorageDirectory().getPath() + "/Shebei");
-    File destDir = new File(Environment.getExternalStorageDirectory().getPath() + "/DjiMedia/");
+    String destDirName = Environment.getExternalStorageDirectory().getPath() + "/DjiMedia/";
+    String destDirNameCompress = Environment.getExternalStorageDirectory().getPath() + "/DjiMediaCompress/";
+    File destDir = new File(destDirName);
+    File destDirCompress = new File(destDirNameCompress);
     File compressAddress = new File(Environment.getExternalStorageDirectory().getPath() + "/CompressAddress");
     String FileName = "";
     private String currentEquipment = "";//获取当前是什么无人机
@@ -262,7 +280,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     Communication communication_isFlying = null;
     Communication communication_Initialization = null;
     Communication communication_imu_status = null;
-    Communication communication_low_battery = null;
+    Communication communication_download_pic = null;
     private int currentProgress = -1;
     private boolean havePermission = false;
     private boolean lastFlying = false;//判断是否起飞
@@ -273,11 +291,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     FlightControllerKey flightControllerKey1 = FlightControllerKey.create(FlightControllerKey.VISION_ASSISTED_POSITIONING_ENABLED);
     FlightControllerKey flightControllerKey2 = FlightControllerKey.create(FlightControllerKey.PRECISION_LANDING_ENABLED);
     FlightControllerKey flightControllerKey3 = FlightControllerKey.create(FlightControllerKey.UPWARDS_AVOIDANCE_ENABLED);
-    AirLinkKey airLinkKey1=AirLinkKey.createWiFiLinkKey(AirLinkKey.CHANNEL_INTERFERENCE);
-    String avoidanceDistanceUpward = "", avoidanceDistanceDownward = "", maxPerceptionDistanceUpward = "", maxPerceptionDistanceDownward = ""
-    ,avoidanceDistanceHorizontal="",maxPerceptionDistanceHorizontal="";
+    DiagnosticsKey diagnosticsKey = DiagnosticsKey.create(DiagnosticsKey.SYSTEM_STATUS);
+    AirLinkKey airLinkKey1 = AirLinkKey.createWiFiLinkKey(AirLinkKey.CHANNEL_INTERFERENCE);
+    String avoidanceDistanceUpward = "", avoidanceDistanceDownward = "", maxPerceptionDistanceUpward = "", maxPerceptionDistanceDownward = "", avoidanceDistanceHorizontal = "", maxPerceptionDistanceHorizontal = "";
     boolean activeObstacleAvoidance;
-    String channelBandwidth="",frequencyBand="",transcodingDataRate="",interferencePower="";;
+    String channelBandwidth = "", frequencyBand = "", transcodingDataRate = "", interferencePower = "";
+    boolean isDownloadLast = false;//判断是不是最后一个文件
 
     WebInitializationBean webInitializationBean = new WebInitializationBean();
     //这是获取左上角飞行状态的
@@ -287,7 +306,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             // TODOAuto-generated method stub
             planeStatusHandler.postDelayed(this, 1 * 1000);//设置延迟时间，此处是1秒
             //需要执行的代码
-            DiagnosticsKey diagnosticsKey = DiagnosticsKey.create(DiagnosticsKey.SYSTEM_STATUS);
+
             if (KeyManager.getInstance() != null) {
                 KeyManager.getInstance().getValue(diagnosticsKey, new GetCallback() {
                     @Override
@@ -321,6 +340,27 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }
         }
     };
+    private long planeStartFlyTime;//记录起飞时间
+    private boolean isStartShootOrRecord = false;//判断起飞后有没有拍照或录像
+    private Handler handlerStartDownload = new Handler();
+    private Runnable runnableStartDownload = new Runnable() {
+        public void run() {
+            // TODOAuto-generated method stub
+            handlerStartDownload.postDelayed(this, 1 * 1000);//设置延迟时间，此处是1秒
+            //需要执行的代码
+            StringsBean sb = new StringsBean();
+            sb.setValue("1");
+            if (communication_download_pic == null) {
+                communication_download_pic = new Communication();
+            }
+            communication_download_pic.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+            communication_download_pic.setEquipmentId(MApplication.EQUIPMENT_ID);
+            communication_download_pic.setMethod(RsaUtil.encrypt(Constant.IS_DOWNLOAD));
+            communication_download_pic.setResult(gson.toJson(sb, StringsBean.class));
+            NettyClient.getInstance().sendMessage(communication_download_pic, null);
+
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -340,8 +380,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         final Intent intent = new Intent(this, NettyService.class);
         startService(intent);
 
-
-        //视频流
+//视频流
 //        我们mReceivedVideoDataListener使用VideoFeeder的初始化变量VideoDataListener()。
 //        在回调内部，我们重写其onReceive()方法以获取原始H264视频数据并将其发送给mCodecManager解码
         mReceivedVideoDataListener = new VideoFeeder.VideoDataListener() {
@@ -353,6 +392,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 }
             }
         };
+
         //模型赋初始值
         webInitializationBean.setISO(65535);
         webInitializationBean.setExposureCompensation(65535);
@@ -361,7 +401,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         webInitializationBean.setCameraMode(255);
         webInitializationBean.setUpLink(0);
         webInitializationBean.setDownLink(0);
-
+        et_url = findViewById(R.id.et_url);
+        et_url.setText(liveShowUrl);
 
     }
 
@@ -375,6 +416,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         Log.e(TAG, "onResume");
         super.onResume();
         initPreviewer();
+
 
         if (mVideoSurface == null) {
             Log.e(TAG, "mVideoSurface is null");
@@ -406,7 +448,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //
 //                    }
 //                });
-                transcodingDataRate=VideoFeeder.getInstance().getTranscodingDataRate()+"";
+                transcodingDataRate = VideoFeeder.getInstance().getTranscodingDataRate() + "";
             }
         }
 
@@ -448,7 +490,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //            }
         }
         planeStatusHandler.removeCallbacks(planeStatusTask);//关闭轮询
-        DJISDKManager.getInstance().getProduct().setDiagnosticsInformationCallback(this);//关闭错误日志
+        if (DJISDKManager.getInstance().getProduct() != null) {
+            DJISDKManager.getInstance().getProduct().setDiagnosticsInformationCallback(this);//关闭错误日志
+        }
+
         super.onDestroy();
 
     }
@@ -456,14 +501,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private void initUI() {
         mTextConnectionStatus = (TextView) findViewById(R.id.text_connection_status);
         mTextProduct = (TextView) findViewById(R.id.text_product_info);
-
         mVersionTv = (TextView) findViewById(R.id.textView2);
         mVersionTv.setText(getResources().getString(R.string.sdk_version, DJISDKManager.getInstance().getSDKVersion()));
-
         mBtnOpen = (Button) findViewById(R.id.btn_open);
         mBtnOpen.setOnClickListener(this);
         mBtnOpen.setEnabled(false);
-
         btn_download = findViewById(R.id.btn_download);
         btn_download.setOnClickListener(this);
         btn_gaode = findViewById(R.id.btn_gaode);
@@ -484,6 +526,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_open: {
+//                Intent intent = new Intent(this, DefaultLayoutActivity.class);
+//                startActivity(intent);
+
+                Intent intent = new Intent(this, TakePhotoActivity.class);
+                startActivity(intent);
+
                 //去拍照录像
 //                Intent intent = new Intent(this, TakePhotoActivity.class);
 //                startActivity(intent);
@@ -506,13 +554,81 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //
 //                    }
 //                });
-                loginAccount();
+
                 break;
 
             }
             case R.id.btn_download: {
+                initMediaManager();
 
-                loginOut();
+//                String[] allfile = destDir.list();
+//                for (int i = 0; i < allfile.length; i++) {
+//                    String everFile = destDirName + allfile[i];
+//                    Log.d("Download", "fileallname=" + everFile);
+//                    if (everFile.endsWith(".JPG") || everFile.endsWith(".jpg") || everFile.endsWith(".JPEG") || everFile.endsWith(".jpeg")) {//图片压缩
+//                        Luban.with(ConnectionActivity.this)
+//                                .load(everFile)
+//                                .ignoreBy(100)
+//                                .setTargetDir(Environment.getExternalStorageDirectory().getPath())
+////                            .filter(new CompressionPredicate() {
+////                                @Override
+////                                public boolean apply(String path) {
+////                                    return !(TextUtils.isEmpty(path) || path.toLowerCase().endsWith(".gif"));
+////                                }
+////                            })
+//                                .setCompressListener(new OnCompressListener() {
+//                                    @Override
+//                                    public void onStart() {
+//                                        // 压缩开始前调用，可以在方法内启动 loading UI
+//                                    }
+//
+//                                    @Override
+//                                    public void onSuccess(File file) {
+//                                        //压缩成功后调用，返回压缩后的图片文件
+//                                        Toast.makeText(ConnectionActivity.this, "压缩成功", Toast.LENGTH_SHORT).show();
+//                                        Log.d("Download", "压缩onSuccess=" + file.getPath());
+//                                        new Thread(new Runnable() {
+//                                            @Override
+//                                            public void run() {
+//                                                String result = null;
+//                                                try {
+//                                                    result = ClientUploadUtils.upload(MApplication.UPLOAD_URL, file, file.getName(), "image").toString();
+//                                                } catch (Exception e) {
+//                                                    e.printStackTrace();
+//                                                }
+//                                                Log.d("Download", "压缩后上传=" + "result:" + result);
+//                                            }
+//                                        }).start();
+//
+//                                    }
+//
+//                                    @Override
+//                                    public void onError(Throwable e) {
+//                                        //当压缩过程出现问题时调用
+//                                        Log.d("Download", "压缩onError=" + e.toString());
+//                                    }
+//                                }).launch();
+//                    }
+//                    //视频
+//                    else {
+//                        new Thread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                String result = null;
+//                                try {
+//                                    File file = new File(everFile);
+//                                    result = ClientUploadUtils.upload(MApplication.UPLOAD_URL, file, file.getName(), "mp4").toString();
+//                                } catch (Exception e) {
+//                                    e.printStackTrace();
+//                                }
+//                                Log.d("Download", "视频result:" + result);
+//
+//                            }
+//                        }).start();
+//                    }
+//                }
+                break;
+                //                loginOut();
                 //去下载
 //                Intent intent = new Intent(this, DefaultLayoutActivity.class);
 //                startActivity(intent);
@@ -569,17 +685,15 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                        }
 //                    }
 //                }).start();
-
-
-                break;
             }
 
             case R.id.btn_gaode: {
+                loginAccount();
                 //去高德地图
 //                Intent intent = new Intent(this, GaodeMainActivity.class);
 //                startActivity(intent);
                 //下载
-                initMediaManager();
+//                initMediaManager();
 
 //                camera.setMode(SettingsDefinitions.CameraMode.MEDIA_DOWNLOAD, new CommonCallbacks.CompletionCallback() {
 //                    @Override
@@ -595,7 +709,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                Intent intent = new Intent(this, SimulatorMainActivity.class);
 //                startActivity(intent);
 //                isLiveShowOn();
-                startLiveShow();
+                startLiveShow(null);
                 break;
             }
 
@@ -621,7 +735,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         return true;
     }
 
-    void startLiveShow() {
+    void startLiveShow(Communication communication) {
         //wang
         Toast.makeText(getApplicationContext(), "Start Live Show", Toast.LENGTH_SHORT).show();
 //        ToastUtils.setResultToToast("Start Live Show");
@@ -632,12 +746,19 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             //wang
             Toast.makeText(getApplicationContext(), "already started!", Toast.LENGTH_SHORT).show();
 //            ToastUtils.setResultToToast("already started!");
+            if(communication!=null){
+                communication.setResult("already started!");
+                communication.setCode(-1);
+                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                NettyClient.getInstance().sendMessage(communication, null);
+            }
+
             return;
         }
         new Thread() {
             @Override
             public void run() {
-                DJISDKManager.getInstance().getLiveStreamManager().setLiveUrl(liveShowUrl);
+                DJISDKManager.getInstance().getLiveStreamManager().setLiveUrl(et_url.getText().toString());
                 int result = DJISDKManager.getInstance().getLiveStreamManager().startStream();
                 DJISDKManager.getInstance().getLiveStreamManager().setStartTime();
 
@@ -650,6 +771,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 "\n isLiveAudioEnabled:" + DJISDKManager.getInstance().getLiveStreamManager().isLiveAudioEnabled() +
                                 "\n isStreaming:" + DJISDKManager.getInstance().getLiveStreamManager().isStreaming();
                         Toast.makeText(getApplicationContext(), sss, Toast.LENGTH_SHORT).show();
+                        if(communication!=null){
+                            communication.setResult(result+"");
+                            communication.setCode(200);
+                            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                            NettyClient.getInstance().sendMessage(communication, null);
+                        }
                     }
                 });
 
@@ -941,7 +1068,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     }
                 });
     }
-    private void loginOut(){
+
+    private void loginOut() {
         UserAccountManager.getInstance().loginOut(new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
@@ -986,6 +1114,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         communication_isFlying.setMethod(RsaUtil.encrypt(Constant.IS_FLYING));
                         communication_isFlying.setResult(gson.toJson(beans, StringsBean.class));
                         NettyClient.getInstance().sendMessage(communication_isFlying, null);
+                        //如果已经飞完，并且有拍过照或录过像就开始下载操作
+                        if (!isFlying && isStartShootOrRecord) {
+                            initMediaManager();//去下载和上传
+                        }
                     }
 
                     if (fastClick.flightControllerClick()) {
@@ -1202,7 +1334,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         }
                         communication_flightController.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                         communication_flightController.setEquipmentId(MApplication.EQUIPMENT_ID);
-                        communication_flightController.setMethod(RsaUtil.encrypt("flightController"));
+                        communication_flightController.setMethod(RsaUtil.encrypt(Constant.flightController));
                         communication_flightController.setResult(gson.toJson(flightControllerBean, FlightControllerBean.class));
 //                        Log.d("MMMMM",communication_flightController.toString());
                         NettyClient.getInstance().sendMessage(communication_flightController, null);
@@ -1214,111 +1346,111 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             });
 
 
-            //IMU状态
-            mFlightController.setIMUStateCallback(new IMUState.Callback() {
-                @Override
-                public void onUpdate(IMUState imuState) {
-                    Log.d("IMU_index", imuState.getIndex() + "");
-                    //加速度计
-                    Log.d("IMU_ARS", imuState.getAccelerometerState() + "");
-                    Log.d("IMU_ARV", imuState.getAccelerometerValue() + "");
-                    //陀螺仪
-                    Log.d("IMU_GYS", imuState.getGyroscopeState() + "");
-                    Log.d("IMU_GYV", imuState.getGyroscopeValue() + "");
-                    IMUStateBean imuStateBean = null;
-                    if (imuStateBean == null) {
-                        imuStateBean = new IMUStateBean();
-                    }
-                    imuStateBean.setIMU_index(imuState.getIndex() + "");
-                    imuStateBean.setIMU_ARS(imuState.getAccelerometerState() + "");
-                    imuStateBean.setIMU_ARV(imuState.getAccelerometerValue() + "");
-                    imuStateBean.setIMU_GYS(imuState.getGyroscopeState() + "");
-                    imuStateBean.setIMU_GYV(imuState.getGyroscopeValue() + "");
-
-                    if (communication_imu_status == null) {
-                        communication_imu_status = new Communication();
-                    }
-                    communication_imu_status.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    communication_imu_status.setEquipmentId(MApplication.EQUIPMENT_ID);
-                    communication_imu_status.setMethod(RsaUtil.encrypt(IMU_STATUS));
-                    communication_imu_status.setResult(gson.toJson(imuStateBean, IMUStateBean.class));
-                    NettyClient.getInstance().sendMessage(communication_imu_status, null);
-                }
-            });
-            //低电量值，严重低电量，智能返回（都在电池ui那块）
-            mFlightController.getLowBatteryWarningThreshold(new CommonCallbacks.CompletionCallbackWith<Integer>() {
-                @Override
-                public void onSuccess(Integer integer) {
-                    lowBatteryWarning = integer + "";
-                }
-
-                @Override
-                public void onFailure(DJIError djiError) {
-
-                }
-            });
-            mFlightController.getSeriousLowBatteryWarningThreshold(new CommonCallbacks.CompletionCallbackWith<Integer>() {
-                @Override
-                public void onSuccess(Integer integer) {
-                    seriousLowBatteryWarning = integer + "";
-                }
-
-                @Override
-                public void onFailure(DJIError djiError) {
-
-                }
-            });
-            mFlightController.getSmartReturnToHomeEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
-                @Override
-                public void onSuccess(Boolean aBoolean) {
-                    smartReturnToHomeEnabled = aBoolean;
-                }
-
-                @Override
-                public void onFailure(DJIError djiError) {
-
-                }
-            });
-
-
-            if (KeyManager.getInstance() != null) {
-                //视觉定位
-                KeyManager.getInstance().getValue(flightControllerKey1, new GetCallback() {
-                    @Override
-                    public void onSuccess(Object o) {
-                        visionAssistedPosition = (boolean) o;
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
-                //精确着陆
-                KeyManager.getInstance().getValue(flightControllerKey2, new GetCallback() {
-                    @Override
-                    public void onSuccess(Object o) {
-                        precisionLand = (boolean) o;
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
-                //向上避免
-                KeyManager.getInstance().getValue(flightControllerKey3, new GetCallback() {
-                    @Override
-                    public void onSuccess(Object o) {
-                        upwardsAvoidance = (boolean) o;
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
-            }
+            //IMU状态 有用
+//            mFlightController.setIMUStateCallback(new IMUState.Callback() {
+//                @Override
+//                public void onUpdate(IMUState imuState) {
+//                    Log.d("IMU_index", imuState.getIndex() + "");
+//                    //加速度计
+//                    Log.d("IMU_ARS", imuState.getAccelerometerState() + "");
+//                    Log.d("IMU_ARV", imuState.getAccelerometerValue() + "");
+//                    //陀螺仪
+//                    Log.d("IMU_GYS", imuState.getGyroscopeState() + "");
+//                    Log.d("IMU_GYV", imuState.getGyroscopeValue() + "");
+//                    IMUStateBean imuStateBean = null;
+//                    if (imuStateBean == null) {
+//                        imuStateBean = new IMUStateBean();
+//                    }
+//                    imuStateBean.setIMU_index(imuState.getIndex() + "");
+//                    imuStateBean.setIMU_ARS(imuState.getAccelerometerState() + "");
+//                    imuStateBean.setIMU_ARV(imuState.getAccelerometerValue() + "");
+//                    imuStateBean.setIMU_GYS(imuState.getGyroscopeState() + "");
+//                    imuStateBean.setIMU_GYV(imuState.getGyroscopeValue() + "");
+//
+//                    if (communication_imu_status == null) {
+//                        communication_imu_status = new Communication();
+//                    }
+//                    communication_imu_status.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                    communication_imu_status.setEquipmentId(MApplication.EQUIPMENT_ID);
+//                    communication_imu_status.setMethod(RsaUtil.encrypt(IMU_STATUS));
+//                    communication_imu_status.setResult(gson.toJson(imuStateBean, IMUStateBean.class));
+//                    NettyClient.getInstance().sendMessage(communication_imu_status, null);
+//                }
+//            });
+//            //低电量值，严重低电量，智能返回（都在电池ui那块） 有用
+//            mFlightController.getLowBatteryWarningThreshold(new CommonCallbacks.CompletionCallbackWith<Integer>() {
+//                @Override
+//                public void onSuccess(Integer integer) {
+//                    lowBatteryWarning = integer + "";
+//                }
+//
+//                @Override
+//                public void onFailure(DJIError djiError) {
+//
+//                }
+//            });
+//            mFlightController.getSeriousLowBatteryWarningThreshold(new CommonCallbacks.CompletionCallbackWith<Integer>() {
+//                @Override
+//                public void onSuccess(Integer integer) {
+//                    seriousLowBatteryWarning = integer + "";
+//                }
+//
+//                @Override
+//                public void onFailure(DJIError djiError) {
+//
+//                }
+//            });
+//            mFlightController.getSmartReturnToHomeEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+//                @Override
+//                public void onSuccess(Boolean aBoolean) {
+//                    smartReturnToHomeEnabled = aBoolean;
+//                }
+//
+//                @Override
+//                public void onFailure(DJIError djiError) {
+//
+//                }
+//            });
+//
+//
+//            if (KeyManager.getInstance() != null) {
+//                //视觉定位
+//                KeyManager.getInstance().getValue(flightControllerKey1, new GetCallback() {
+//                    @Override
+//                    public void onSuccess(Object o) {
+//                        visionAssistedPosition = (boolean) o;
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+//
+//                    }
+//                });
+//                //精确着陆
+//                KeyManager.getInstance().getValue(flightControllerKey2, new GetCallback() {
+//                    @Override
+//                    public void onSuccess(Object o) {
+//                        precisionLand = (boolean) o;
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+//
+//                    }
+//                });
+//                //向上避免
+//                KeyManager.getInstance().getValue(flightControllerKey3, new GetCallback() {
+//                    @Override
+//                    public void onSuccess(Object o) {
+//                        upwardsAvoidance = (boolean) o;
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+//
+//                    }
+//                });
+//            }
 
 
             //遥控器信号
@@ -1389,65 +1521,72 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     }
                 });
             }
+//            FPVDemoApplication.getProductInstance().getAirLink().getOcuSyncLink().assignSourceToPrimaryChannel(PhysicalSource.MAIN_CAM, PhysicalSource.FPV_CAM, new CommonCallbacks.CompletionCallback() {
+//                @Override
+//                public void onResult(DJIError djiError) {
+//
+//                }
+//            });
 
-            //带宽
-            FPVDemoApplication.getProductInstance().getAirLink().getOcuSyncLink().getChannelBandwidth(new CommonCallbacks.CompletionCallbackWith<OcuSyncBandwidth>() {
-                @Override
-                public void onSuccess(OcuSyncBandwidth ocuSyncBandwidth) {
-                    switch (ocuSyncBandwidth.value()){
-                        case 0:
-                            channelBandwidth="20MHz";
-                            break;
-                        case 1:
-                            channelBandwidth="10MHz";
-                            break;
-                        case 2:
-                            channelBandwidth="40MHz";
-                            break;
-                    }
-
-                }
-                @Override
-                public void onFailure(DJIError djiError) {
-
-                }
-            });
-            //工作频段 2.4g 5.8g 双频
-            FPVDemoApplication.getProductInstance().getAirLink().getOcuSyncLink().getFrequencyBand(new CommonCallbacks.CompletionCallbackWith<OcuSyncFrequencyBand>() {
-                @Override
-                public void onSuccess(OcuSyncFrequencyBand ocuSyncFrequencyBand) {
-                    switch (ocuSyncFrequencyBand.getValue()){
-                        case 0:
-                            frequencyBand="双频";
-                            break;
-                        case 1:
-                            frequencyBand="2.4G";
-                            break;
-                        case 2:
-                            frequencyBand="5.8G";
-                            break;
-                    }
-                }
-
-                @Override
-                public void onFailure(DJIError djiError) {
-
-                }
-            });
-            //干扰功率
-            KeyManager.getInstance().getValue(airLinkKey1, new GetCallback() {
-                @Override
-                public void onSuccess(Object o) {
-                    if(o instanceof WifiChannelInterference){
-                        interferencePower=((WifiChannelInterference) o).getPower()+"";
-                    }
-                }
-
-                @Override
-                public void onFailure(DJIError djiError) {
-
-                }
-            });
+//            //带宽  有用
+//            FPVDemoApplication.getProductInstance().getAirLink().getOcuSyncLink().getChannelBandwidth(new CommonCallbacks.CompletionCallbackWith<OcuSyncBandwidth>() {
+//                @Override
+//                public void onSuccess(OcuSyncBandwidth ocuSyncBandwidth) {
+//                    switch (ocuSyncBandwidth.value()) {
+//                        case 0:
+//                            channelBandwidth = "20MHz";
+//                            break;
+//                        case 1:
+//                            channelBandwidth = "10MHz";
+//                            break;
+//                        case 2:
+//                            channelBandwidth = "40MHz";
+//                            break;
+//                    }
+//
+//                }
+//
+//                @Override
+//                public void onFailure(DJIError djiError) {
+//
+//                }
+//            });
+//            //工作频段 2.4g 5.8g 双频
+//            FPVDemoApplication.getProductInstance().getAirLink().getOcuSyncLink().getFrequencyBand(new CommonCallbacks.CompletionCallbackWith<OcuSyncFrequencyBand>() {
+//                @Override
+//                public void onSuccess(OcuSyncFrequencyBand ocuSyncFrequencyBand) {
+//                    switch (ocuSyncFrequencyBand.getValue()) {
+//                        case 0:
+//                            frequencyBand = "双频";
+//                            break;
+//                        case 1:
+//                            frequencyBand = "2.4G";
+//                            break;
+//                        case 2:
+//                            frequencyBand = "5.8G";
+//                            break;
+//                    }
+//                }
+//
+//                @Override
+//                public void onFailure(DJIError djiError) {
+//
+//                }
+//            });
+//            //干扰功率
+//            KeyManager.getInstance().getValue(airLinkKey1, new GetCallback() {
+//                @Override
+//                public void onSuccess(Object o) {
+//                    if (o instanceof WifiChannelInterference) {
+//                        interferencePower = ((WifiChannelInterference) o).getPower() + "";
+//                    }
+//                }
+//
+//                @Override
+//                public void onFailure(DJIError djiError) {
+//
+//                }
+//            });
 
 
             //遥控器
@@ -1473,31 +1612,31 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             });
 
             if (isM300Product()) {
-                //获取感知试图
-                mFlightAssistant.setVisualPerceptionInformationCallback(new CommonCallbacks.CompletionCallbackWith<PerceptionInformation>() {
-                    @Override
-                    public void onSuccess(PerceptionInformation perceptionInformation) {
-                        if (fastClick.PerceptionClick()) {
-                            PerceptionBean perceptionBean = new PerceptionBean();
-                            perceptionBean.setDownwardObstacleDistance(perceptionInformation.getDownwardObstacleDistance());
-                            perceptionBean.setUpwardObstacleDistance(perceptionInformation.getUpwardObstacleDistance());
-                            perceptionBean.setDistances(perceptionInformation.getDistances());
-                            if (communication_perception_data == null) {
-                                communication_perception_data = new Communication();
-                            }
-                            communication_perception_data.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                            communication_perception_data.setEquipmentId(MApplication.EQUIPMENT_ID);
-                            communication_perception_data.setMethod(RsaUtil.encrypt(Constant.PERCEPTION_DATA));
-                            communication_perception_data.setResult(gson.toJson(perceptionBean, PerceptionBean.class));
-                            NettyClient.getInstance().sendMessage(communication_perception_data, null);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
+//                //获取感知试图 有用
+//                mFlightAssistant.setVisualPerceptionInformationCallback(new CommonCallbacks.CompletionCallbackWith<PerceptionInformation>() {
+//                    @Override
+//                    public void onSuccess(PerceptionInformation perceptionInformation) {
+//                        if (fastClick.PerceptionClick()) {
+//                            PerceptionBean perceptionBean = new PerceptionBean();
+//                            perceptionBean.setDownwardObstacleDistance(perceptionInformation.getDownwardObstacleDistance());
+//                            perceptionBean.setUpwardObstacleDistance(perceptionInformation.getUpwardObstacleDistance());
+//                            perceptionBean.setDistances(perceptionInformation.getDistances());
+//                            if (communication_perception_data == null) {
+//                                communication_perception_data = new Communication();
+//                            }
+//                            communication_perception_data.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                            communication_perception_data.setEquipmentId(MApplication.EQUIPMENT_ID);
+//                            communication_perception_data.setMethod(RsaUtil.encrypt(Constant.PERCEPTION_DATA));
+//                            communication_perception_data.setResult(gson.toJson(perceptionBean, PerceptionBean.class));
+//                            NettyClient.getInstance().sendMessage(communication_perception_data, null);
+//                        }
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+//
+//                    }
+//                });
 
 //                mFlightAssistant.setObstacleAvoidanceSensorStateListener(new CommonCallbacks.CompletionCallbackWith<ObstacleAvoidanceSensorState>() {
 //                    @Override
@@ -1615,7 +1754,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 mFlightAssistant.getActiveObstacleAvoidanceEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
                     @Override
                     public void onSuccess(Boolean aBoolean) {
-                        activeObstacleAvoidance=aBoolean;
+                        activeObstacleAvoidance = aBoolean;
                     }
 
                     @Override
@@ -2043,31 +2182,31 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //        List<Lens> lens=camera.getLenses();
 //
 
-
-        Log.d("NNNNN", "camera.getLenses().size()=" + camera.getLenses().size());
-        for (int i = 0; i < camera.getLenses().size(); i++) {
-            Log.d("NNNNN", i + "getCameraIndex()" + camera.getLenses().get(i).getCameraIndex());
-            Log.d("NNNNN", i + "getType()" + camera.getLenses().get(i).getType());
-            Log.d("NNNNN", i + "getDisplayName()" + camera.getLenses().get(i).getDisplayName());
-            Log.d("NNNNN", i + "getCapabilities()" + camera.getLenses().get(i).getCapabilities());
-            camera.getLenses().get(i).getISO(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ISO>() {
-                @Override
-                public void onSuccess(SettingsDefinitions.ISO iso) {
-                    Log.d("NNNNN", "NNNNNiso()" + iso.value());
-                }
-
-                @Override
-                public void onFailure(DJIError djiError) {
-                    Log.d("NNNNN", "NNNNNiso()" + djiError);
-                }
-            });
-        }
+        //98注释
+//        Log.d("NNNNN", "camera.getLenses().size()=" + camera.getLenses().size());
+//        for (int i = 0; i < camera.getLenses().size(); i++) {
+//            Log.d("NNNNN", i + "getCameraIndex()" + camera.getLenses().get(i).getCameraIndex());
+//            Log.d("NNNNN", i + "getType()" + camera.getLenses().get(i).getType());
+//            Log.d("NNNNN", i + "getDisplayName()" + camera.getLenses().get(i).getDisplayName());
+//            Log.d("NNNNN", i + "getCapabilities()" + camera.getLenses().get(i).getCapabilities());
+//            camera.getLenses().get(i).getISO(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ISO>() {
+//                @Override
+//                public void onSuccess(SettingsDefinitions.ISO iso) {
+//                    Log.d("NNNNN", "NNNNNiso()" + iso.value());
+//                }
+//
+//                @Override
+//                public void onFailure(DJIError djiError) {
+//                    Log.d("NNNNN", "NNNNNiso()" + djiError);
+//                }
+//            });
+//        }
     }
 
-    String battery_one = "0", battery_two = "0", battery_voltages_one = "0", battery_voltages_two = "0",battery_temperature_one="",battery_temperature_two="";
-    List<Float> battery_list_one=new ArrayList<>();
-    List<Float> battery_list_two=new ArrayList<>();
-    String battery_discharges_one="",battery_discharges_two="";
+    String battery_one = "0", battery_two = "0", battery_voltages_one = "0", battery_voltages_two = "0", battery_temperature_one = "", battery_temperature_two = "";
+    List<Float> battery_list_one = new ArrayList<>();
+    List<Float> battery_list_two = new ArrayList<>();
+    String battery_discharges_one = "", battery_discharges_two = "";
 
     private void initBattery() {
         battery = FPVDemoApplication.getProductInstance().getBattery();
@@ -2076,9 +2215,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         BatteryKey battery_voltage_one = BatteryKey.create(BatteryKey.CELL_VOLTAGES);
         BatteryKey battery_voltage_two = BatteryKey.create(BatteryKey.CELL_VOLTAGES, 1);
         BatteryKey temperature_one = BatteryKey.create(BatteryKey.TEMPERATURE);
-        BatteryKey temperature_two = BatteryKey.create(BatteryKey.TEMPERATURE,1);
+        BatteryKey temperature_two = BatteryKey.create(BatteryKey.TEMPERATURE, 1);
         BatteryKey discharges_one = BatteryKey.create(BatteryKey.NUMBER_OF_DISCHARGES);
-        BatteryKey discharges_two = BatteryKey.create(BatteryKey.NUMBER_OF_DISCHARGES,1);
+        BatteryKey discharges_two = BatteryKey.create(BatteryKey.NUMBER_OF_DISCHARGES, 1);
         KeyManager.getInstance().addListener(battery_per_one, new KeyListener() {
             @Override
             public void onValueChange(Object o, Object o1) {
@@ -2098,75 +2237,77 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 }
             }
         });
-
-        KeyManager.getInstance().addListener(battery_voltage_one, new KeyListener() {
-            @Override
-            public void onValueChange(Object o, Object o1) {
-                if (fastClick.batteryClick()) {
-                    battery_voltages_one = getMinVoltage(o1) + "";
-                    if (o1 != null && o1 instanceof Integer[]) {
-                        for (int i = 0; i <((Integer[]) o1).length ; i++) {
-                            int aaa=((Integer[])o1)[i];
-                            battery_list_one.add((float) (aaa * 1.0F / 1000.0F));
-                        }
-                    }
-                    submitBatteryPersentAndV();
-                }
-
-            }
-        });
-        KeyManager.getInstance().addListener(battery_voltage_two, new KeyListener() {
-            @Override
-            public void onValueChange(Object o, Object o1) {
-                if (fastClick.batteryClick()) {
-                    battery_voltages_two = getMinVoltage(o1) + "";
-                    if (o1 != null && o1 instanceof Integer[]) {
-                        for (int i = 0; i <((Integer[]) o1).length ; i++) {
-                            int aaa=((Integer[])o1)[i];
-                            battery_list_two.add((float) (aaa * 1.0F / 1000.0F));
-                        }
-
-                    }
-                    submitBatteryPersentAndV();
-                }
-            }
-        });
+        //十几个电池先驻掉
+//        KeyManager.getInstance().addListener(battery_voltage_one, new KeyListener() {
+//            @Override
+//            public void onValueChange(Object o, Object o1) {
+//                if (fastClick.batteryClick()) {
+//                    battery_voltages_one = getMinVoltage(o1) + "";
+//                    if (o1 != null && o1 instanceof Integer[]) {
+//                        for (int i = 0; i < ((Integer[]) o1).length; i++) {
+//                            int aaa = ((Integer[]) o1)[i];
+//                            battery_list_one.add((float) (aaa * 1.0F / 1000.0F));
+//                        }
+//                    }
+//                    submitBatteryPersentAndV();
+//                }
+//
+//            }
+//        });
+//        KeyManager.getInstance().addListener(battery_voltage_two, new KeyListener() {
+//            @Override
+//            public void onValueChange(Object o, Object o1) {
+//                if (fastClick.batteryClick()) {
+//                    battery_voltages_two = getMinVoltage(o1) + "";
+//                    if (o1 != null && o1 instanceof Integer[]) {
+//                        for (int i = 0; i < ((Integer[]) o1).length; i++) {
+//                            int aaa = ((Integer[]) o1)[i];
+//                            battery_list_two.add((float) (aaa * 1.0F / 1000.0F));
+//                        }
+//
+//                    }
+//                    submitBatteryPersentAndV();
+//                }
+//            }
+//        });
         KeyManager.getInstance().addListener(temperature_one, new KeyListener() {
             @Override
             public void onValueChange(Object o, Object o1) {
-                battery_temperature_one=o1+"";
+                battery_temperature_one = o1 + "";
                 submitBatteryPersentAndV();
             }
         });
         KeyManager.getInstance().addListener(temperature_two, new KeyListener() {
             @Override
             public void onValueChange(Object o, Object o1) {
-                battery_temperature_two=o1+"";
+                battery_temperature_two = o1 + "";
                 submitBatteryPersentAndV();
             }
         });
         KeyManager.getInstance().addListener(discharges_one, new KeyListener() {
             @Override
             public void onValueChange(Object o, Object o1) {
-                battery_discharges_one=o1+"";
+                battery_discharges_one = o1 + "";
                 submitBatteryPersentAndV();
             }
         });
         KeyManager.getInstance().addListener(discharges_two, new KeyListener() {
             @Override
             public void onValueChange(Object o, Object o1) {
-                battery_discharges_two=o1+"";
+                battery_discharges_two = o1 + "";
                 submitBatteryPersentAndV();
             }
         });
     }
-    String gimbal_pitch_speed="",gimbal_yaw_speed="";
-    private void initGimbal(){
-        gimbal= FPVDemoApplication.getProductInstance().getGimbal();
+
+    String gimbal_pitch_speed = "", gimbal_yaw_speed = "";
+
+    private void initGimbal() {
+        gimbal = FPVDemoApplication.getProductInstance().getGimbal();
         gimbal.getControllerSpeedCoefficient(PITCH, new CommonCallbacks.CompletionCallbackWith<Integer>() {
             @Override
             public void onSuccess(Integer integer) {
-                gimbal_pitch_speed=integer+"";
+                gimbal_pitch_speed = integer + "";
             }
 
             @Override
@@ -2177,7 +2318,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         gimbal.getControllerSpeedCoefficient(YAW, new CommonCallbacks.CompletionCallbackWith<Integer>() {
             @Override
             public void onSuccess(Integer integer) {
-                gimbal_yaw_speed=integer+"";
+                gimbal_yaw_speed = integer + "";
             }
 
             @Override
@@ -2212,6 +2353,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
 
     private void initMediaManager() {
+        isStartShootOrRecord = false;
         if (FPVDemoApplication.getProductInstance() == null) {
             mediaFileList.clear();
             Log.e(TAG, "Product disconnected");
@@ -2221,7 +2363,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 mMediaManager = FPVDemoApplication.getCameraInstance().getMediaManager();
                 if (null != mMediaManager) {
                     mMediaManager.addUpdateFileListStateListener(this.updateFileListStateListener);
-
+                    //这个是老方法 m300不适用
 //                    调用的setMode()方法，Camera并将CameraMode设置为MEDIA_DOWNLOAD。
 //                    并调用该getFileList()方法以获取媒体文件列表。
 //                    最后，初始化FetchMediaTaskScheduler来安排获取媒体文件任务。
@@ -2247,25 +2389,52 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         @Override
                         public void onResult(DJIError djiError) {
                             if (djiError == null) {
-                                Toast.makeText(ConnectionActivity.this, "Set cameraMode success", Toast.LENGTH_SHORT).show();
+//                                Toast.makeText(ConnectionActivity.this, "Set cameraMode success", Toast.LENGTH_SHORT).show();
+                                Log.e("downLoadPic", "Set cameraDownloadMode success " );
                                 getFileList();
                             } else {
-                                Log.e(TAG, "Set cameraMode failed " + djiError.toString());
-                                Toast.makeText(ConnectionActivity.this, "Set cameraMode failed " + djiError.toString(), Toast.LENGTH_LONG).show();
-                                Communication communication = new Communication();
-                                communication.setResult(djiError.getDescription());
-                                communication.setCode(-1);
-                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                                NettyClient.getInstance().sendMessage(communication, null);
+                                Log.e("downLoadPic", "Set cameraDownloadMode failed " + djiError.toString());
+                                //失败再重调一遍
+                                camera.setFlatMode(PHOTO_SINGLE, new CommonCallbacks.CompletionCallback() {
+                                    @Override
+                                    public void onResult(DJIError djiError) {
+                                        Log.e("downLoadPic", "setFlatMode failed " + djiError.toString());
+                                        camera.enterPlayback(new CommonCallbacks.CompletionCallback() {
+                                            @Override
+                                            public void onResult(DJIError djiError) {
+                                                if (djiError == null) {
+//                                Toast.makeText(ConnectionActivity.this, "Set cameraMode success", Toast.LENGTH_SHORT).show();
+                                                    Log.e("downLoadPic", "Set cameraDownloadMode success " );
+                                                    getFileList();
+                                                } else {
+                                                    Log.e("downLoadPic", "Set cameraDownloadMode failed " + djiError.toString());
+                                                    Toast.makeText(ConnectionActivity.this, "Set cameraMode failed " + djiError.toString(), Toast.LENGTH_LONG).show();
+                                                    Communication communication = new Communication();
+                                                    communication.setResult(djiError.getDescription());
+                                                    communication.setCode(-1);
+                                                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                                    NettyClient.getInstance().sendMessage(communication, null);
+                                                }
+                                            }
+                                        });
+//                                Toast.makeText(ConnectionActivity.this, "Set cameraMode failed " + djiError.toString(), Toast.LENGTH_LONG).show();
+//                                Communication communication = new Communication();
+//                                communication.setResult(djiError.getDescription());
+//                                communication.setCode(-1);
+//                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                                NettyClient.getInstance().sendMessage(communication, null);
+                                    }
+                                });
+
                             }
                         }
                     });
 
-                    if (mMediaManager.isVideoPlaybackSupported()) {
-                        Log.e(TAG, "Camera support video playback!");
-                    } else {
-                        Log.e(TAG, "Camera does not support video playback!");
-                    }
+//                    if (mMediaManager.isVideoPlaybackSupported()) {
+//                        Log.e(TAG, "Camera support video playback!");
+//                    } else {
+//                        Log.e(TAG, "Camera does not support video playback!");
+//                    }
 //                    scheduler = mMediaManager.getScheduler();
                 }
 
@@ -2287,7 +2456,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         if (mMediaManager != null) {
 
             if ((currentFileListState == MediaManager.FileListState.SYNCING) || (currentFileListState == MediaManager.FileListState.DELETING)) {
-                Toast.makeText(ConnectionActivity.this, "Media Manager is busy.", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(ConnectionActivity.this, "Media Manager is busy.", Toast.LENGTH_SHORT).show();
+                Log.e("downLoadPic", "Media Manager is busy.");
             } else {
 
                 mMediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.SDCARD, new CommonCallbacks.CompletionCallback() {
@@ -2311,6 +2481,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                            如果存在错误，请调用该hideProgressDialog()方法以隐藏进度对话框。
 
                             mediaFileList = mMediaManager.getSDCardFileListSnapshot();
+                            //这是排序
                             Collections.sort(mediaFileList, new Comparator<MediaFile>() {
                                 @Override
                                 public int compare(MediaFile lhs, MediaFile rhs) {
@@ -2322,9 +2493,31 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                     return 0;
                                 }
                             });
+                            //拿到起飞后最新的列表只要起飞后拍的
+                            for (int i = 0; i < mediaFileList.size(); i++) {
+                                if (mediaFileList.get(i).getTimeCreated() - planeStartFlyTime < 0) {
+                                    mediaFileList.remove(i);
+                                    i--;
+                                }
+                            }
+                            //测试 只传一个
+//                            for (int i = 0; i < mediaFileList.size(); i++) {
+//                                if (i == 1) {
+//                                    mediaFileList.remove(i);
+//                                    i--;
+//                                }
+//                            }
+                            if (mediaFileList.size() > 0) {
+                                Log.e("downLoadPic", "可以去下载 " );
+                                downloadPic();
+                                //发消息给后台开始下载
+                                //循环1s去传开始下载传给后台
+                                handlerStartDownload.post(runnableStartDownload);
+                            }else{
+                                Log.e("downLoadPic", "没有图片可下载 " );
+                            }
 
-                            downloadPic();
-                            Toast.makeText(ConnectionActivity.this, "拿到list去下载" + mediaFileList.size(), Toast.LENGTH_SHORT).show();
+//                            Toast.makeText(ConnectionActivity.this, "拿到list去下载" + mediaFileList.size(), Toast.LENGTH_SHORT).show();
 //                            scheduler.resume(new CommonCallbacks.CompletionCallback() {
 //                                @Override
 //                                public void onResult(DJIError error) {
@@ -2352,156 +2545,94 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
     }
 
+
+    int downloadToPadCount=0;
     private void downloadPic() {
-        if ((mediaFileList.get(0).getMediaType() == MediaFile.MediaType.PANORAMA)
-                || (mediaFileList.get(0).getMediaType() == MediaFile.MediaType.SHALLOW_FOCUS)) {
-            return;
-        }
+        Log.e("downLoadPic", "文件个数： "+mediaFileList.size() );
+        isDownloadLast=false;
+        for (int i = 0; i < mediaFileList.size(); i++) {
+            if (i == mediaFileList.size() - 1) {
+                isDownloadLast = true;
+            }
+            if ((mediaFileList.get(i).getMediaType() == MediaFile.MediaType.PANORAMA)
+                    || (mediaFileList.get(i).getMediaType() == MediaFile.MediaType.SHALLOW_FOCUS)) {
+                return;
+            }
 //        if(mediaFileList.get(0).getMediaType()==MediaFile.MediaType.MOV||mediaFileList.get(0).getMediaType()==MediaFile.MediaType.MP4){
 //            downloadFileType="0";//视频
 //        }else{
 //            downloadFileType="1";//图片
 //        }
-        FileName = mediaFileList.get(0).getFileName();
-        mediaFileList.get(0).fetchFileData(destDir, null, new DownloadListener<String>() {
-            @Override
-            public void onFailure(DJIError error) {
-                Toast.makeText(ConnectionActivity.this, "Download File Failed" + error.getDescription(), Toast.LENGTH_SHORT).show();
-                if (communication_takePhoto == null) {
-                    communication_takePhoto = new Communication();
-                }
-                communication_takePhoto.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                communication_takePhoto.setEquipmentId(MApplication.EQUIPMENT_ID);
-                communication_takePhoto.setCode(-1);
-                communication_takePhoto.setMethod(RsaUtil.encrypt(Constant.PHOTO_UP_LOAD));
-                communication_takePhoto.setResult(error.getDescription());
-                NettyClient.getInstance().sendMessage(communication_takePhoto, null);
-            }
-
-            @Override
-            public void onProgress(long total, long current) {
-            }
-
-            @Override
-            public void onRateUpdate(long total, long current, long persize) {
-                int tmpProgress = (int) (1.0 * current / total * 100);
-                if (tmpProgress != currentProgress) {
-                    currentProgress = tmpProgress;
-                    btn_login.setText(currentProgress + "");
-                }
-            }
-
-            @Override
-            public void onStart() {
-                currentProgress = -1;
-//                ShowDownloadProgressDialog();
-            }
-
-            @Override
-            public void onSuccess(String filePath) {
-//                HideDownloadProgressDialog();
-//                setResultToToast();
-                Toast.makeText(ConnectionActivity.this, "Download File Success" + ":" + filePath, Toast.LENGTH_LONG).show();
-                currentProgress = -1;
-                try {
-
-                    File downloadFile = new File(filePath + "/" + FileName);
-                    Log.e(TAG, "fileallname=" + filePath + "/" + FileName);
-                    if (FileName.endsWith(".JPG") || FileName.endsWith(".jpg") || FileName.endsWith(".JPEG") || FileName.endsWith(".jpeg")) {//图片压缩
-                        Luban.with(ConnectionActivity.this)
-                                .load(downloadFile)
-                                .ignoreBy(100)
-                                .setTargetDir(Environment.getExternalStorageDirectory().getPath())
-//                            .filter(new CompressionPredicate() {
-//                                @Override
-//                                public boolean apply(String path) {
-//                                    return !(TextUtils.isEmpty(path) || path.toLowerCase().endsWith(".gif"));
-//                                }
-//                            })
-                                .setCompressListener(new OnCompressListener() {
-                                    @Override
-                                    public void onStart() {
-                                        // 压缩开始前调用，可以在方法内启动 loading UI
-                                    }
-
-                                    @Override
-                                    public void onSuccess(File file) {
-                                        //压缩成功后调用，返回压缩后的图片文件
-                                        Toast.makeText(ConnectionActivity.this, "压缩成功", Toast.LENGTH_SHORT).show();
-                                        Log.e(TAG, "压缩onSuccess=" + file.getPath());
-                                        String result = null;
-                                        try {
-                                            result = ClientUploadUtils.upload(MApplication.UPLOAD_URL, file, file.getName()).toString();
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        }
-                                        Toast.makeText(ConnectionActivity.this, "result:" + result, Toast.LENGTH_SHORT).show();
-                                    }
-
-                                    @Override
-                                    public void onError(Throwable e) {
-                                        //当压缩过程出现问题时调用
-                                        Log.e(TAG, "压缩onError=" + e.toString());
-                                    }
-                                }).launch();
-                    } else {
-                        String result = null;
-                        try {
-                            result = ClientUploadUtils.upload(MApplication.UPLOAD_URL, downloadFile, downloadFile.getName()).toString();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        Toast.makeText(ConnectionActivity.this, "result:" + result, Toast.LENGTH_SHORT).show();
+//            FileName = mediaFileList.get(i).getFileName();
+            mediaFileList.get(i).fetchFileData(destDir, mediaFileList.get(i).getTimeCreated() + "", new DownloadListener<String>() {
+                @Override
+                public void onFailure(DJIError error) {
+//                    Toast.makeText(ConnectionActivity.this, "Download File Failed" + error.getDescription(), Toast.LENGTH_SHORT).show();
+                    if (communication_takePhoto == null) {
+                        communication_takePhoto = new Communication();
                     }
-
-
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    communication_takePhoto.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                    communication_takePhoto.setEquipmentId(MApplication.EQUIPMENT_ID);
+                    communication_takePhoto.setCode(-1);
+                    communication_takePhoto.setMethod(RsaUtil.encrypt(Constant.PHOTO_UP_LOAD));
+                    communication_takePhoto.setResult(error.getDescription());
+                    NettyClient.getInstance().sendMessage(communication_takePhoto, null);
+                    Log.e("downLoadPic", "下载到平板失败 "+error.toString() );
+                    downloadToPadCount++;
                 }
-//                if(downloadFileType.equals("0")){//视频
-//
-//                }else if(downloadFileType.equals("1")){//图片
-//                    String base64=ImageUtils.bitmapToBase64(ImageUtils.returnBitMap(filePath));
-//                    if (communication_takePhoto == null) {
-//                        communication_takePhoto = new Communication();
-//                    }
-//                    communication_takePhoto.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                    communication_takePhoto.setEquipmentId(MApplication.EQUIPMENT_ID);
-//                    communication_takePhoto.setCode(200);
-//                    communication_takePhoto.setMethod(RsaUtil.encrypt(Constant.PHOTO_UP_LOAD));
-//                    communication_takePhoto.setResult(base64);
-//                    NettyClient.getInstance().sendMessage(communication_takePhoto, null);
-//                    ArrayList<MediaFile> fileToDelete = new ArrayList<MediaFile>();
-//                    if (mediaFileList.size() > 0) {
-//                        fileToDelete.add(mediaFileList.get(0));
-//                        mMediaManager.deleteFiles(fileToDelete, new CommonCallbacks.CompletionCallbackWithTwoParam<List<MediaFile>, DJICameraError>() {
-//                            @Override
-//                            public void onSuccess(List<MediaFile> x, DJICameraError y) {
-//                                Log.e(TAG, "Delete file success");
-//                                runOnUiThread(new Runnable() {
-//                                    public void run() {
-//                                        MediaFile file = mediaFileList.remove(0);
-////
-////                                    //Reset select view
-////                                    lastClickViewIndex = -1;
-////                                    lastClickView = null;
-////
-////                                    //Update recyclerView
-////                                    mListAdapter.notifyItemRemoved(index);
-//                                    }
-//                                });
-//                            }
-//
-//                            @Override
-//                            public void onFailure(DJIError error) {
-////                            setResultToToast("Delete file failed");
-//                            }
-//                        });
-//                    }
-//                }
 
-            }
-        });
+                @Override
+                public void onProgress(long total, long current) {
+                    int curr= (int) (1.0 * current / total * 100);
+                    btn_gaode.setText(curr+"");
+                }
+
+                @Override
+                public void onRateUpdate(long total, long current, long persize) {
+                    int tmpProgress = (int) (1.0 * current / total * 100);
+                    if (tmpProgress != currentProgress) {
+                        currentProgress = tmpProgress;
+                        btn_download.setText(currentProgress + "");
+                    }
+                }
+
+                @Override
+                public void onStart() {
+                    currentProgress = -1;
+//                ShowDownloadProgressDialog();
+                }
+
+                @Override
+                public void onSuccess(String filePath) {
+//                HideDownloadProgressDialog();
+//                    Toast.makeText(ConnectionActivity.this, "Download File Success" + ":" + filePath, Toast.LENGTH_LONG).show();
+                    currentProgress = -1;
+                    downloadToPadCount++;
+                    Log.e("downLoadPic", "下载到平板成功 " );
+                    if (downloadToPadCount==mediaFileList.size()) {//下载到平板成功
+                        Log.e("downLoadPic", "下载到平板全部完成 " );
+                        isDownloadLast=false;
+                        uploadToServer();
+                        handlerStartDownload.removeCallbacks(runnableStartDownload);//关闭发送下载的轮询
+                        //通知后台已下载完
+                        StringsBean sb = new StringsBean();
+                        sb.setValue("0");
+                        if (communication_download_pic == null) {
+                            communication_download_pic = new Communication();
+                        }
+                        communication_download_pic.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        communication_download_pic.setEquipmentId(MApplication.EQUIPMENT_ID);
+                        communication_download_pic.setMethod(RsaUtil.encrypt(Constant.IS_DOWNLOAD));
+                        communication_download_pic.setResult(gson.toJson(sb, StringsBean.class));
+                        NettyClient.getInstance().sendMessage(communication_download_pic, null);
+                        isStartShootOrRecord=false;
+                    }
+                }
+            });
+
+
+        }
+
     }
 
     private MediaManager.FileListStateListener updateFileListStateListener = new MediaManager.FileListStateListener() {
@@ -2510,6 +2641,93 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             currentFileListState = state;
         }
     };
+
+    private void uploadToServer() {
+        String[] allfile = destDir.list();
+        for (int i = 0; i < allfile.length; i++) {
+            String everFile = destDirName + allfile[i];
+            Log.e("downLoadPic", "fileallname=" + everFile);
+            if (everFile.endsWith(".JPG") || everFile.endsWith(".jpg") || everFile.endsWith(".JPEG") || everFile.endsWith(".jpeg")) {//图片压缩
+                //不要压缩直接传
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String result = null;
+                        try {
+                            result = ClientUploadUtils.upload(MApplication.UPLOAD_URL, file, file.getName(), "image").string();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Log.e("downLoadPic", "不压缩后上传报错=" + e.toString());
+                        }
+                        Log.e("downLoadPic", "不压缩后上传=" + "result:" + result);
+                    }
+                }).start();
+
+
+//                Luban.with(ConnectionActivity.this)
+//                        .load(everFile)
+////                        .ignoreBy(100)
+//                        .setTargetDir(Environment.getExternalStorageDirectory().getPath())
+////                        .setTargetDir(destDirCompress.getPath())
+////                            .filter(new CompressionPredicate() {
+////                                @Override
+////                                public boolean apply(String path) {
+////                                    return !(TextUtils.isEmpty(path) || path.toLowerCase().endsWith(".gif"));
+////                                }
+////                            })
+//                        .setCompressListener(new OnCompressListener() {
+//                            @Override
+//                            public void onStart() {
+//                                // 压缩开始前调用，可以在方法内启动 loading UI
+//                            }
+//
+//                            @Override
+//                            public void onSuccess(File file) {
+//                                //压缩成功后调用，返回压缩后的图片文件
+//                                Toast.makeText(ConnectionActivity.this, "压缩成功", Toast.LENGTH_SHORT).show();
+//                                Log.e("downLoadPic", "压缩onSuccess=" + file.getPath());
+//                                new Thread(new Runnable() {
+//                                    @Override
+//                                    public void run() {
+//                                        String result = null;
+//                                        try {
+//                                            result = ClientUploadUtils.upload(MApplication.UPLOAD_URL, file, file.getName(), "image").string();
+//                                        } catch (Exception e) {
+//                                            e.printStackTrace();
+//                                            Log.e("downLoadPic", "压缩后上传报错=" + e.toString());
+//                                        }
+//                                        Log.e("downLoadPic", "压缩后上传=" + "result:" + result);
+//                                    }
+//                                }).start();
+//
+//                            }
+//
+//                            @Override
+//                            public void onError(Throwable e) {
+//                                //当压缩过程出现问题时调用
+//                                Log.e("downLoadPic", "压缩onError=" + e.toString());
+//                            }
+//                        }).launch();
+            }
+            //视频
+            else {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String result = null;
+                        try {
+                            File file = new File(everFile);
+                            result = ClientUploadUtils.upload(MApplication.UPLOAD_URL, file, file.getName(), "mp4").string();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        Log.e("downLoadPic", "视频result:" + result);
+
+                    }
+                }).start();
+            }
+        }
+    }
 
     //长连接最终返回
     @Override
@@ -2524,6 +2742,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         switch (method) {
             //起飞
             case Constant.START_TAKE_OFF:
+                planeStartFlyTime = DateTransformationUtils.timeStamp();
                 startTakeoff(communication);
                 break;
             //获取控制权限
@@ -2580,6 +2799,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 break;
             //航线自动飞行开始
             case Constant.WAYPOINT_FLY_START:
+                planeStartFlyTime = DateTransformationUtils.timeStamp();
                 startWaypointMission(communication);
                 break;
             //航线自动飞行停止
@@ -2616,28 +2836,13 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 break;
             //切换相机拍照模式
             case Constant.CHANGE_CAMERA_SHOOT_MODE:
+
                 camera_set_shoot_mode(communication);
                 break;
             //开始拍照
             case Constant.CAMERE_START_SHOOT:
                 camera_start_shoot(communication);
-//                camera.getMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.CameraMode>() {
-//                    @Override
-//                    public void onSuccess(SettingsDefinitions.CameraMode cameraMode) {
-//                        if (cameraMode == SettingsDefinitions.CameraMode.MEDIA_DOWNLOAD) {
-//                            communication.setResult("正在下载中");
-//                            communication.setCode(-1);
-//                            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                            NettyClient.getInstance().sendMessage(communication, null);
-//                        } else {
-//                            camera_start_shoot(communication);
-//                        }
-//                    }
-//
-//                    @Override
-//                    public void onFailure(DJIError djiError) {
-//                    }
-//                });
+
                 break;
             //结束拍照
             case Constant.CAMERE_STOP_SHOOT:
@@ -2740,9 +2945,48 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             case Constant.SET_CONNECT_FAIL_BEHAVIOR:
                 setConnectionFailBehavior(communication);
                 break;
-
-
-
+            //格式化内存卡
+            case Constant.FORMAT_SDCARD:
+                formatSDCard(communication);
+                break;
+            //设置拍照时led自动开关
+            case Constant.SET_LED_AUTO_TURN_OFF:
+                setBeaconAutoTurnOffEnabled(communication);
+                break;
+            //设置调色板
+            case Constant.SET_THERMAL_PALETTE:
+                setThermalPalette(communication);
+                break;
+            //设置等温线
+            case Constant.SET_THERMAL_ISO_THERM_UNIT:
+                setThermalIsothermEnabled(communication);
+                break;
+            //设置水印
+            case Constant.SET_WATER_MARK_SETTINGS:
+                setWatermarkSettings(communication);
+                break;
+            //相机重置参数（恢复出厂设置）
+            case Constant.CAMERA_RFS:
+                cameraRestoreFactorySettings(communication);
+                break;
+            //开始推流
+            case Constant.START_LIVE:
+                startLiveShow(communication);
+                break;
+            //结束推流
+            case Constant.STOP_LIVE:
+                DJISDKManager.getInstance().getLiveStreamManager().stopStream();
+                Toast.makeText(getApplicationContext(), "Stop Live Show", Toast.LENGTH_SHORT).show();
+                break;
+            //重启app
+            case Constant.RESTART_APP:
+                Intent intent = getBaseContext().getPackageManager().getLaunchIntentForPackage(getBaseContext().getPackageName());
+                intent.putExtra("REBOOT","reboot");
+                PendingIntent restartIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
+                AlarmManager mgr = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+                mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 1000, restartIntent);
+                android.os.Process.killProcess(android.os.Process.myPid());
+                break;
 
 
 
@@ -2756,7 +3000,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             case Constant.SET_MAX_HEIGHT:
                 setMaxHeight(communication);
                 break;
-
             //设置重心校准
             case Constant.SET_GRAVITY_CENTER_STATE:
                 setGravityCenterState(communication);
@@ -2825,7 +3068,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             case Constant.SET_CONTROLLER_SMOOTHING:
                 setControllerSmoothingFactor(communication);
                 break;
-
 
 
         }
@@ -2914,13 +3156,15 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private void camera_up_and_down(Communication communication) {
         String angle = communication.getPara().get(Constant.ANGLE);
         if (!TextUtils.isEmpty(angle)) {
-            Rotation.Builder builder = new Rotation.Builder().mode(RotationMode.ABSOLUTE_ANGLE).time(2);
-            builder.pitch(Float.parseFloat(angle));
-            builder.build();
+
             Gimbal gimbal = FPVDemoApplication.getProductInstance().getGimbal();
             if (gimbal == null) {
                 return;
             }
+            Rotation.Builder builder = new Rotation.Builder().mode(RotationMode.ABSOLUTE_ANGLE).time(2);
+            builder.pitch(Float.parseFloat(angle));
+            builder.build();
+
             gimbal.rotate(builder.build(), new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
@@ -2941,13 +3185,14 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         String angle = communication.getPara().get(Constant.ANGLE);
         if (!TextUtils.isEmpty(angle)) {
 //            Rotation.Builder builder = new Rotation.Builder().mode(RotationMode.ABSOLUTE_ANGLE).time(2);
-            Rotation.Builder builder = new Rotation.Builder().mode(RotationMode.RELATIVE_ANGLE).time(2);
-            builder.yaw(Float.parseFloat(angle));
-            builder.build();
+
             Gimbal gimbal = FPVDemoApplication.getProductInstance().getGimbal();
             if (gimbal == null) {
                 return;
             }
+            Rotation.Builder builder = new Rotation.Builder().mode(RotationMode.RELATIVE_ANGLE).time(2);
+            builder.yaw(Float.parseFloat(angle));
+            builder.build();
             gimbal.rotate(builder.build(), new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
@@ -3081,31 +3326,50 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     //设置相机模式
     private void camere_set_mode(Communication communication) {
-        String type = communication.getPara().get(Constant.TYPE);
-        if (camera != null) {
-            SettingsDefinitions.CameraMode cameraMode = SettingsDefinitions.CameraMode.SHOOT_PHOTO;
-            switch (type) {
-                case "0":
-                    cameraMode = SettingsDefinitions.CameraMode.SHOOT_PHOTO;
-                    break;
-                case "1":
-                    cameraMode = SettingsDefinitions.CameraMode.RECORD_VIDEO;
-                    break;
-
-            }
-            camera.setMode(cameraMode, new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
-                    CommonDjiCallback(djiError, communication);
-                }
-            });
-
-        } else {
-            communication.setResult("camera==null");
-            communication.setCode(-1);
-            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-            NettyClient.getInstance().sendMessage(communication, null);
+        if(mMediaManager!=null){
+            mMediaManager.exitMediaDownloading();
         }
+
+        camera.exitPlayback(new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                if(djiError==null){
+                    String type = communication.getPara().get(Constant.TYPE);
+                    if (camera != null) {
+                        SettingsDefinitions.CameraMode cameraMode = SettingsDefinitions.CameraMode.SHOOT_PHOTO;
+                        switch (type) {
+                            case "0":
+                                cameraMode = SettingsDefinitions.CameraMode.SHOOT_PHOTO;
+                                break;
+                            case "1":
+                                cameraMode = SettingsDefinitions.CameraMode.RECORD_VIDEO;
+                                break;
+
+                        }
+                        camera.setMode(cameraMode, new CommonCallbacks.CompletionCallback() {
+                            @Override
+                            public void onResult(DJIError djiError) {
+                                CommonDjiCallback(djiError, communication);
+                            }
+                        });
+
+                    } else {
+                        communication.setResult("camera==null");
+                        communication.setCode(-1);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
+                    }
+                }else{
+                    communication.setResult(djiError.toString());
+                    communication.setCode(-1);
+                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                    NettyClient.getInstance().sendMessage(communication, null);
+                }
+            }
+        });
+
+
+
     }
 
     //切换相机拍照模式
@@ -3188,6 +3452,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
             NettyClient.getInstance().sendMessage(communication, null);
         }
+
     }
 
     //开始拍照
@@ -3202,8 +3467,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                         NettyClient.getInstance().sendMessage(communication, null);
                     } else {
-                        initMediaManager();//去下载和上传
-                        Toast.makeText(ConnectionActivity.this, "拍照完成准备下载", Toast.LENGTH_SHORT).show();
+                        isStartShootOrRecord = true;
+                        communication.setResult("成功");
+                        communication.setCode(200);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
                     }
                 }
             });
@@ -3218,12 +3486,25 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     //结束拍照
     private void camera_stop_shoot(Communication communication) {
         if (camera != null) {
-            camera.startShootPhoto(new CommonCallbacks.CompletionCallback() {
+
+            camera.stopShootPhoto(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    CommonDjiCallback(djiError, communication);
+                    if (djiError != null) {
+                        communication.setResult(djiError.getDescription());
+                        communication.setCode(-1);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
+                    } else {
+                        isStartShootOrRecord = true;
+                        communication.setResult("成功");
+                        communication.setCode(200);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
+                    }
                 }
             });
+
         } else {
             communication.setResult("camera==null");
             communication.setCode(-1);
@@ -3238,9 +3519,21 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             camera.startRecordVideo(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    CommonDjiCallback(djiError, communication);
+                    if (djiError != null) {
+                        communication.setResult(djiError.getDescription());
+                        communication.setCode(-1);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
+                    } else {
+                        isStartShootOrRecord = true;
+                        communication.setResult("成功");
+                        communication.setCode(200);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
+                    }
                 }
             });
+
         } else {
             communication.setResult("camera==null");
             communication.setCode(-1);
@@ -3252,7 +3545,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     //停止录像
     private void camera_stop_recode(Communication communication) {
         if (camera != null) {
-            camera.startRecordVideo(new CommonCallbacks.CompletionCallback() {
+            camera.stopRecordVideo(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError != null) {
@@ -3261,7 +3554,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                         NettyClient.getInstance().sendMessage(communication, null);
                     } else {
-                        initMediaManager();//去下载和上传
+//                        initMediaManager();//去下载和上传
+                        communication.setResult("成功");
+                        communication.setCode(200);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
                     }
                 }
             });
@@ -3412,7 +3709,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private void setISO(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
         if (isM300Product() && camera != null) {
-            camera.getLens(camera.getIndex()).setISO(SettingsDefinitions.ISO.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
+            camera.getLens(0).setISO(SettingsDefinitions.ISO.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
                     CommonDjiCallback(djiError, communication);
@@ -3426,7 +3723,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private void setExposureCom(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
         if (isM300Product() && camera != null) {
-            camera.getLens(camera.getIndex()).setExposureCompensation(SettingsDefinitions.ExposureCompensation.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
+            camera.getLens(0).setExposureCompensation(SettingsDefinitions.ExposureCompensation.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
                     CommonDjiCallback(djiError, communication);
@@ -3475,7 +3772,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private void setCameraZoom(Communication communication) {
         if (isM300Product() && camera != null) {
             String type = communication.getPara().get(Constant.TYPE);
-            camera.getLens(camera.getIndex()).setHybridZoomFocalLength(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
+            camera.getLens(0).setHybridZoomFocalLength(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
                     CommonDjiCallback(djiError, communication);
@@ -3545,7 +3842,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             webInitializationBean.setLockExposure(type);
 
             if (isM300Product()) {
-                camera.getLens(camera.getIndex()).setAELock(exposure, new CommonCallbacks.CompletionCallback() {
+                camera.getLens(0).setAELock(exposure, new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
                         CommonDjiCallback(djiError, communication);
@@ -3843,16 +4140,16 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private void setMaxPerceptionDistance(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
         String value = communication.getPara().get(Constant.VALUE);
-        PerceptionInformation.DJIFlightAssistantObstacleSensingDirection direction=Downward;
-        switch (type){
+        PerceptionInformation.DJIFlightAssistantObstacleSensingDirection direction = Downward;
+        switch (type) {
             case "0":
-                direction=Downward;
+                direction = Downward;
                 break;
             case "1":
-                direction=Upward;
+                direction = Upward;
                 break;
             case "2":
-                direction=Horizontal;
+                direction = Horizontal;
                 break;
         }
         mFlightAssistant.setMaxPerceptionDistance(Float.parseFloat(value), direction, new CommonCallbacks.CompletionCallback() {
@@ -3862,20 +4159,21 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }
         });
     }
+
     //设置上下安全距离
     private void setAvoidanceDistance(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
         String value = communication.getPara().get(Constant.VALUE);
-        PerceptionInformation.DJIFlightAssistantObstacleSensingDirection direction=Downward;
-        switch (type){
+        PerceptionInformation.DJIFlightAssistantObstacleSensingDirection direction = Downward;
+        switch (type) {
             case "0":
-                direction=Downward;
+                direction = Downward;
                 break;
             case "1":
-                direction=Upward;
+                direction = Upward;
                 break;
             case "2":
-                direction=Horizontal;
+                direction = Horizontal;
                 break;
         }
         mFlightAssistant.setObstaclesAvoidanceDistance(Float.parseFloat(value), direction, new CommonCallbacks.CompletionCallback() {
@@ -3885,8 +4183,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }
         });
     }
+
     //设置避障刹车功能
-    private void setActiveObstacleAvoidance(Communication communication){
+    private void setActiveObstacleAvoidance(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
         mFlightAssistant.setActiveObstacleAvoidanceEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
             @Override
@@ -3903,16 +4202,16 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
     //设置偏航俯仰速度
-    private void setGimbalSpeed(Communication communication){
+    private void setGimbalSpeed(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
         String value = communication.getPara().get(Constant.VALUE);
-        Axis axis=PITCH;
-        switch (type){
+        Axis axis = PITCH;
+        switch (type) {
             case "0":
-                axis=PITCH;
+                axis = PITCH;
                 break;
             case "1":
-                axis=YAW;
+                axis = YAW;
                 break;
         }
         gimbal.setControllerSpeedCoefficient(axis, Integer.parseInt(value), new CommonCallbacks.CompletionCallback() {
@@ -3922,8 +4221,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }
         });
     }
+
     //自动校准
-    private void startCalibration(Communication communication){
+    private void startCalibration(Communication communication) {
         gimbal.startCalibration(new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
@@ -3931,8 +4231,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }
         });
     }
+
     //恢复出厂
-    private void restoreFactorySettings(Communication communication){
+    private void restoreFactorySettings(Communication communication) {
         gimbal.restoreFactorySettings(new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
@@ -3940,8 +4241,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }
         });
     }
+
     //云台偏航缓启停
-    private void setControllerSmoothingFactor(Communication communication){
+    private void setControllerSmoothingFactor(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
         gimbal.setControllerSmoothingFactor(YAW, Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
             @Override
@@ -3951,7 +4253,112 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         });
     }
 
+    //格式化sdcard
+    private void formatSDCard(Communication communication) {
+        if (camera != null) {
+            camera.formatSDCard(new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    CommonDjiCallback(djiError, communication);
+                }
+            });
+        }
+    }
 
+    //设置拍照时led开关
+    private void setBeaconAutoTurnOffEnabled(Communication communication) {
+        String type = communication.getPara().get(Constant.TYPE);
+        if (camera != null && isM300Product()) {
+            camera.setBeaconAutoTurnOffEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    CommonDjiCallback(djiError, communication);
+                }
+            });
+        }
+    }
+
+    //设置调色板
+    private void setThermalPalette(Communication communication) {
+        if (camera != null && isM300Product()) {
+            String type = communication.getPara().get(Constant.TYPE);
+            camera.getLens(2).setThermalPalette(SettingsDefinitions.ThermalPalette.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    CommonDjiCallback(djiError, communication);
+                }
+            });
+        }
+    }
+
+    //设置等温度线
+    private void setThermalIsothermEnabled(Communication communication) {
+        if (camera != null && isM300Product()) {
+            String type = communication.getPara().get(Constant.TYPE);
+            String min_value = communication.getPara().get(Constant.MIN_VALUE);
+            String max_value = communication.getPara().get(Constant.MAX_VALUE);
+            boolean tf = type.equals("1") ? true : false;
+            camera.getLens(2).setThermalIsothermUnit(SettingsDefinitions.ThermalIsothermUnit.CELSIUS, new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if (djiError != null) {
+                        communication.setResult(djiError.getDescription());
+                        communication.setCode(-1);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
+                    } else {
+                        camera.getLens(2).setThermalIsothermEnabled(tf, new CommonCallbacks.CompletionCallback() {
+                            @Override
+                            public void onResult(DJIError djiError) {
+                                CommonDjiCallback(djiError, communication);
+                            }
+                        });
+                        if (tf) {
+                            camera.getLens(2).setThermalIsothermUpperValue(Integer.parseInt(max_value), new CommonCallbacks.CompletionCallback() {
+                                @Override
+                                public void onResult(DJIError djiError) {
+
+                                }
+                            });
+                            camera.getLens(2).setThermalIsothermLowerValue(Integer.parseInt(min_value), new CommonCallbacks.CompletionCallback() {
+                                @Override
+                                public void onResult(DJIError djiError) {
+
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    //设置水印
+    private void setWatermarkSettings(Communication communication) {
+        if (camera != null) {
+            String video = communication.getPara().get("video");
+            String phote = communication.getPara().get("phote");
+            WatermarkSettings watermarkSettings = new WatermarkSettings(video.equals("1") ? true : false, phote.equals("1") ? true : false);
+            camera.setWatermarkSettings(watermarkSettings, new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    CommonDjiCallback(djiError, communication);
+                }
+            });
+        }
+    }
+
+    //相机重置参数（应该是恢复出厂设置）
+    private void cameraRestoreFactorySettings(Communication communication) {
+        if (camera != null) {
+            camera.restoreFactorySettings(new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    CommonDjiCallback(djiError, communication);
+                }
+            });
+        }
+    }
 
 
     //这四个 视频相关
@@ -3998,7 +4405,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             errorMsg.append(diagnostics.getReason()).append(",");
         }
         StringsBean stringsBean = new StringsBean();
-        stringsBean.setValue(errorMsg.toString().substring(0, errorMsg.length() - 1) + ",乃要的测试数据");
+//        stringsBean.setValue(errorMsg.toString().substring(0, errorMsg.length() - 1) + ",乃要的测试数据");
+        stringsBean.setValue(errorMsg.toString());
         Log.d("ErrorUpdate", errorMsg.toString().substring(0, errorMsg.length() - 1));
         if (communication_error_log == null) {
             communication_error_log = new Communication();
@@ -4180,9 +4588,17 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     //航点规划
     private void waypoint_plan(Communication communication) {
         String speed = communication.getPara().get(Constant.SPEED);
+        String gimbalPitch = communication.getPara().get(Constant.GIMBAL_PITCH);
+        String turnMode = communication.getPara().get(Constant.TURN_MODE);
 //        Log.d("HHHHH","speed="+speed);
         if (!TextUtils.isEmpty(speed)) {
             mSpeed = Float.parseFloat(speed);
+        }
+        if (!TextUtils.isEmpty(gimbalPitch)) {
+            mGimbalPitch = Float.parseFloat(gimbalPitch);
+        }
+        if (!TextUtils.isEmpty(turnMode)) {
+            mTurnMode = turnMode;
         }
         String finishedAction = communication.getPara().get(Constant.FINISHED_ACTION);
         if (!TextUtils.isEmpty(finishedAction)) {
@@ -4228,21 +4644,29 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     break;
             }
         }
-
-//        mSpeed = 10.0f;
-//            AUTO_LAND 飞机将在最后一个航点自动降落。
-//            CONTINUE_UNTIL_END 如果用户在执行任务时尝试将飞机拉回飞行路线，则飞机将朝着先前的航路点移动并将继续这样做，直到没有更多的航路点返回或用户停止尝试移回飞机。
-//            GO_FIRST_WAYPOINT 飞机将返回其第一个航点并悬停就位。
-//            GO_HOME 完成任务后，飞机将返回家中。
-//            NO_ACTION 任务完成将不会采取进一步的行动
-//        mFinishedAction = WaypointMissionFinishedAction.GO_HOME;
-//            AUTO 飞机的航向将始终在飞行方向上。
-//            CONTROL_BY_REMOTE_CONTROLLER 飞机的航向将由遥控器控制。
-//            TOWARD_POINT_OF_INTEREST 飞机的航向将始终朝着兴趣点前进。
-//            USING_INITIAL_DIRECTION 飞机的航向将设置为初始起飞航向。
-//            USING_WAYPOINT_HEADING 在航点之间旅行时，飞机的航向将设置为上一个航点的航向。
-//        mHeadingMode = WaypointMissionHeadingMode.AUTO;
-//        altitude = 0;
+        String mPathMode = communication.getPara().get(Constant.FLIGHT_PATH_MODE);
+        if (!TextUtils.isEmpty(mPathMode)) {
+            switch (mPathMode) {
+                case "0":
+                    mFlightPathMode = WaypointMissionFlightPathMode.NORMAL;
+                    break;
+                case "1":
+                    mFlightPathMode = WaypointMissionFlightPathMode.NORMAL;
+                    break;
+            }
+        }
+        String gpre = communication.getPara().get(Constant.GPRE);
+        boolean sgpre = true;
+        if (!TextUtils.isEmpty(gpre)) {
+            switch (mPathMode) {
+                case "0":
+                    sgpre = false;
+                    break;
+                case "1":
+                    sgpre = true;
+                    break;
+            }
+        }
 
         // add点
         String wayPoints = communication.getPara().get(Constant.WAY_POINTS);
@@ -4253,7 +4677,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }.getType());
             waypointList.clear();
             for (int i = 0; i < myWayPointList.size(); i++) {
-                add_point(myWayPointList.get(i));
+                add_point(myWayPointList.get(i), mSpeed + "", mGimbalPitch + "",mTurnMode);
             }
         }
 
@@ -4262,13 +4686,16 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     .headingMode(mHeadingMode)
                     .autoFlightSpeed(mSpeed)
                     .maxFlightSpeed(mSpeed)
-                    .flightPathMode(WaypointMissionFlightPathMode.NORMAL);
+                    .setGimbalPitchRotationEnabled(sgpre)
+                    .flightPathMode(mFlightPathMode);
+
         } else {
             waypointMissionBuilder.finishedAction(mFinishedAction)
                     .headingMode(mHeadingMode)
                     .autoFlightSpeed(mSpeed)
                     .maxFlightSpeed(mSpeed)
-                    .flightPathMode(WaypointMissionFlightPathMode.NORMAL);
+                    .setGimbalPitchRotationEnabled(sgpre)
+                    .flightPathMode(mFlightPathMode);
 
         }
 //        if (waypointMissionBuilder.getWaypointList().size() > 0) {
@@ -4291,7 +4718,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 public void onResult(DJIError error) {
                     if (error == null) {
 //                        setResultToToast("Mission upload successfully!");
-                        communication.setResult("Success");
+                        communication.setResult("Mission upload successfully!");
                         communication.setCode(200);
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                         NettyClient.getInstance().sendMessage(communication, null);
@@ -4325,12 +4752,13 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     //开始航点自动飞行
     private void startWaypointMission(Communication communication) {
-
+        String currentState= getWaypointMissionOperator().getCurrentState().toString();
+        Log.d("currentState",currentState);
         getWaypointMissionOperator().startMission(new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError error) {
                 if (error != null) {
-                    communication.setResult(error.getDescription());
+                    communication.setResult("调用返回:"+error.getDescription()+"currentState:"+currentState);
                     communication.setCode(-1);
                     communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                     NettyClient.getInstance().sendMessage(communication, null);
@@ -4407,10 +4835,40 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         });
     }
 
-    private void add_point(WayPointsBean wayPointsBean) {
+    private void add_point(WayPointsBean wayPointsBean, String speed, String gimbalPitch,String mTurnMode) {
 
         Waypoint mWaypoint = new Waypoint(Double.parseDouble(wayPointsBean.getLatitude()), Double.parseDouble(wayPointsBean.getLongitude()), Float.parseFloat(wayPointsBean.getAltitude()));
-        mWaypoint.speed = Float.parseFloat(wayPointsBean.getSpeed());
+        if (TextUtils.isEmpty(wayPointsBean.getSpeed()) || wayPointsBean.getSpeed().equals("0")) {
+            mWaypoint.speed = Float.parseFloat(speed);
+        } else {
+            mWaypoint.speed = Float.parseFloat(wayPointsBean.getSpeed());
+        }
+
+        if (TextUtils.isEmpty(wayPointsBean.getGimbalPitch()) || wayPointsBean.getGimbalPitch().equals("0")) {
+            mWaypoint.gimbalPitch = Float.parseFloat(gimbalPitch);
+        } else {
+            mWaypoint.gimbalPitch = Float.parseFloat(wayPointsBean.getGimbalPitch());
+        }
+        //设置弧度
+        if (!TextUtils.isEmpty(wayPointsBean.getCornerRadiusInMeters())) {
+            mWaypoint.cornerRadiusInMeters = Float.parseFloat(wayPointsBean.getCornerRadiusInMeters());
+        }
+        //1顺0逆
+        if (!TextUtils.isEmpty(wayPointsBean.getTurnMode())) {
+            if(wayPointsBean.getTurnMode().equals("1")){
+                mWaypoint.turnMode =WaypointTurnMode.CLOCKWISE;
+            }else{
+                mWaypoint.turnMode =WaypointTurnMode.COUNTER_CLOCKWISE;
+            }
+        } else {
+            if(mTurnMode.equals("0")){
+                mWaypoint.turnMode =WaypointTurnMode.COUNTER_CLOCKWISE;
+            }else{
+                mWaypoint.turnMode =WaypointTurnMode.CLOCKWISE;
+            }
+        }
+
+
         for (int i = 0; i < wayPointsBean.getWayPointAction().size(); i++) {
             switch (wayPointsBean.getWayPointAction().get(i).getActionType()) {
                 case 0:

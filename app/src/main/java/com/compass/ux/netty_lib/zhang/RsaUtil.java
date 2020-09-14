@@ -55,7 +55,8 @@ public class RsaUtil {
    * @param value 值
    * @return String
    */
-  public static String encrypt(String value) {
+
+  public synchronized static String encrypt(String value) {
     try {
       byte[] result = encryptCipher.doFinal(value.getBytes());
       return Base64.encodeToString(result, android.util.Base64.NO_WRAP);

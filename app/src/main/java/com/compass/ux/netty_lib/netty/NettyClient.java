@@ -116,7 +116,7 @@ public class NettyClient {
 
                 @Override
                 public void success() {
-                    Log.e(TAG, "发送成功--->" );
+                    Log.e(TAG, "发送成功--->"+vo.getMethod() );
                 }
 
                 @Override
