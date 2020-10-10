@@ -42,6 +42,12 @@
         android:hint="这里写推流地址"
         android:textSize="20dp"
         />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+    </LinearLayout>
     <Button
         android:id="@+id/btn_open"
         android:layout_width="150dp"

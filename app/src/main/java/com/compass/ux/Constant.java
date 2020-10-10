@@ -57,6 +57,9 @@ public class Constant {
     public static final String STORAGE_STATE="storageState";
     public static final String IS_FLYING="isFlying";
     public static final String IS_DOWNLOAD="isDownload";
+    public static final String ON_EXECUTION_FINISH="onExecutionFinish";
+    public static final String HAVEPIC="isHavePic";
+    public static final String DISTANCE_GO_HOME="distanceGoHome";
     public static final String SET_CONNECT_FAIL_BEHAVIOR="setConnectionFailSafeBehavior";
 
 

@@ -86,4 +86,6 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
     //压缩
     implementation 'top.zibin:Luban:1.1.8'
+    //权限
+    implementation 'com.yanzhenjie:permission:2.0.3'
 }
