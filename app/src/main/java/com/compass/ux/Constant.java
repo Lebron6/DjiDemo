@@ -47,6 +47,7 @@ public class Constant {
     public static final String SET_EXPOSURE_MODE="setExposureMode";
     public static final String SET_SHUTTER="setShutter";
     public static final String DIAGNOSTICS="diagnostics";
+    public static final String BS_INFO="bs_info";
     public static final String BatteryPAV="batteryPersentAndVoltage";
     public static final String SET_CAMERA_ZOOM="setCameraZoom";
     public static final String PERCEPTION_DATA="perceptionData";
@@ -94,6 +95,12 @@ public class Constant {
     public static final String START_LIVE="startLive";
     public static final String STOP_LIVE="stopLive";
     public static final String RESTART_APP="restartApp";
+    public static final String SET_RTK="setRTK";
+    public static final String START_SET_BS="startSearchBaseStation";
+    public static final String STOP_SET_BS="stopSearchBaseStation";
+    public static final String CONNECT_BS="connectToBaseStation";
+    public static final String SET_RSS="setReferenceStationSource";
+    public static final String SET_NSCS="setNetworkServiceCoordinateSystem";
 
 
     public static String LINE_SEPARATOR=System.getProperty("line.separator");
@@ -119,6 +126,7 @@ public class Constant {
     public static String FLIGHT_CONTROLLER_BEAN = "flightControllerBean";
     public static String BATTERY_STATE_BEAN = "batteryStateBean";
     public static String flightController = "flightController";
+    public static String RTKBean = "rtkBean";
 
 
     //无人机名字

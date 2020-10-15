@@ -12,6 +12,7 @@ import com.compass.ux.simulator.DJISimulatorApplication;
 import com.compass.ux.takephoto.FPVDemoApplication;
 import com.compass.ux.utils.FileUtils;
 import com.secneo.sdk.Helper;
+import com.tencent.bugly.crashreport.CrashReport;
 
 import java.io.File;
 
@@ -60,6 +61,8 @@ public class MApplication extends Application {
         fpvDemoApplication.onCreate();
 //        simulatorApplication.onCreate();
 //        djiDemoApplication.onCreate();
+
+        CrashReport.initCrashReport(getApplicationContext(), "4a94e8a682", true);
     }
 
 }

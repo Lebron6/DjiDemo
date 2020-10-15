@@ -30,6 +30,27 @@ public class WebInitializationBean {
     private String lockExposure;
     //获取红外的焦距
     private String thermalDigitalZoom;
+    //获取左右俯仰角
+    private String horizontalAngle;
+    //获取上下俯仰角
+    private String pitchAngle;
+
+
+    public String getHorizontalAngle() {
+        return horizontalAngle;
+    }
+
+    public void setHorizontalAngle(String horizontalAngle) {
+        this.horizontalAngle = horizontalAngle;
+    }
+
+    public String getPitchAngle() {
+        return pitchAngle;
+    }
+
+    public void setPitchAngle(String pitchAngle) {
+        this.pitchAngle = pitchAngle;
+    }
 
     public String getThermalDigitalZoom() {
         return thermalDigitalZoom;

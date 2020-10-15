@@ -88,4 +88,6 @@ dependencies {
     implementation 'top.zibin:Luban:1.1.8'
     //权限
     implementation 'com.yanzhenjie:permission:2.0.3'
+    //bugly
+    implementation 'com.tencent.bugly:crashreport:latest.release'
 }
