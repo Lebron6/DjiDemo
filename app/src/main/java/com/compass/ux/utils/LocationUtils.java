@@ -65,19 +65,19 @@ public class LocationUtils {
      * @date 2019/2/15 0015 9:14
      */
     public static double getDistance(String originLon, String originLat, String destinationLon, String destinationLat) {
-        if (!TextUtils.isEmpty(originLon)) {
+        if (TextUtils.isEmpty(originLon)) {
 //            log.error("出发点 经度不可以为空！");
             return 0;
         }
-        if (!TextUtils.isEmpty(originLat)) {
+        if (TextUtils.isEmpty(originLat)) {
 //            log.error("出发点 纬度不可以为空！");
             return 0;
         }
-        if (!TextUtils.isEmpty(destinationLon)) {
+        if (TextUtils.isEmpty(destinationLon)) {
 //            log.error("目的地 经度不可以为空！");
             return 0;
         }
-        if (!TextUtils.isEmpty(destinationLat)) {
+        if (TextUtils.isEmpty(destinationLat)) {
 //            log.error("目的地 纬度不可以为空！");
             return 0;
         }
@@ -90,9 +90,11 @@ public class LocationUtils {
                 + Math.cos(radLat1) * Math.cos(radLat2)
                 * Math.pow(Math.sin(b / 2), 2)));
         s = s * EARTH_RADIUS;
-        // 保留两位小数
-        s = Math.round(s * 100d) / 100d;
+        // 保留四位小数
+        s = Math.round(s * 10000d) / 10000d;
         s = s * 1000;
         return s;
     }
+
+
 }

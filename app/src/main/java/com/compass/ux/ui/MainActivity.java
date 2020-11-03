@@ -1,4 +1,4 @@
-package com.compass.ux;
+package com.compass.ux.ui;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,6 +30,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.compass.ux.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -531,6 +533,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             notifyStatusChange();
 
                         }
+
+                        @Override
+                        public void onProductChanged(BaseProduct baseProduct) {
+
+                        }
+
                         @Override
                         public void onComponentChange(BaseProduct.ComponentKey componentKey, BaseComponent oldComponent,
                                                       BaseComponent newComponent) {

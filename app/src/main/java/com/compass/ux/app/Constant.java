@@ -1,4 +1,4 @@
-package com.compass.ux;
+package com.compass.ux.app;
 
 /**
  * Created by xhf on 2020-06-18
@@ -7,6 +7,7 @@ public class Constant {
     public static final String START_TAKE_OFF="startTakeoff";
     public static final String ENABLE_VIRTUAL_STICK="enableVirtualStick";
     public static final String START_LANDING="startLanding";
+    public static final String CANCEL_LANDING="cancelLanding";
     public static final String DISABLE_VIRTUAL_STICK="disableVirtualStick";
     public static final String RISE_AND_FALL="riseAndFall";
     public static final String TURN_LEFT_AND_TURN_RIGHT="turnLeftAndRight";
@@ -57,6 +58,7 @@ public class Constant {
     public static final String OASS="obstacleAvoidanceSensorState";
     public static final String STORAGE_STATE="storageState";
     public static final String IS_FLYING="isFlying";
+    public static final String GO_HOME_LENGTH="goHomeLength";
     public static final String IS_DOWNLOAD="isDownload";
     public static final String ON_EXECUTION_FINISH="onExecutionFinish";
     public static final String HAVEPIC="isHavePic";
@@ -72,10 +74,10 @@ public class Constant {
     public static final String START_IMU="startIMU";
     public static final String GET_INITIALIZATION_DATA="getInitializationData";
     public static final String IMU_STATUS="imu_status";
-    public static final String GET_LOW_BATTERY="getSettingData";
+    public static final String GET_SETTING_DATA="getSettingData";
     public static final String SET_LOW_BATTERY="setLowBattery";
     public static final String SET_SERIOUS_LOW_BATTERY="setSeriousLowBattery";
-    public static final String SET_SMART_GOHOME="setSmartGohome";
+    public static final String SET_SMART_GOHOME="setSmartGoHome";
     public static final String SET_VISION_ASSISTED="setVisionAssistedPosition";
     public static final String SET_PRECISION_LAND="setPrecisionLand";
     public static final String SET_UPWARDS_AVOIDANCE="setUpwardsAvoidance";
@@ -101,6 +103,7 @@ public class Constant {
     public static final String CONNECT_BS="connectToBaseStation";
     public static final String SET_RSS="setReferenceStationSource";
     public static final String SET_NSCS="setNetworkServiceCoordinateSystem";
+    public static final String LIVE_PATH="livePath";
 
 
     public static String LINE_SEPARATOR=System.getProperty("line.separator");

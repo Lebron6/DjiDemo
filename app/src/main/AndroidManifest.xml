@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.compass.ux">
+    package="com.compass.ux"
+    >
     <!-- Permissions and features -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -42,17 +43,18 @@
     <uses-permission android:name="android.permission.WRITE_SETTINGS" /> <!-- <uses-permission android:name="android.permission.VIBRATE" /> -->
     <!-- <uses-permission android:name="android.permission.WAKE_LOCK" /> -->
     <!-- <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" /> -->
-    <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" />
-
-    <!--bugly-->
-<!--    <uses-permission android:name="android.permission.READ_PHONE_STATE" />-->
-<!--    <uses-permission android:name="android.permission.INTERNET" />-->
-<!--    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />-->
-<!--    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />-->
+    <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" /> <!-- bugly -->
+    <!-- <uses-permission android:name="android.permission.READ_PHONE_STATE" /> -->
+    <!-- <uses-permission android:name="android.permission.INTERNET" /> -->
+    <!-- <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> -->
+    <!-- <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" /> -->
     <uses-permission android:name="android.permission.READ_LOGS" />
 
+    <!-- 开机启动所需权限 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
-        android:name=".MApplication"
+        android:name=".app.MApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -60,12 +62,20 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
+        <activity android:name=".ui.FirstActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
         <uses-library
             android:name="org.apache.http.legacy"
             android:required="false" />
-        <activity android:name=".live.LiveMainActivity"></activity>
-        <activity android:name=".simulator.SimulatorMainActivity">
-        </activity>
+
+        <activity android:name=".live.LiveMainActivity" />
+        <activity android:name=".simulator.SimulatorMainActivity"></activity>
         <activity
             android:name=".TapFlyandActiveTrack.TrackingTestActivity"
             android:label="@string/title_activity_tracking_test"
@@ -82,18 +92,17 @@
             android:name=".TapFlyandActiveTrack.TFMainActivity"
             android:configChanges="orientation|screenSize"
             android:screenOrientation="landscape"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
-        <activity
-            android:name=".GaodeMap.GaodeMainActivity"
-            android:configChanges="orientation|screenSize"
-            android:screenOrientation="landscape" />
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" /> <!-- <activity -->
+        <!-- android:name=".GaodeMap.GaodeMainActivity" -->
+        <!-- android:configChanges="orientation|screenSize" -->
+        <!-- android:screenOrientation="landscape" /> -->
         <activity
             android:name=".downloadpic.DownLoadPicActivity"
             android:screenOrientation="landscape" />
         <activity
             android:name=".downloadpic.DefaultLayoutActivity"
             android:screenOrientation="landscape" />
-        <activity android:name=".live.live.LiveStreamView"/>
+        <activity android:name=".live.live.LiveStreamView" />
 
         <uses-library android:name="com.android.future.usb.accessory" />
 
@@ -118,20 +127,15 @@
 
         <service android:name="dji.sdk.sdkmanager.DJIGlobalService" /> <!-- DJI SDK -->
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:configChanges="orientation"
-            android:screenOrientation="portrait">
-        </activity>
+            android:screenOrientation="portrait"></activity>
         <activity
-            android:name=".ConnectionActivity"
+            android:name=".ui.ConnectionActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
         <activity
             android:name=".takephoto.TakePhotoActivity"
@@ -140,7 +144,29 @@
         <service
             android:name=".netty_lib.NettyService"
             android:enabled="true"
-            android:exported="true"/>
+            android:exported="true" />
+
+        <activity
+            android:name=".crash.DefaultErrorActivity"
+            android:process=":error_activity" />
+
+        <provider
+            android:name=".crash.CaocInitProvider"
+            android:authorities="${applicationId}.customactivityoncrashinitprovider"
+            android:exported="false"
+            android:initOrder="101" />
+
+        <!-- 开机启动 -->
+        <receiver
+            android:name=".app.AutoStartReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <!--.接收启动完成的广播-->
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <category android:name="android.intent.category.HOME"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

@@ -1,6 +1,6 @@
 package com.compass.ux.netty_lib.zhang;
 
-import com.compass.ux.Constant;
+import com.compass.ux.app.Constant;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

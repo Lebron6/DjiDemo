@@ -1,12 +1,8 @@
 package com.compass.ux.netty_lib.netty;
 
 
-import com.compass.ux.Constant;
-import com.compass.ux.MApplication;
-import com.compass.ux.netty_lib.zhang.Communication;
+import com.compass.ux.app.MApplication;
 import com.compass.ux.netty_lib.zhang.ConnectorIdleStateTrigger;
-import com.compass.ux.netty_lib.zhang.Decode;
-import com.compass.ux.netty_lib.zhang.Encode;
 import com.compass.ux.netty_lib.zhang.EventHandle;
 import com.compass.ux.netty_lib.zhang.HeartBeatClientHandler;
 

@@ -55,7 +55,6 @@ import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKInitEvent;
 import dji.sdk.sdkmanager.DJISDKManager;
 import dji.sdk.useraccount.UserAccountManager;
-import dji.ux.widget.TakeOffWidget;
 
 import com.compass.ux.R;
 import com.compass.ux.takephoto.FPVDemoApplication;

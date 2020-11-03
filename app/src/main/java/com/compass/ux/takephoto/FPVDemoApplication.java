@@ -12,6 +12,8 @@ import android.widget.Toast;
 import androidx.core.content.ContextCompat;
 import dji.common.error.DJIError;
 import dji.common.error.DJISDKError;
+import dji.sdk.airlink.AirLink;
+import dji.sdk.airlink.OcuSyncLink;
 import dji.sdk.base.BaseComponent;
 import dji.sdk.camera.Camera;
 import dji.sdk.base.BaseProduct;
@@ -73,6 +75,24 @@ public class FPVDemoApplication extends Application {
 
         return camera;
     }
+
+    public static synchronized AirLink getAirLinkInstance() {
+
+        if (getProductInstance() == null) return null;
+
+        AirLink airLink = null;
+
+        if (getProductInstance() instanceof Aircraft){
+            airLink = ((Aircraft) getProductInstance()).getAirLink();
+
+        } else if (getProductInstance() instanceof HandHeld) {
+            airLink = ((HandHeld) getProductInstance()).getAirLink();
+        }
+
+        return airLink;
+    }
+
+
     public static boolean isAircraftConnected() {
         return getProductInstance() != null && getProductInstance() instanceof Aircraft;
     }
@@ -132,6 +152,12 @@ public class FPVDemoApplication extends Application {
                 notifyStatusChange();
 
             }
+
+            @Override
+            public void onProductChanged(BaseProduct baseProduct) {
+
+            }
+
             @Override
             public void onComponentChange(BaseProduct.ComponentKey componentKey, BaseComponent oldComponent,
                                           BaseComponent newComponent) {

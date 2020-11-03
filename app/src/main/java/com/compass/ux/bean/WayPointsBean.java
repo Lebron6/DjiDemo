@@ -1,4 +1,4 @@
-package com.compass.ux;
+package com.compass.ux.bean;
 
 import java.util.List;
 

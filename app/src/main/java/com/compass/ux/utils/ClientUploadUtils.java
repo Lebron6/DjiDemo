@@ -1,19 +1,26 @@
 package com.compass.ux.utils;
 
-import com.compass.ux.MApplication;
+import com.compass.ux.app.MApplication;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import okhttp3.Headers;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+import dji.thirdparty.okhttp3.MediaType;
+import dji.thirdparty.okhttp3.MultipartBody;
+import dji.thirdparty.okhttp3.OkHttpClient;
+import dji.thirdparty.okhttp3.Request;
+import dji.thirdparty.okhttp3.RequestBody;
+import dji.thirdparty.okhttp3.Response;
+import dji.thirdparty.okhttp3.ResponseBody;
+//import okhttp3.Headers;
+//import okhttp3.MediaType;
+//import okhttp3.MultipartBody;
+//import okhttp3.OkHttpClient;
+//import okhttp3.Request;
+//import okhttp3.RequestBody;
+//import okhttp3.Response;
+//import okhttp3.ResponseBody;
 
 /**
  * Created by xhf

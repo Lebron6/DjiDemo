@@ -2,7 +2,7 @@ package com.compass.ux.netty_lib.netty;
 
 import android.util.Log;
 
-import com.compass.ux.Constant;
+import com.compass.ux.app.Constant;
 import com.compass.ux.netty_lib.constant.UrlConstant;
 import com.compass.ux.netty_lib.zhang.Communication;
 import com.google.gson.Gson;

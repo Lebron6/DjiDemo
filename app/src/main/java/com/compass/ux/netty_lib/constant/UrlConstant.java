@@ -10,7 +10,7 @@ public class UrlConstant {
      */
 //    public static final String SOCKET_HOST = "10.0.1.122";
 //    public static final String SOCKET_HOST = "47.100.42.180";
-//    public static final String SOCKET_HOST = "192.168.43.126";
+//    public static final String SOCKET_HOST = "192.168.8.110";
     public static final String SOCKET_HOST = "61.155.157.42";
     /**
      *  socket 服务器端口号

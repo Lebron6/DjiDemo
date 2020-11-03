@@ -196,6 +196,22 @@ public class FlightControllerBean {
      */
     private int WindSpeed;
 
+    /**
+     * 离家距离
+     * @return
+     */
+    private double goHomeLength;
+
+
+
+    public double getGoHomeLength() {
+        return goHomeLength;
+    }
+
+    public void setGoHomeLength(double goHomeLength) {
+        this.goHomeLength = goHomeLength;
+    }
+
     public int getWindDirection() {
         return WindDirection;
     }

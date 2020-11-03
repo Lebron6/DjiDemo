@@ -76,6 +76,7 @@ public class NettyService extends Service implements NettyListener {
     @Override
     public void onMessageResponse(String messageHolder) {
         notifyData(NettyActivity.MSG_FROM_SERVER, messageHolder);
+        Log.d(TAG, "messageHolder："+messageHolder);
 
     }
 
@@ -95,11 +96,11 @@ public class NettyService extends Service implements NettyListener {
     @Override
     public void onServiceStatusConnectChanged(int statusCode) {
         if (statusCode == NettyListener.STATUS_CONNECT_SUCCESS) {
-            Log.e(TAG, "connect sucessful");
+            Log.d(TAG, "connect sucessful");
             //发送认证
 //            sendAuthor();
         } else {
-            Log.e(TAG, "connect fail statusCode = " + statusCode);
+            Log.d(TAG, "connect fail statusCode = " + statusCode);
             notifyData(NettyActivity.MSG_NET_WORK_ERROR, String.valueOf("服务器连接失败"));
         }
 
@@ -128,7 +129,7 @@ public class NettyService extends Service implements NettyListener {
                 if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI
                         || activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE) {
                     connect();
-                    Log.e(TAG, "connecting ...");
+                    Log.d(TAG, "connecting ...");
                 }
             }
         }

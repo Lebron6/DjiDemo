@@ -3,7 +3,6 @@ package com.compass.ux.downloadpic;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.OrientationHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import dji.common.camera.SettingsDefinitions;
 import dji.common.error.DJICameraError;
@@ -32,7 +31,7 @@ import android.widget.SlidingDrawer;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.compass.ux.MainActivity;
+import com.compass.ux.ui.MainActivity;
 import com.compass.ux.R;
 import com.compass.ux.takephoto.FPVDemoApplication;
 

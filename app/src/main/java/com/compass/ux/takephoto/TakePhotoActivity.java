@@ -24,7 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.compass.ux.MainActivity;
+import com.compass.ux.ui.MainActivity;
 import com.compass.ux.R;
 
 public class TakePhotoActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener, View.OnClickListener {

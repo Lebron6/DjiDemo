@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@color/background_blue"
     android:orientation="horizontal"
-    tools:context=".MainActivity">
+    tools:context=".ui.MainActivity">
 
     <!-- Widget to see first person view (FPV) -->
     <dji.ux.widget.FPVWidget
@@ -56,10 +56,11 @@
             android:layout_width="32dp"
             android:layout_height="25dp"/>
 
-        <dji.ux.widget.BatteryWidget
-            android:layout_width="96dp"
-            android:layout_height="22dp"
-            custom:excludeView="singleVoltage"/>
+<!--        <dji.ux.widget.BatteryWidget-->
+<!--            android:layout_width="96dp"-->
+<!--            android:layout_height="22dp"-->
+<!--            custom:excludeView="singleVoltage"/>-->
+
 
         <dji.ux.widget.ConnectionWidget
             android:layout_marginTop="3dp"
@@ -192,8 +193,8 @@
         android:layout_height="30dp"
         android:layout_alignStart="@+id/CameraCapturePanel"
         android:layout_below="@id/CameraCapturePanel"
-        android:background="@drawable/playback"
         android:visibility="visible" />
+<!--    android:background="@drawable/playback"-->
 
     <!-- Pre-flight checklist panel -->
     <dji.ux.panel.PreFlightCheckListPanel
