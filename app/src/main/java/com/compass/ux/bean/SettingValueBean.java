@@ -16,6 +16,8 @@ public class SettingValueBean {
     //精准着陆
     private boolean precisionLand;
     //障碍物检测
+    private boolean collisionAvoidance;
+    //上避障
     private boolean upwardsAvoidance;
 //    上避障安全距离范围为[1.0，10]
     private String avoidanceDistanceUpward;
@@ -44,6 +46,75 @@ public class SettingValueBean {
     //干扰功率范围为[-60，-100] dBm。较小的负值表示干扰较小，通信质量较好。所有中文自己根据值写一下
     private String interferencePower;
 
+    //云台俯仰限位扩展
+    private boolean pitchRangeExtension;
+    //云台偏航俯仰缓启停
+    private String pitch_CSF;
+    private String yaw_CSF;
+    //返航高度
+    private String goHomeHeightInMeters="";
+    //限高
+    private String maxFlightHeight="";
+    //限远
+    private String maxFlightRadius="";
+    //限远开关
+    private boolean maxFlightRadiusLimitationEnabled;
+
+    public String getGoHomeHeightInMeters() {
+        return goHomeHeightInMeters;
+    }
+
+    public void setGoHomeHeightInMeters(String goHomeHeightInMeters) {
+        this.goHomeHeightInMeters = goHomeHeightInMeters;
+    }
+
+    public String getMaxFlightHeight() {
+        return maxFlightHeight;
+    }
+
+    public void setMaxFlightHeight(String maxFlightHeight) {
+        this.maxFlightHeight = maxFlightHeight;
+    }
+
+    public String getMaxFlightRadius() {
+        return maxFlightRadius;
+    }
+
+    public void setMaxFlightRadius(String maxFlightRadius) {
+        this.maxFlightRadius = maxFlightRadius;
+    }
+
+    public boolean isMaxFlightRadiusLimitationEnabled() {
+        return maxFlightRadiusLimitationEnabled;
+    }
+
+    public void setMaxFlightRadiusLimitationEnabled(boolean maxFlightRadiusLimitationEnabled) {
+        this.maxFlightRadiusLimitationEnabled = maxFlightRadiusLimitationEnabled;
+    }
+
+    public String getPitch_CSF() {
+        return pitch_CSF;
+    }
+
+    public void setPitch_CSF(String pitch_CSF) {
+        this.pitch_CSF = pitch_CSF;
+    }
+
+    public String getYaw_CSF() {
+        return yaw_CSF;
+    }
+
+    public void setYaw_CSF(String yaw_CSF) {
+        this.yaw_CSF = yaw_CSF;
+    }
+
+    public boolean isPitchRangeExtension() {
+        return pitchRangeExtension;
+    }
+
+    public void setPitchRangeExtension(boolean pitchRangeExtension) {
+        this.pitchRangeExtension = pitchRangeExtension;
+    }
 
     public String getChannelBandwidth() {
         return channelBandwidth;
@@ -196,4 +267,14 @@ public class SettingValueBean {
     public void setMaxPerceptionDistanceDownward(String maxPerceptionDistanceDownward) {
         this.maxPerceptionDistanceDownward = maxPerceptionDistanceDownward;
     }
+
+
+    public boolean isCollisionAvoidance() {
+        return collisionAvoidance;
+    }
+
+    public void setCollisionAvoidance(boolean collisionAvoidance) {
+        this.collisionAvoidance = collisionAvoidance;
+    }
+
 }

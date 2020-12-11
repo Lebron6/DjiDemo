@@ -64,6 +64,8 @@ public class Constant {
     public static final String HAVEPIC="isHavePic";
     public static final String DISTANCE_GO_HOME="distanceGoHome";
     public static final String SET_CONNECT_FAIL_BEHAVIOR="setConnectionFailSafeBehavior";
+    public static final String SET_HY_DISPLAY_MODE="setHyDisplayMode";
+    public static final String TRANSMISSION_SET_BEAN="transmissionSetBean";
 
 
 
@@ -104,6 +106,9 @@ public class Constant {
     public static final String SET_RSS="setReferenceStationSource";
     public static final String SET_NSCS="setNetworkServiceCoordinateSystem";
     public static final String LIVE_PATH="livePath";
+    public static final String PITCH_RANGE_EXTENSION="pitchRangeExtension";
+    public static final String SET_FREQUENCY_BAND="setFrequencyBand";
+    public static final String SET_GIMBAL_MODE="setGimbalMode";
 
 
     public static String LINE_SEPARATOR=System.getProperty("line.separator");

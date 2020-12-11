@@ -35,6 +35,30 @@ public class RTKBean {
     private String baseStationReceiverGLONASSInfo;
     private String baseStationReceiverGalileoInfo;
 
+    //判断rtk是否正在使用
+    private boolean isRTKBeingUsed;
+    //离原点的距离
+    private String distanceToHomePoint;
+
+    public String getDistanceToHomePoint() {
+        return distanceToHomePoint;
+    }
+
+    public void setDistanceToHomePoint(String distanceToHomePoint) {
+        this.distanceToHomePoint = distanceToHomePoint;
+    }
+
+
+
+    public boolean isRTKBeingUsed() {
+        return isRTKBeingUsed;
+    }
+
+    public void setRTKBeingUsed(boolean RTKBeingUsed) {
+        isRTKBeingUsed = RTKBeingUsed;
+    }
+
+
 
 
     public String getBaseStationLatitude() {

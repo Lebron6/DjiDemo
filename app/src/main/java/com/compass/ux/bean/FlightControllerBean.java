@@ -201,6 +201,20 @@ public class FlightControllerBean {
      * @return
      */
     private double goHomeLength;
+    /**
+     * 表示航向，以度为单位。真北为0度，正向为北以东，负向为北以西。航向范围是[-180，180]。
+     */
+    private String heading;
+
+    public String getHeading() {
+        return heading;
+    }
+
+    public void setHeading(String heading) {
+        this.heading = heading;
+    }
+
+
 
 
 

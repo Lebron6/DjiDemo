@@ -35,6 +35,55 @@ public class WebInitializationBean {
     //获取上下俯仰角
     private String pitchAngle;
 
+    //获取四个灯光
+    private String beacons;
+    private String front;
+    private String rear;
+    private String statusIndicator;
+
+    public String getCurrentVideoSource() {
+        return currentVideoSource;
+    }
+
+    public void setCurrentVideoSource(String currentVideoSource) {
+        this.currentVideoSource = currentVideoSource;
+    }
+
+    //当前流是不是fpv
+    private String currentVideoSource;
+
+
+    public String getBeacons() {
+        return beacons;
+    }
+
+    public void setBeacons(String beacons) {
+        this.beacons = beacons;
+    }
+
+    public String getFront() {
+        return front;
+    }
+
+    public void setFront(String front) {
+        this.front = front;
+    }
+
+    public String getRear() {
+        return rear;
+    }
+
+    public void setRear(String rear) {
+        this.rear = rear;
+    }
+
+    public String getStatusIndicator() {
+        return statusIndicator;
+    }
+
+    public void setStatusIndicator(String statusIndicator) {
+        this.statusIndicator = statusIndicator;
+    }
 
     public String getHorizontalAngle() {
         return horizontalAngle;

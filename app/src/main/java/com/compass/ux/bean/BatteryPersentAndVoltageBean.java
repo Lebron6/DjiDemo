@@ -19,6 +19,10 @@ public class BatteryPersentAndVoltageBean {
     private List<Float> battery_list_one;
     //电池2电压组
     private List<Float> battery_list_two;
+    //电池1电量组
+    private List<String> battery_list_per_one;
+    //电池2电量组
+    private List<String> battery_list_per_two;
     //温度1
     private String battery_temperature_one;
     //温度2
@@ -27,6 +31,22 @@ public class BatteryPersentAndVoltageBean {
     private String battery_discharges_one;
     //循环次数2
     private String battery_discharges_two;
+
+    public List<String> getBattery_list_per_one() {
+        return battery_list_per_one;
+    }
+
+    public void setBattery_list_per_one(List<String> battery_list_per_one) {
+        this.battery_list_per_one = battery_list_per_one;
+    }
+
+    public List<String> getBattery_list_per_two() {
+        return battery_list_per_two;
+    }
+
+    public void setBattery_list_per_two(List<String> battery_list_per_two) {
+        this.battery_list_per_two = battery_list_per_two;
+    }
 
     public String getBattery_discharges_one() {
         return battery_discharges_one;
