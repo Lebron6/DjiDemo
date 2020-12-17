@@ -124,14 +124,12 @@ import com.compass.ux.app.MApplication;
 import com.compass.ux.R;
 import com.compass.ux.bean.BatteryPersentAndVoltageBean;
 import com.compass.ux.bean.FlightControllerBean;
-import com.compass.ux.bean.IMUStateBean;
 import com.compass.ux.bean.LaserMeasureInformBean;
 import com.compass.ux.bean.RTKBean;
 import com.compass.ux.bean.SettingValueBean;
 import com.compass.ux.bean.ObstacleAvoidanceSensorStateBean;
 import com.compass.ux.bean.StorageStateBean;
 import com.compass.ux.bean.StringsBean;
-import com.compass.ux.bean.TextMessageBean;
 import com.compass.ux.bean.TransmissionSetBean;
 import com.compass.ux.bean.WayPointsBean;
 import com.compass.ux.bean.WebInitializationBean;
@@ -144,7 +142,6 @@ import com.compass.ux.takephoto.FPVDemoApplication;
 import com.compass.ux.utils.ClientUploadUtils;
 import com.compass.ux.utils.DateTransformationUtils;
 import com.compass.ux.utils.DeleteUtil;
-import com.compass.ux.utils.FileUtils;
 import com.compass.ux.utils.LocationUtils;
 import com.compass.ux.utils.MapConvertUtils;
 import com.compass.ux.utils.fastClick;
@@ -160,7 +157,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static dji.common.camera.CameraVideoStreamSource.DEFAULT;
 import static dji.common.camera.CameraVideoStreamSource.INFRARED_THERMAL;
@@ -183,16 +179,9 @@ import static dji.keysdk.FlightControllerKey.WIND_SPEED;
 import static dji.sdk.codec.DJICodecManager.VideoSource.CAMERA;
 import static dji.sdk.codec.DJICodecManager.VideoSource.FPV;
 
-/**
- * 1.判断无人机关机 重启app
- * 2.推流地址和设备名建议服务器给
- */
 public class ConnectionActivity extends NettyActivity implements View.OnClickListener, TextureView.SurfaceTextureListener, DJIDiagnostics.DiagnosticsInformationCallback, RTK.RTKBaseStationListCallback {
     private String liveShowUrl = "";
-
     private static final String TAG = ConnectionActivity.class.getName();
-
-
     private TextView mTextConnectionStatus;
     private TextView mTextProduct;
     private TextView mVersionTv;
@@ -320,15 +309,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         }
                         communication_plane_status.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                         communication_plane_status.setEquipmentId(MApplication.EQUIPMENT_ID);
-                        communication_plane_status.setMethod(RsaUtil.encrypt(Constant.LINK_PLANE_STATUS));
+                        communication_plane_status.setMethod((Constant.LINK_PLANE_STATUS));
                         communication_plane_status.setResult(gson.toJson(stringsBean, StringsBean.class));
                         NettyClient.getInstance().sendMessage(communication_plane_status, null);
-//                        runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                Toast.makeText(ConnectionActivity.this, o.toString(), Toast.LENGTH_SHORT).show();
-//                            }
-//                        });
                     }
 
                     @Override
@@ -346,7 +329,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }
             communication_up_link.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
             communication_up_link.setEquipmentId(MApplication.EQUIPMENT_ID);
-            communication_up_link.setMethod(RsaUtil.encrypt(Constant.UP_LOAD_SIGNAL));
+            communication_up_link.setMethod((Constant.UP_LOAD_SIGNAL));
             communication_up_link.setResult(gson.toJson(upLinkBean, StringsBean.class));
             NettyClient.getInstance().sendMessage(communication_up_link, null);
             //每秒返回视图信号
@@ -357,7 +340,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }
             communication_down_link.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
             communication_down_link.setEquipmentId(MApplication.EQUIPMENT_ID);
-            communication_down_link.setMethod(RsaUtil.encrypt(Constant.DOWN_LOAD_SIGNAL));
+            communication_down_link.setMethod((Constant.DOWN_LOAD_SIGNAL));
             communication_down_link.setResult(gson.toJson(upLinkBean, StringsBean.class));
             NettyClient.getInstance().sendMessage(communication_down_link, null);
 
@@ -372,13 +355,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }
             communication_TSB.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
             communication_TSB.setEquipmentId(MApplication.EQUIPMENT_ID);
-            communication_TSB.setMethod(RsaUtil.encrypt(Constant.TRANSMISSION_SET_BEAN));
+            communication_TSB.setMethod((Constant.TRANSMISSION_SET_BEAN));
             communication_TSB.setResult(gson.toJson(transmissionSetBean, TransmissionSetBean.class));
             NettyClient.getInstance().sendMessage(communication_TSB, null);
         }
     };
-    private long planeStartFlyTime;//记录起飞时间
-    private boolean isStartShootOrRecord = false;//判断起飞后有没有拍照或录像
     private Handler handlerStartDownload = new Handler();
     private Runnable runnableStartDownload = new Runnable() {
         public void run() {
@@ -392,8 +373,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }
             communication_download_pic.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
             communication_download_pic.setEquipmentId(MApplication.EQUIPMENT_ID);
-            communication_download_pic.setMethod(RsaUtil.encrypt(Constant.IS_DOWNLOAD));
-//            communication_download_pic.setResult(gson.toJson(sb, StringsBean.class));
+            communication_download_pic.setMethod((Constant.IS_DOWNLOAD));
             communication_download_pic.setResult("1");
             NettyClient.getInstance().sendMessage(communication_download_pic, null);
 
@@ -436,7 +416,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             public void onReceive(byte[] videoBuffer, int size) {
                 if (mCodecManager != null) {
                     mCodecManager.sendDataToDecoder(videoBuffer, size);
-//                    mCodecManager.switchSource(CAMERA);
                 }
             }
         };
@@ -493,14 +472,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
 
                 VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(mReceivedVideoDataListener);
-//                VideoFeeder.getInstance().getPrimaryVideoFeed().setPriority(VideoFeedPriority.HIGH, new CommonCallbacks.CompletionCallback() {
-//                    @Override
-//                    public void onResult(DJIError djiError) {
-//
-//                    }
-//                });
-//                transcodingDataRate = VideoFeeder.getInstance().getTranscodingDataRate() + "";
-//                Log.d("WifiChannelInterference","transcodingDataRate="+transcodingDataRate);
                 String cvs = VideoFeeder.getInstance().getPrimaryVideoFeed().getVideoSource().value() + "";
                 if (cvs.equals("5")) {
                     currentVideoSource = "1";
@@ -515,7 +486,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
     private void uninitPreviewer() {
-//        camera = FPVDemoApplication.getCameraInstance();
         if (camera != null) {
             // Reset the callback
             VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(null);
@@ -681,9 +651,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     }
                 });
 
-              /*  ToastUtils.setResultToToast("startLive:" + result +
-                        "\n isVideoStreamSpeedConfigurable:" + DJISDKManager.getInstance().getLiveStreamManager().isVideoStreamSpeedConfigurable() +
-                        "\n isLiveAudioEnabled:" + DJISDKManager.getInstance().getLiveStreamManager().isLiveAudioEnabled());*/
             }
         }.start();
     }
@@ -914,7 +881,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 }
                                 communication_isFlying.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                                 communication_isFlying.setEquipmentId(MApplication.EQUIPMENT_ID);
-                                communication_isFlying.setMethod(RsaUtil.encrypt(Constant.IS_FLYING));
+                                communication_isFlying.setMethod((Constant.IS_FLYING));
 //                        communication_isFlying.setResult(gson.toJson(beans, StringsBean.class));
                                 communication_isFlying.setResult(isFlying ? "1" : "0");
                                 NettyClient.getInstance().sendMessage(communication_isFlying, null);
@@ -998,7 +965,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                     }
                                     communication_length.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                                     communication_length.setEquipmentId(MApplication.EQUIPMENT_ID);
-                                    communication_length.setMethod(RsaUtil.encrypt(Constant.DISTANCE_GO_HOME));
+                                    communication_length.setMethod((Constant.DISTANCE_GO_HOME));
 //                            communication_length.setResult(gson.toJson(beans, StringsBean.class));
                                     communication_length.setResult(lastDistance ? "1" : "0");
                                     NettyClient.getInstance().sendMessage(communication_length, null);
@@ -1020,7 +987,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                     }
                                     communication_gohomelength.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                                     communication_gohomelength.setEquipmentId(MApplication.EQUIPMENT_ID);
-                                    communication_gohomelength.setMethod(RsaUtil.encrypt(Constant.GO_HOME_LENGTH));
+                                    communication_gohomelength.setMethod((Constant.GO_HOME_LENGTH));
                                     communication_gohomelength.setResult(goHomelength + "");
                                     NettyClient.getInstance().sendMessage(communication_gohomelength, null);
                                 }
@@ -1190,7 +1157,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 }
                                 communication_flightController.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                                 communication_flightController.setEquipmentId(MApplication.EQUIPMENT_ID);
-                                communication_flightController.setMethod(RsaUtil.encrypt(Constant.flightController));
+                                communication_flightController.setMethod((Constant.flightController));
                                 communication_flightController.setResult(gson.toJson(flightControllerBean, FlightControllerBean.class));
 //                        Log.d("MMMMM",communication_flightController.toString());
                                 NettyClient.getInstance().sendMessage(communication_flightController, null);
@@ -1228,7 +1195,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                    }
 //                    communication_imu_status.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
 //                    communication_imu_status.setEquipmentId(MApplication.EQUIPMENT_ID);
-//                    communication_imu_status.setMethod(RsaUtil.encrypt(IMU_STATUS));
+//                    communication_imu_status.setMethod((IMU_STATUS));
 //                    communication_imu_status.setResult(gson.toJson(imuStateBean, IMUStateBean.class));
 //                    NettyClient.getInstance().sendMessage(communication_imu_status, null);
 //                }
@@ -1465,45 +1432,45 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
                 if (mRTK != null) {
                     //rtk的状态
-                    mRTK.setStateCallback(new RTKState.Callback() {
-                        @Override
-                        public void onUpdate(RTKState rtkState) {
-                            if (fastClick.flightControllerClick()) {
-                                if (rtkBean == null) {
-                                    rtkBean = new RTKBean();
-                                }
-                                rtkBean.setFusionMobileStationLatitude(rtkState.getFusionMobileStationLocation().getLatitude() + "");
-                                rtkBean.setFusionMobileStationLatitude(rtkState.getFusionMobileStationLocation().getLongitude() + "");
-                                rtkBean.setFusionMobileStationLatitude(rtkState.getFusionHeading() + "");
-                                rtkBean.setBaseStationLatitude(rtkState.getBaseStationLocation().getLatitude() + "");
-                                rtkBean.setBaseStationLongitude(rtkState.getBaseStationLocation().getLongitude() + "");
-                                rtkBean.setBaseStationAltitude(rtkState.getBaseStationAltitude() + "");
-                                rtkBean.setMobileStationReceiver1GPSInfo(rtkState.getMobileStationReceiver1GPSInfo().getSatelliteCount() + "");
-                                rtkBean.setMobileStationReceiver1BeiDouInfo(rtkState.getMobileStationReceiver1BeiDouInfo().getSatelliteCount() + "");
-                                rtkBean.setMobileStationReceiver1GalileoInfo(rtkState.getMobileStationReceiver1GalileoInfo().getSatelliteCount() + "");
-                                rtkBean.setMobileStationReceiver1GLONASSInfo(rtkState.getMobileStationReceiver1GLONASSInfo() + "");
-                                rtkBean.setMobileStationReceiver2GPSInfo(rtkState.getMobileStationReceiver2GPSInfo().getSatelliteCount() + "");
-                                rtkBean.setMobileStationReceiver2BeiDouInfo(rtkState.getMobileStationReceiver2BeiDouInfo().getSatelliteCount() + "");
-                                rtkBean.setMobileStationReceiver2GalileoInfo(rtkState.getMobileStationReceiver2GalileoInfo().getSatelliteCount() + "");
-                                rtkBean.setMobileStationReceiver2GLONASSInfo(rtkState.getMobileStationReceiver2GLONASSInfo() + "");
-                                rtkBean.setBaseStationReceiverGPSInfo(rtkState.getBaseStationReceiverGPSInfo().getSatelliteCount() + "");
-                                rtkBean.setBaseStationReceiverBeiDouInfo(rtkState.getBaseStationReceiverBeiDouInfo() + "");
-                                rtkBean.setBaseStationReceiverGalileoInfo(rtkState.getBaseStationReceiverGalileoInfo().getSatelliteCount() + "");
-                                rtkBean.setBaseStationReceiverGLONASSInfo(rtkState.getBaseStationReceiverGLONASSInfo().getSatelliteCount() + "");
-                                rtkBean.setDistanceToHomePoint(rtkState.getDistanceToHomePoint() + "");
-                                rtkBean.setRTKBeingUsed(rtkState.isRTKBeingUsed());
-                                if (communication_rtk == null) {
-                                    communication_rtk = new Communication();
-                                }
-                                communication_rtk.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                                communication_rtk.setEquipmentId(MApplication.EQUIPMENT_ID);
-                                communication_rtk.setMethod(RsaUtil.encrypt(Constant.RTKBean));
-                                communication_rtk.setResult(gson.toJson(rtkBean, RTKBean.class));
-//                        Log.d("MMMMM",communication_flightController.toString());
-                                NettyClient.getInstance().sendMessage(communication_rtk, null);
-                            }
-                        }
-                    });
+//                    mRTK.setStateCallback(new RTKState.Callback() {
+//                        @Override
+//                        public void onUpdate(RTKState rtkState) {
+//                            if (fastClick.flightControllerClick()) {
+//                                if (rtkBean == null) {
+//                                    rtkBean = new RTKBean();
+//                                }
+//                                rtkBean.setFusionMobileStationLatitude(rtkState.getFusionMobileStationLocation().getLatitude() + "");
+//                                rtkBean.setFusionMobileStationLatitude(rtkState.getFusionMobileStationLocation().getLongitude() + "");
+//                                rtkBean.setFusionMobileStationLatitude(rtkState.getFusionHeading() + "");
+//                                rtkBean.setBaseStationLatitude(rtkState.getBaseStationLocation().getLatitude() + "");
+//                                rtkBean.setBaseStationLongitude(rtkState.getBaseStationLocation().getLongitude() + "");
+//                                rtkBean.setBaseStationAltitude(rtkState.getBaseStationAltitude() + "");
+//                                rtkBean.setMobileStationReceiver1GPSInfo(rtkState.getMobileStationReceiver1GPSInfo().getSatelliteCount() + "");
+//                                rtkBean.setMobileStationReceiver1BeiDouInfo(rtkState.getMobileStationReceiver1BeiDouInfo().getSatelliteCount() + "");
+//                                rtkBean.setMobileStationReceiver1GalileoInfo(rtkState.getMobileStationReceiver1GalileoInfo().getSatelliteCount() + "");
+//                                rtkBean.setMobileStationReceiver1GLONASSInfo(rtkState.getMobileStationReceiver1GLONASSInfo() + "");
+//                                rtkBean.setMobileStationReceiver2GPSInfo(rtkState.getMobileStationReceiver2GPSInfo().getSatelliteCount() + "");
+//                                rtkBean.setMobileStationReceiver2BeiDouInfo(rtkState.getMobileStationReceiver2BeiDouInfo().getSatelliteCount() + "");
+//                                rtkBean.setMobileStationReceiver2GalileoInfo(rtkState.getMobileStationReceiver2GalileoInfo().getSatelliteCount() + "");
+//                                rtkBean.setMobileStationReceiver2GLONASSInfo(rtkState.getMobileStationReceiver2GLONASSInfo() + "");
+//                                rtkBean.setBaseStationReceiverGPSInfo(rtkState.getBaseStationReceiverGPSInfo().getSatelliteCount() + "");
+//                                rtkBean.setBaseStationReceiverBeiDouInfo(rtkState.getBaseStationReceiverBeiDouInfo() + "");
+//                                rtkBean.setBaseStationReceiverGalileoInfo(rtkState.getBaseStationReceiverGalileoInfo().getSatelliteCount() + "");
+//                                rtkBean.setBaseStationReceiverGLONASSInfo(rtkState.getBaseStationReceiverGLONASSInfo().getSatelliteCount() + "");
+//                                rtkBean.setDistanceToHomePoint(rtkState.getDistanceToHomePoint() + "");
+//                                rtkBean.setRTKBeingUsed(rtkState.isRTKBeingUsed());
+//                                if (communication_rtk == null) {
+//                                    communication_rtk = new Communication();
+//                                }
+//                                communication_rtk.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                                communication_rtk.setEquipmentId(MApplication.EQUIPMENT_ID);
+//                                communication_rtk.setMethod((Constant.RTKBean));
+//                                communication_rtk.setResult(gson.toJson(rtkBean, RTKBean.class));
+////                        Log.d("MMMMM",communication_flightController.toString());
+//                                NettyClient.getInstance().sendMessage(communication_rtk, null);
+//                            }
+//                        }
+//                    });
 
 //                    RTKNetworkServiceProvider provider = RTKNetworkServiceProvider.getInstance();
 //                    provider.addNetworkServiceStateCallback(new NetworkServiceState.Callback() {
@@ -1561,7 +1528,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                            }
 //                            communication_perception_data.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
 //                            communication_perception_data.setEquipmentId(MApplication.EQUIPMENT_ID);
-//                            communication_perception_data.setMethod(RsaUtil.encrypt(Constant.PERCEPTION_DATA));
+//                            communication_perception_data.setMethod((Constant.PERCEPTION_DATA));
 //                            communication_perception_data.setResult(gson.toJson(perceptionBean, PerceptionBean.class));
 //                            NettyClient.getInstance().sendMessage(communication_perception_data, null);
 //                        }
@@ -1595,7 +1562,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             }
                             communication_ObstacleAvoidanceSensorState.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                             communication_ObstacleAvoidanceSensorState.setEquipmentId(MApplication.EQUIPMENT_ID);
-                            communication_ObstacleAvoidanceSensorState.setMethod(RsaUtil.encrypt(Constant.OASS));
+                            communication_ObstacleAvoidanceSensorState.setMethod((Constant.OASS));
                             communication_ObstacleAvoidanceSensorState.setResult(gson.toJson(bean, ObstacleAvoidanceSensorStateBean.class));
                             NettyClient.getInstance().sendMessage(communication_ObstacleAvoidanceSensorState, null);
                         }
@@ -1819,7 +1786,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     }
                     communication_StorageState.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                     communication_StorageState.setEquipmentId(MApplication.EQUIPMENT_ID);
-                    communication_StorageState.setMethod(RsaUtil.encrypt(Constant.STORAGE_STATE));
+                    communication_StorageState.setMethod((Constant.STORAGE_STATE));
                     communication_StorageState.setResult(gson.toJson(bean, StorageStateBean.class));
                     NettyClient.getInstance().sendMessage(communication_StorageState, null);
                 }
@@ -2190,210 +2157,209 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
         communication_battery.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
         communication_battery.setEquipmentId(MApplication.EQUIPMENT_ID);
-        communication_battery.setMethod(RsaUtil.encrypt(Constant.BatteryPAV));
+        communication_battery.setMethod((Constant.BatteryPAV));
         communication_battery.setResult(gson.toJson(batteryPersentAndVoltageBean, BatteryPersentAndVoltageBean.class));
         NettyClient.getInstance().sendMessage(communication_battery, null);
     }
 
 
-    private void initMediaManager() {
-        isStartShootOrRecord = false;
-        if (FPVDemoApplication.getProductInstance() == null) {
-            mediaFileList.clear();
-            Log.e(TAG, "Product disconnected");
-            return;
-        } else {
-            if (null != FPVDemoApplication.getCameraInstance() && FPVDemoApplication.getCameraInstance().isMediaDownloadModeSupported()) {
-                mMediaManager = FPVDemoApplication.getCameraInstance().getMediaManager();
-                if (null != mMediaManager) {
-                    mMediaManager.addUpdateFileListStateListener(this.updateFileListStateListener);
-                    //这个是老方法 m300不适用
-//                    调用的setMode()方法，Camera并将CameraMode设置为MEDIA_DOWNLOAD。
-//                    并调用该getFileList()方法以获取媒体文件列表。
-//                    最后，初始化FetchMediaTaskScheduler来安排获取媒体文件任务。
-//                    camera.setMode(SettingsDefinitions.CameraMode.MEDIA_DOWNLOAD, new CommonCallbacks.CompletionCallback() {
+//    private void initMediaManager() {
+//        if (FPVDemoApplication.getProductInstance() == null) {
+//            mediaFileList.clear();
+//            Log.e(TAG, "Product disconnected");
+//            return;
+//        } else {
+//            if (null != FPVDemoApplication.getCameraInstance() && FPVDemoApplication.getCameraInstance().isMediaDownloadModeSupported()) {
+//                mMediaManager = FPVDemoApplication.getCameraInstance().getMediaManager();
+//                if (null != mMediaManager) {
+//                    mMediaManager.addUpdateFileListStateListener(this.updateFileListStateListener);
+//                    //这个是老方法 m300不适用
+////                    调用的setMode()方法，Camera并将CameraMode设置为MEDIA_DOWNLOAD。
+////                    并调用该getFileList()方法以获取媒体文件列表。
+////                    最后，初始化FetchMediaTaskScheduler来安排获取媒体文件任务。
+////                    camera.setMode(SettingsDefinitions.CameraMode.MEDIA_DOWNLOAD, new CommonCallbacks.CompletionCallback() {
+////                        @Override
+////                        public void onResult(DJIError error) {
+////                            if (error == null) {
+////                                Toast.makeText(ConnectionActivity.this, "Set cameraMode success", Toast.LENGTH_SHORT).show();
+////                                getFileList();
+////                            } else {
+////                                Log.e(TAG, "Set cameraMode failed " + error.toString());
+////                                Toast.makeText(ConnectionActivity.this, "Set cameraMode failed " + error.toString(), Toast.LENGTH_LONG).show();
+////                                Communication communication = new Communication();
+////                                communication.setResult(error.getDescription());
+////                                communication.setCode(-1);
+////                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+////                                NettyClient.getInstance().sendMessage(communication, null);
+////                            }
+////                        }
+////                    });
+//
+//                    camera.enterPlayback(new CommonCallbacks.CompletionCallback() {
 //                        @Override
-//                        public void onResult(DJIError error) {
-//                            if (error == null) {
-//                                Toast.makeText(ConnectionActivity.this, "Set cameraMode success", Toast.LENGTH_SHORT).show();
+//                        public void onResult(DJIError djiError) {
+//                            if (djiError == null) {
+////                                Toast.makeText(ConnectionActivity.this, "Set cameraMode success", Toast.LENGTH_SHORT).show();
+//                                Log.e("downLoadPic", "Set cameraDownloadMode success ");
 //                                getFileList();
 //                            } else {
-//                                Log.e(TAG, "Set cameraMode failed " + error.toString());
-//                                Toast.makeText(ConnectionActivity.this, "Set cameraMode failed " + error.toString(), Toast.LENGTH_LONG).show();
+//
+////                                if (mMediaManager != null) {
+////                                    mMediaManager.stop(null);
+//////                                    mMediaManager.removeFileListStateCallback(this.updateFileListStateListener);
+//////            调用exitMediaDownloading()方法以退出MEDIA_DOWNLOAD模式并进入SHOOT_PHOTO模式
+////                                    mMediaManager.exitMediaDownloading();
+////                                }
+//                                Log.e("downLoadPic", "Set cameraDownloadMode failed " + djiError.toString());
+//                                Toast.makeText(ConnectionActivity.this, "Set cameraMode failed " + djiError.toString(), Toast.LENGTH_LONG).show();
 //                                Communication communication = new Communication();
-//                                communication.setResult(error.getDescription());
+//                                communication.setResult(djiError.getDescription());
 //                                communication.setCode(-1);
 //                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
 //                                NettyClient.getInstance().sendMessage(communication, null);
+//
 //                            }
 //                        }
 //                    });
-
-                    camera.enterPlayback(new CommonCallbacks.CompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            if (djiError == null) {
-//                                Toast.makeText(ConnectionActivity.this, "Set cameraMode success", Toast.LENGTH_SHORT).show();
-                                Log.e("downLoadPic", "Set cameraDownloadMode success ");
-                                getFileList();
-                            } else {
-
-//                                if (mMediaManager != null) {
-//                                    mMediaManager.stop(null);
-////                                    mMediaManager.removeFileListStateCallback(this.updateFileListStateListener);
-////            调用exitMediaDownloading()方法以退出MEDIA_DOWNLOAD模式并进入SHOOT_PHOTO模式
-//                                    mMediaManager.exitMediaDownloading();
-//                                }
-                                Log.e("downLoadPic", "Set cameraDownloadMode failed " + djiError.toString());
-                                Toast.makeText(ConnectionActivity.this, "Set cameraMode failed " + djiError.toString(), Toast.LENGTH_LONG).show();
-                                Communication communication = new Communication();
-                                communication.setResult(djiError.getDescription());
-                                communication.setCode(-1);
-                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                                NettyClient.getInstance().sendMessage(communication, null);
-
-                            }
-                        }
-                    });
-
-//                    if (mMediaManager.isVideoPlaybackSupported()) {
-//                        Log.e(TAG, "Camera support video playback!");
-//                    } else {
-//                        Log.e(TAG, "Camera does not support video playback!");
-//                    }
-//                    scheduler = mMediaManager.getScheduler();
-                }
-
-            } else if (null != FPVDemoApplication.getCameraInstance()
-                    && !FPVDemoApplication.getCameraInstance().isMediaDownloadModeSupported()) {
-                Log.e(TAG, "Media Download Mode not Supported");
-            }
-        }
-        return;
-    }
+//
+////                    if (mMediaManager.isVideoPlaybackSupported()) {
+////                        Log.e(TAG, "Camera support video playback!");
+////                    } else {
+////                        Log.e(TAG, "Camera does not support video playback!");
+////                    }
+////                    scheduler = mMediaManager.getScheduler();
+//                }
+//
+//            } else if (null != FPVDemoApplication.getCameraInstance()
+//                    && !FPVDemoApplication.getCameraInstance().isMediaDownloadModeSupported()) {
+//                Log.e(TAG, "Media Download Mode not Supported");
+//            }
+//        }
+//        return;
+//    }
 
     /**
      * 在该getFileList()方法中，我们获取最新的mMediaManager对象并检查其是否不为null。
      * 然后检查currentFileListState变量的值。如果状态既不是SYNCING也不为DELETING，
      * 则调用的refreshFileListOfStorageLocation()方法MediaManager以从SD卡刷新文件列表
      */
-    private void getFileList() {
-        mMediaManager = FPVDemoApplication.getCameraInstance().getMediaManager();
-        if (mMediaManager != null) {
-
-            if ((currentFileListState == MediaManager.FileListState.SYNCING) || (currentFileListState == MediaManager.FileListState.DELETING)) {
-//                Toast.makeText(ConnectionActivity.this, "Media Manager is busy.", Toast.LENGTH_SHORT).show();
-                Log.e("downLoadPic", "Media Manager is busy.");
-            } else {
-
-                mMediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.SDCARD, new CommonCallbacks.CompletionCallback() {
-                    //                    在onResult()回调方法中，如果没有错误，则检查currentFileListState值是否不相等，
-//                    MediaManager.FileListState.INCOMPLETE
-//                    然后重置mediaFileList列表，lastClickViewIndex和lastClickView变量。
-                    @Override
-                    public void onResult(DJIError djiError) {
-                        if (null == djiError) {
-//                            hideProgressDialog();
-
-                            //Reset data
-                            if (currentFileListState != MediaManager.FileListState.INCOMPLETE) {
-                                mediaFileList.clear();
-//                                lastClickViewIndex = -1;
-//                                lastClickView = null;
-                            }
-//                            mediaFileList根据创建的时间对中的媒体文件进行排序。然后，
-//                            调用的resume()方法FetchMediaTaskScheduler以恢复调度程序，
-//                            并getThumbnails()在onResult()回调方法中调用该方法。
-//                            如果存在错误，请调用该hideProgressDialog()方法以隐藏进度对话框。
-
-                            mediaFileList = mMediaManager.getSDCardFileListSnapshot();
-                            //这是排序
-                            Collections.sort(mediaFileList, new Comparator<MediaFile>() {
-                                @Override
-                                public int compare(MediaFile lhs, MediaFile rhs) {
-                                    if (lhs.getTimeCreated() < rhs.getTimeCreated()) {
-                                        return 1;
-                                    } else if (lhs.getTimeCreated() > rhs.getTimeCreated()) {
-                                        return -1;
-                                    }
-                                    return 0;
-                                }
-                            });
-                            //拿到起飞后最新的列表只要起飞后拍的
-
-
-                            for (int i = 0; i < mediaFileList.size(); i++) {
-                                Log.e("downLoadPic", "StartFlyTime:" + planeStartFlyTime + "TimeCreated:" + mediaFileList.get(i).getTimeCreated());
-                                if (mediaFileList.get(i).getTimeCreated() - planeStartFlyTime < 0) {
-                                    mediaFileList.remove(i);
-                                    i--;
-                                }
-                            }
-                            //测试 只传一个
+//    private void getFileList() {
+//        mMediaManager = FPVDemoApplication.getCameraInstance().getMediaManager();
+//        if (mMediaManager != null) {
+//
+//            if ((currentFileListState == MediaManager.FileListState.SYNCING) || (currentFileListState == MediaManager.FileListState.DELETING)) {
+////                Toast.makeText(ConnectionActivity.this, "Media Manager is busy.", Toast.LENGTH_SHORT).show();
+//                Log.e("downLoadPic", "Media Manager is busy.");
+//            } else {
+//
+//                mMediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.SDCARD, new CommonCallbacks.CompletionCallback() {
+//                    //                    在onResult()回调方法中，如果没有错误，则检查currentFileListState值是否不相等，
+////                    MediaManager.FileListState.INCOMPLETE
+////                    然后重置mediaFileList列表，lastClickViewIndex和lastClickView变量。
+//                    @Override
+//                    public void onResult(DJIError djiError) {
+//                        if (null == djiError) {
+////                            hideProgressDialog();
+//
+//                            //Reset data
+//                            if (currentFileListState != MediaManager.FileListState.INCOMPLETE) {
+//                                mediaFileList.clear();
+////                                lastClickViewIndex = -1;
+////                                lastClickView = null;
+//                            }
+////                            mediaFileList根据创建的时间对中的媒体文件进行排序。然后，
+////                            调用的resume()方法FetchMediaTaskScheduler以恢复调度程序，
+////                            并getThumbnails()在onResult()回调方法中调用该方法。
+////                            如果存在错误，请调用该hideProgressDialog()方法以隐藏进度对话框。
+//
+//                            mediaFileList = mMediaManager.getSDCardFileListSnapshot();
+//                            //这是排序
+//                            Collections.sort(mediaFileList, new Comparator<MediaFile>() {
+//                                @Override
+//                                public int compare(MediaFile lhs, MediaFile rhs) {
+//                                    if (lhs.getTimeCreated() < rhs.getTimeCreated()) {
+//                                        return 1;
+//                                    } else if (lhs.getTimeCreated() > rhs.getTimeCreated()) {
+//                                        return -1;
+//                                    }
+//                                    return 0;
+//                                }
+//                            });
+//                            //拿到起飞后最新的列表只要起飞后拍的
+//
+//
 //                            for (int i = 0; i < mediaFileList.size(); i++) {
-//                                if (i == 1) {
+//                                Log.e("downLoadPic", "StartFlyTime:" + planeStartFlyTime + "TimeCreated:" + mediaFileList.get(i).getTimeCreated());
+//                                if (mediaFileList.get(i).getTimeCreated() - planeStartFlyTime < 0) {
 //                                    mediaFileList.remove(i);
 //                                    i--;
 //                                }
 //                            }
-                            if (mediaFileList.size() > 0) {
-                                Log.e("downLoadPic", "可以去下载 ");
-                                downloadPic();
-                                //发消息给后台开始下载
-                                //循环1s去传开始下载传给后台
-                                handlerStartDownload.post(runnableStartDownload);
-                                StringsBean beans = new StringsBean();
-                                beans.setValue("1");
-                                if (communication_havePic == null) {
-                                    communication_havePic = new Communication();
-                                }
-                                communication_havePic.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                                communication_havePic.setEquipmentId(MApplication.EQUIPMENT_ID);
-                                communication_havePic.setMethod(RsaUtil.encrypt(Constant.HAVEPIC));
-//                                communication_havePic.setResult(gson.toJson(beans, StringsBean.class));
-                                communication_havePic.setResult("1");
-                            } else {
-                                Log.e("downLoadPic", "没有图片可下载 ");
-                                StringsBean beans = new StringsBean();
-                                beans.setValue("0");
-                                if (communication_havePic == null) {
-                                    communication_havePic = new Communication();
-                                }
-                                communication_havePic.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                                communication_havePic.setEquipmentId(MApplication.EQUIPMENT_ID);
-                                communication_havePic.setMethod(RsaUtil.encrypt(Constant.HAVEPIC));
-//                                communication_havePic.setResult(gson.toJson(beans, StringsBean.class));
-                                communication_havePic.setResult("0");
-
-                            }
-
-//                            Toast.makeText(ConnectionActivity.this, "拿到list去下载" + mediaFileList.size(), Toast.LENGTH_SHORT).show();
-//                            scheduler.resume(new CommonCallbacks.CompletionCallback() {
-//                                @Override
-//                                public void onResult(DJIError error) {
-//                                    if (error == null) {
-//                                        getThumbnails();
-//                                    }
+//                            //测试 只传一个
+////                            for (int i = 0; i < mediaFileList.size(); i++) {
+////                                if (i == 1) {
+////                                    mediaFileList.remove(i);
+////                                    i--;
+////                                }
+////                            }
+//                            if (mediaFileList.size() > 0) {
+//                                Log.e("downLoadPic", "可以去下载 ");
+//                                downloadPic();
+//                                //发消息给后台开始下载
+//                                //循环1s去传开始下载传给后台
+//                                handlerStartDownload.post(runnableStartDownload);
+//                                StringsBean beans = new StringsBean();
+//                                beans.setValue("1");
+//                                if (communication_havePic == null) {
+//                                    communication_havePic = new Communication();
 //                                }
-//                            });
-                        } else {
-//                            hideProgressDialog();
-//                            setResultToToast("Get Media File List Failed:" + djiError.getDescription());
-                            if (communication_takePhoto == null) {
-                                communication_takePhoto = new Communication();
-                            }
-                            communication_takePhoto.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                            communication_takePhoto.setEquipmentId(MApplication.EQUIPMENT_ID);
-                            communication_takePhoto.setCode(-1);
-                            communication_takePhoto.setMethod(RsaUtil.encrypt(Constant.PHOTO_UP_LOAD));
-                            communication_takePhoto.setResult(djiError.getDescription());
-                            NettyClient.getInstance().sendMessage(communication_takePhoto, null);
-                        }
-                    }
-                });
-            }
-        }
-    }
+//                                communication_havePic.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                                communication_havePic.setEquipmentId(MApplication.EQUIPMENT_ID);
+//                                communication_havePic.setMethod((Constant.HAVEPIC));
+////                                communication_havePic.setResult(gson.toJson(beans, StringsBean.class));
+//                                communication_havePic.setResult("1");
+//                            } else {
+//                                Log.e("downLoadPic", "没有图片可下载 ");
+//                                StringsBean beans = new StringsBean();
+//                                beans.setValue("0");
+//                                if (communication_havePic == null) {
+//                                    communication_havePic = new Communication();
+//                                }
+//                                communication_havePic.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                                communication_havePic.setEquipmentId(MApplication.EQUIPMENT_ID);
+//                                communication_havePic.setMethod((Constant.HAVEPIC));
+////                                communication_havePic.setResult(gson.toJson(beans, StringsBean.class));
+//                                communication_havePic.setResult("0");
+//
+//                            }
+//
+////                            Toast.makeText(ConnectionActivity.this, "拿到list去下载" + mediaFileList.size(), Toast.LENGTH_SHORT).show();
+////                            scheduler.resume(new CommonCallbacks.CompletionCallback() {
+////                                @Override
+////                                public void onResult(DJIError error) {
+////                                    if (error == null) {
+////                                        getThumbnails();
+////                                    }
+////                                }
+////                            });
+//                        } else {
+////                            hideProgressDialog();
+////                            setResultToToast("Get Media File List Failed:" + djiError.getDescription());
+//                            if (communication_takePhoto == null) {
+//                                communication_takePhoto = new Communication();
+//                            }
+//                            communication_takePhoto.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                            communication_takePhoto.setEquipmentId(MApplication.EQUIPMENT_ID);
+//                            communication_takePhoto.setCode(-1);
+//                            communication_takePhoto.setMethod((Constant.PHOTO_UP_LOAD));
+//                            communication_takePhoto.setResult(djiError.getDescription());
+//                            NettyClient.getInstance().sendMessage(communication_takePhoto, null);
+//                        }
+//                    }
+//                });
+//            }
+//        }
+//    }
 
 
     private void downloadPic() {
@@ -2420,7 +2386,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     communication_takePhoto.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                     communication_takePhoto.setEquipmentId(MApplication.EQUIPMENT_ID);
                     communication_takePhoto.setCode(-1);
-                    communication_takePhoto.setMethod(RsaUtil.encrypt(Constant.PHOTO_UP_LOAD));
+                    communication_takePhoto.setMethod((Constant.PHOTO_UP_LOAD));
                     communication_takePhoto.setResult(error.getDescription());
                     NettyClient.getInstance().sendMessage(communication_takePhoto, null);
                     Log.e("downLoadPic", "下载到平板失败 " + error.toString());
@@ -2437,11 +2403,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         }
                         communication_download_pic.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                         communication_download_pic.setEquipmentId(MApplication.EQUIPMENT_ID);
-                        communication_download_pic.setMethod(RsaUtil.encrypt(Constant.IS_DOWNLOAD));
+                        communication_download_pic.setMethod((Constant.IS_DOWNLOAD));
 //                        communication_download_pic.setResult(gson.toJson(sb, StringsBean.class));
                         communication_download_pic.setResult("0");
                         NettyClient.getInstance().sendMessage(communication_download_pic, null);
-                        isStartShootOrRecord = false;
                     }
 
 //                    if (mMediaManager != null) {
@@ -2495,10 +2460,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         }
                         communication_download_pic.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                         communication_download_pic.setEquipmentId(MApplication.EQUIPMENT_ID);
-                        communication_download_pic.setMethod(RsaUtil.encrypt(Constant.IS_DOWNLOAD));
+                        communication_download_pic.setMethod((Constant.IS_DOWNLOAD));
                         communication_download_pic.setResult(gson.toJson(sb, StringsBean.class));
                         NettyClient.getInstance().sendMessage(communication_download_pic, null);
-                        isStartShootOrRecord = false;
                     }
                 }
             });
@@ -2610,8 +2574,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             return;
         }
         Communication communication = gson.fromJson(json, Communication.class);
-        String method = RsaUtil.decrypt(communication.getMethod());
-        communication.setMethod(RsaUtil.encrypt(method));
+//        String method = RsaUtil.decrypt(communication.getMethod());
+        String method = communication.getMethod();
+        communication.setMethod((method));
+
         switch (method) {
             case Constant.LIVE_PATH://后台拿到的推流地址
                 liveShowUrl = communication.getPara().get("desRtmpUrl");
@@ -2621,8 +2587,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 break;
             //起飞
             case Constant.START_TAKE_OFF:
-                planeStartFlyTime = DateTransformationUtils.timeStamp();
-                Log.e("downLoadPic", "StartFlyTime:" + planeStartFlyTime);
                 DeleteUtil.deleteDirectory(destDirName);//删除本地文件
                 if (camera != null) {
                     camera.exitPlayback(new CommonCallbacks.CompletionCallback() {
@@ -2692,7 +2656,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 break;
             //航线自动飞行开始
             case Constant.WAYPOINT_FLY_START:
-                planeStartFlyTime = DateTransformationUtils.timeStamp();
                 startWaypointMission(communication);
                 break;
             //航线自动飞行停止
@@ -2974,6 +2937,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             //设置红外展示模式
             case Constant.SET_HY_DISPLAY_MODE:
                 setHyDisplayMode(communication);
+                break;
+            case "print":
+                TestPrint(communication);
                 break;
 
 
@@ -3521,7 +3487,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                         NettyClient.getInstance().sendMessage(communication, null);
                     } else {
-                        isStartShootOrRecord = true;
                         communication.setResult("成功");
                         communication.setCode(200);
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
@@ -3549,7 +3514,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                         NettyClient.getInstance().sendMessage(communication, null);
                     } else {
-                        isStartShootOrRecord = true;
                         communication.setResult("成功");
                         communication.setCode(200);
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
@@ -3578,7 +3542,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                         NettyClient.getInstance().sendMessage(communication, null);
                     } else {
-                        isStartShootOrRecord = true;
                         communication.setResult("成功");
                         communication.setCode(200);
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
@@ -3720,7 +3683,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     }
                     communication_laser_status.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                     communication_laser_status.setEquipmentId(MApplication.EQUIPMENT_ID);
-                    communication_laser_status.setMethod(RsaUtil.encrypt(Constant.LASER_DATA));
+                    communication_laser_status.setMethod((Constant.LASER_DATA));
                     communication_laser_status.setResult(gson.toJson(bean, LaserMeasureInformBean.class));
                     NettyClient.getInstance().sendMessage(communication_laser_status, null);
                 }
@@ -4167,7 +4130,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
         communication.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
         communication.setEquipmentId(MApplication.EQUIPMENT_ID);
-        communication.setMethod(RsaUtil.encrypt(Constant.GET_SETTING_DATA));
+        communication.setMethod((Constant.GET_SETTING_DATA));
         communication.setResult(gson.toJson(settingValueBean, SettingValueBean.class));
         NettyClient.getInstance().sendMessage(communication, null);
     }
@@ -4745,7 +4708,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }
             communication_error_log.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
             communication_error_log.setEquipmentId(MApplication.EQUIPMENT_ID);
-            communication_error_log.setMethod(RsaUtil.encrypt(Constant.DIAGNOSTICS));
+            communication_error_log.setMethod((Constant.DIAGNOSTICS));
             communication_error_log.setResult(gson.toJson(stringsBean));
             NettyClient.getInstance().sendMessage(communication_error_log, null);
         }
@@ -4768,7 +4731,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }
             communication_BS_info.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
             communication_BS_info.setEquipmentId(MApplication.EQUIPMENT_ID);
-            communication_BS_info.setMethod(RsaUtil.encrypt(Constant.BS_INFO));
+            communication_BS_info.setMethod((Constant.BS_INFO));
             communication_BS_info.setResult(gson.toJson(stringsBean));
             NettyClient.getInstance().sendMessage(communication_BS_info, null);
         }
@@ -5648,7 +5611,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 }
                 communication_onExecutionFinish.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                 communication_onExecutionFinish.setEquipmentId(MApplication.EQUIPMENT_ID);
-                communication_onExecutionFinish.setMethod(RsaUtil.encrypt(Constant.ON_EXECUTION_FINISH));
+                communication_onExecutionFinish.setMethod((Constant.ON_EXECUTION_FINISH));
                 communication_onExecutionFinish.setResult("1");
                 NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
                 Log.d("WMUEWMUE", "推送已发送");
@@ -5673,7 +5636,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //            }
 //            communication_onExecutionFinish.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
 //            communication_onExecutionFinish.setEquipmentId(MApplication.EQUIPMENT_ID);
-//            communication_onExecutionFinish.setMethod(RsaUtil.encrypt(Constant.ON_EXECUTION_FINISH));
+//            communication_onExecutionFinish.setMethod((Constant.ON_EXECUTION_FINISH));
 //            communication_onExecutionFinish.setResult("2");
 //            NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
         }
@@ -5692,6 +5655,13 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
             NettyClient.getInstance().sendMessage(communication, null);
         }
+    }
+
+    private void TestPrint(Communication communication){
+        communication.setResult("true");
+        communication.setCode(200);
+        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+        NettyClient.getInstance().sendMessage(communication, null);
     }
 
 

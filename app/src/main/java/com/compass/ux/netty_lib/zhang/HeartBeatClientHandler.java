@@ -45,7 +45,7 @@ public class HeartBeatClientHandler extends ChannelInboundHandlerAdapter {
     Communication communication=new Communication();
     communication.setEquipmentId(apronId);
 //    communication.setMethod("register");
-    String register=RsaUtil.encrypt("register");
+    String register="register";
     Log.d(TAG,"register="+register);
     communication.setMethod(register);
 

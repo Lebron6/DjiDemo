@@ -16,7 +16,7 @@ import com.tencent.bugly.crashreport.CrashReport;
  * Created by xhf on 2020-06-08
  */
 public class MApplication extends Application {
-//    public static String EQUIPMENT_ID= RsaUtil.encrypt("Mobile_01");
+//    public static String EQUIPMENT_ID= "Mobile_01";
     public static String EQUIPMENT_ID="";
     public static String UPLOAD_URL="http://61.155.157.42:7070/oauth/file/upload";
     public static boolean HAVE_Permission=false;

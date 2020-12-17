@@ -110,7 +110,7 @@ public class FirstActivity extends AppCompatActivity {
 
             if (!TextUtils.isEmpty(text_message)) {
                 TextMessageBean textMessageBean = gson.fromJson(text_message, TextMessageBean.class);
-                String mobile_Id = RsaUtil.encrypt(textMessageBean.getEquip_id());
+                String mobile_Id = textMessageBean.getEquip_id();
                 MApplication.EQUIPMENT_ID = mobile_Id;
                 MApplication.UPLOAD_URL = textMessageBean.getUpload_url();
                 Log.d("FileUtils", "FileUtils=" + mobile_Id);
@@ -170,7 +170,7 @@ public class FirstActivity extends AppCompatActivity {
 
                 if (!TextUtils.isEmpty(text_message)) {
                     TextMessageBean textMessageBean = gson.fromJson(text_message, TextMessageBean.class);
-                    String mobile_Id = RsaUtil.encrypt(textMessageBean.getEquip_id());
+                    String mobile_Id = textMessageBean.getEquip_id();
                     MApplication.EQUIPMENT_ID = mobile_Id;
                     MApplication.UPLOAD_URL = textMessageBean.getUpload_url();
                     Log.d("FileUtils", "FileUtils=" + mobile_Id);

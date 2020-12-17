@@ -110,7 +110,7 @@ public class NettyClient {
             return;
         }
         String responseJson=gson.toJson(vo,Communication.class);
-        responseJson+= Constant.LINE_SEPARATOR;
+//        responseJson+= Constant.LINE_SEPARATOR;
         if (futureListener == null) {
             channel.writeAndFlush(responseJson).addListener(new FutureListener() {
 
