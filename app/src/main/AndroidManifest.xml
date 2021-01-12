@@ -27,7 +27,8 @@
         android:required="false" />
     <uses-feature
         android:name="android.hardware.usb.accessory"
-        android:required="true" /> <!-- 这些是高德地图要用到的 -->
+        android:required="true" />
+    <!-- 这些是高德地图要用到的 -->
     <!-- <uses-permission android:name="android.permission.BLUETOOTH" /> -->
     <!-- <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" /> -->
     <!-- <uses-permission android:name="android.permission.INTERNET" /> -->
@@ -66,9 +67,9 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.HOME" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.MONKEY"/>
+<!--                <category android:name="android.intent.category.HOME" />-->
+<!--                <category android:name="android.intent.category.DEFAULT" />-->
+<!--                <category android:name="android.intent.category.MONKEY"/>-->
             </intent-filter>
         </activity>
 
@@ -98,12 +99,12 @@
         <!-- android:name=".GaodeMap.GaodeMainActivity" -->
         <!-- android:configChanges="orientation|screenSize" -->
         <!-- android:screenOrientation="landscape" /> -->
-        <activity
-            android:name=".downloadpic.DownLoadPicActivity"
-            android:screenOrientation="landscape" />
-        <activity
-            android:name=".downloadpic.DefaultLayoutActivity"
-            android:screenOrientation="landscape" />
+<!--        <activity-->
+<!--            android:name=".downloadpic.DownLoadPicActivity"-->
+<!--            android:screenOrientation="landscape" />-->
+<!--        <activity-->
+<!--            android:name=".downloadpic.DefaultLayoutActivity"-->
+<!--            android:screenOrientation="landscape" />-->
         <activity android:name=".live.live.LiveStreamView" />
 
         <uses-library android:name="com.android.future.usb.accessory" />

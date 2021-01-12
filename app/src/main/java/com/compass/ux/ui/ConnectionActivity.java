@@ -948,11 +948,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                     flightControllerBean = new FlightControllerBean();
                                 }
 
-                                Log.d("FFFFFF", "length:" + length + "goHomelength:" + goHomelength);
                                 //当2个值不一样就发
                                 if (goHomelength != length) {
                                     goHomelength = length;
-                                    Log.d("FFFFFF2", "length:" + length + "goHomelength:" + goHomelength);
                                     //回家距离
                                     if (communication_gohomelength == null) {
                                         communication_gohomelength = new Communication();
@@ -1254,6 +1252,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     @Override
                     public void onSuccess(Boolean aBoolean) {
                         maxFlightRadiusLimitationEnabled = aBoolean;
+                        Toast.makeText(ConnectionActivity.this,"FRLimitation"+maxFlightRadiusLimitationEnabled,Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
@@ -1511,38 +1510,38 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //
 //                    }
 //                });
-
-                    mFlightController.getFlightAssistant().setObstacleAvoidanceSensorStateListener(new CommonCallbacks.CompletionCallbackWith<ObstacleAvoidanceSensorState>() {
-                        @Override
-                        public void onSuccess(ObstacleAvoidanceSensorState obstacleAvoidanceSensorState) {
-                            ObstacleAvoidanceSensorStateBean bean = new ObstacleAvoidanceSensorStateBean();
-                            bean.setAreObstacleAvoidanceSensorsInHorizo​​ntalDirectionEnabled(obstacleAvoidanceSensorState.areObstacleAvoidanceSensorsInHorizontalDirectionEnabled());
-                            bean.setAreObstacleAvoidanceSensorsInHorizo​​ntalDirectionWorking(obstacleAvoidanceSensorState.areObstacleAvoidanceSensorsInHorizontalDirectionWorking());
-                            bean.setAreObstacleAvoidanceSensorsInVerticalDirectionEnabled(obstacleAvoidanceSensorState.areObstacleAvoidanceSensorsInVerticalDirectionEnabled());
-                            bean.setAreObstacleAvoidanceSensorsInVerticalDirectionWorking(obstacleAvoidanceSensorState.areObstacleAvoidanceSensorsInVerticalDirectionWorking());
-                            bean.setUpwardObstacleAvoidanceSensorEnabled(obstacleAvoidanceSensorState.isUpwardObstacleAvoidanceSensorEnabled());
-                            bean.setUpwardObstacleAvoidanceSensorWorking(obstacleAvoidanceSensorState.isUpwardObstacleAvoidanceSensorWorking());
-                            bean.setLeftSideObstacleAvoidanceSensorEnabled(obstacleAvoidanceSensorState.isLeftSideObstacleAvoidanceSensorEnabled());
-                            bean.setLeftSideObstacleAvoidanceSensorWorking(obstacleAvoidanceSensorState.isLeftSideObstacleAvoidanceSensorWorking());
-                            bean.setRightSideObstacleAvoidanceSensorEnabled(obstacleAvoidanceSensorState.isRightSideObstacleAvoidanceSensorEnabled());
-                            bean.setRightSideObstacleAvoidanceSensorWorking(obstacleAvoidanceSensorState.isRightSideObstacleAvoidanceSensorWorking());
-                            bean.setBackwardObstacleAvoidanceSensorEnabled(obstacleAvoidanceSensorState.isBackwardObstacleAvoidanceSensorEnabled());
-                            bean.setBackwardObstacleAvoidanceSensorWorking(obstacleAvoidanceSensorState.isBackwardObstacleAvoidanceSensorWorking());
-
-                            if (communication_ObstacleAvoidanceSensorState == null) {
-                                communication_ObstacleAvoidanceSensorState = new Communication();
-                            }
-                            communication_ObstacleAvoidanceSensorState.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                            communication_ObstacleAvoidanceSensorState.setEquipmentId(MApplication.EQUIPMENT_ID);
-                            communication_ObstacleAvoidanceSensorState.setMethod((Constant.OASS));
-                            communication_ObstacleAvoidanceSensorState.setResult(gson.toJson(bean, ObstacleAvoidanceSensorStateBean.class));
-                            NettyClient.getInstance().sendMessage(communication_ObstacleAvoidanceSensorState, null);
-                        }
-
-                        @Override
-                        public void onFailure(DJIError djiError) {
-                        }
-                    });
+                        //避障4.14没用了
+//                    mFlightController.getFlightAssistant().setObstacleAvoidanceSensorStateListener(new CommonCallbacks.CompletionCallbackWith<ObstacleAvoidanceSensorState>() {
+//                        @Override
+//                        public void onSuccess(ObstacleAvoidanceSensorState obstacleAvoidanceSensorState) {
+//                            ObstacleAvoidanceSensorStateBean bean = new ObstacleAvoidanceSensorStateBean();
+//                            bean.setAreObstacleAvoidanceSensorsInHorizo​​ntalDirectionEnabled(obstacleAvoidanceSensorState.areObstacleAvoidanceSensorsInHorizontalDirectionEnabled());
+//                            bean.setAreObstacleAvoidanceSensorsInHorizo​​ntalDirectionWorking(obstacleAvoidanceSensorState.areObstacleAvoidanceSensorsInHorizontalDirectionWorking());
+//                            bean.setAreObstacleAvoidanceSensorsInVerticalDirectionEnabled(obstacleAvoidanceSensorState.areObstacleAvoidanceSensorsInVerticalDirectionEnabled());
+//                            bean.setAreObstacleAvoidanceSensorsInVerticalDirectionWorking(obstacleAvoidanceSensorState.areObstacleAvoidanceSensorsInVerticalDirectionWorking());
+//                            bean.setUpwardObstacleAvoidanceSensorEnabled(obstacleAvoidanceSensorState.isUpwardObstacleAvoidanceSensorEnabled());
+//                            bean.setUpwardObstacleAvoidanceSensorWorking(obstacleAvoidanceSensorState.isUpwardObstacleAvoidanceSensorWorking());
+//                            bean.setLeftSideObstacleAvoidanceSensorEnabled(obstacleAvoidanceSensorState.isLeftSideObstacleAvoidanceSensorEnabled());
+//                            bean.setLeftSideObstacleAvoidanceSensorWorking(obstacleAvoidanceSensorState.isLeftSideObstacleAvoidanceSensorWorking());
+//                            bean.setRightSideObstacleAvoidanceSensorEnabled(obstacleAvoidanceSensorState.isRightSideObstacleAvoidanceSensorEnabled());
+//                            bean.setRightSideObstacleAvoidanceSensorWorking(obstacleAvoidanceSensorState.isRightSideObstacleAvoidanceSensorWorking());
+//                            bean.setBackwardObstacleAvoidanceSensorEnabled(obstacleAvoidanceSensorState.isBackwardObstacleAvoidanceSensorEnabled());
+//                            bean.setBackwardObstacleAvoidanceSensorWorking(obstacleAvoidanceSensorState.isBackwardObstacleAvoidanceSensorWorking());
+//
+//                            if (communication_ObstacleAvoidanceSensorState == null) {
+//                                communication_ObstacleAvoidanceSensorState = new Communication();
+//                            }
+//                            communication_ObstacleAvoidanceSensorState.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                            communication_ObstacleAvoidanceSensorState.setEquipmentId(MApplication.EQUIPMENT_ID);
+//                            communication_ObstacleAvoidanceSensorState.setMethod((Constant.OASS));
+//                            communication_ObstacleAvoidanceSensorState.setResult(gson.toJson(bean, ObstacleAvoidanceSensorStateBean.class));
+//                            NettyClient.getInstance().sendMessage(communication_ObstacleAvoidanceSensorState, null);
+//                        }
+//
+//                        @Override
+//                        public void onFailure(DJIError djiError) {
+//                        }
+//                    });
                     mFlightAssistant.getVisualObstaclesAvoidanceDistance(Upward, new CommonCallbacks.CompletionCallbackWith<Float>() {
                         @Override
                         public void onSuccess(Float aFloat) {
@@ -3586,36 +3585,39 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private void setMaxFlightRadiusLimit(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
         String value = communication.getPara().get(Constant.VALUE);
-        mFlightController.setMaxFlightRadiusLimitationEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                if (djiError == null) {
-                    maxFlightRadiusLimitationEnabled = type.equals("1") ? true : false;
-                    if (maxFlightRadiusLimitationEnabled) {
-                        mFlightController.setMaxFlightRadius(Integer.parseInt(value), new CommonCallbacks.CompletionCallback() {
-                            @Override
-                            public void onResult(DJIError djiError) {
-                                if (djiError == null) {
-                                    maxFlightRadius = value;
+        if(mFlightController!=null){
+            mFlightController.setMaxFlightRadiusLimitationEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if (djiError == null) {
+                        maxFlightRadiusLimitationEnabled = type.equals("1") ? true : false;
+                        if (maxFlightRadiusLimitationEnabled) {
+                            mFlightController.setMaxFlightRadius(Integer.parseInt(value), new CommonCallbacks.CompletionCallback() {
+                                @Override
+                                public void onResult(DJIError djiError) {
+                                    if (djiError == null) {
+                                        maxFlightRadius = value;
+                                    }
+                                    CommonDjiCallback(djiError, communication);
                                 }
-                                CommonDjiCallback(djiError, communication);
-                            }
-                        });
+                            });
+                        } else {
+                            communication.setResult("success");
+                            communication.setCode(200);
+                            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                            NettyClient.getInstance().sendMessage(communication, null);
+                        }
+
                     } else {
-                        communication.setResult("success");
-                        communication.setCode(200);
+                        communication.setResult(djiError.toString());
+                        communication.setCode(-1);
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                         NettyClient.getInstance().sendMessage(communication, null);
                     }
-
-                } else {
-                    communication.setResult(djiError.toString());
-                    communication.setCode(-1);
-                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    NettyClient.getInstance().sendMessage(communication, null);
                 }
-            }
-        });
+            });
+        }
+
 
 
     }
