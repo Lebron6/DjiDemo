@@ -8,8 +8,8 @@ android {
         applicationId "com.compass.ux"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 1
-        versionName "0.0.2"
+        versionCode 4
+        versionName "0.0.4"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
         ndk {
@@ -74,11 +74,11 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     //集成大疆无人机
-//    implementation 'com.dji:dji-uxsdk:4.12'
-//    compileOnly 'com.dji:dji-sdk-provided:4.12'
-
     implementation 'com.dji:dji-sdk:4.13.1'
     compileOnly 'com.dji:dji-sdk-provided:4.13.1'
+
+//    implementation 'com.dji:dji-sdk:4.14trial1'
+//    compileOnly 'com.dji:dji-sdk-provided:4.14trial1'
 
     implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0-rc01'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'

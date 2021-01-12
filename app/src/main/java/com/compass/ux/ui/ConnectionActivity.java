@@ -79,9 +79,6 @@ import dji.sdk.flightcontroller.FlightAssistant;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.flightcontroller.RTK;
 import dji.sdk.gimbal.Gimbal;
-import dji.sdk.media.DownloadListener;
-import dji.sdk.media.MediaFile;
-import dji.sdk.media.MediaManager;
 import dji.sdk.mission.waypoint.WaypointMissionOperator;
 import dji.sdk.mission.waypoint.WaypointMissionOperatorListener;
 import dji.sdk.network.RTKNetworkServiceProvider;
@@ -227,9 +224,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private Gson gson = new Gson();
 
 
-    private List<MediaFile> mediaFileList = new ArrayList<MediaFile>();
-    private MediaManager mMediaManager;
-    private MediaManager.FileListState currentFileListState = MediaManager.FileListState.UNKNOWN;
     VideoFeeder.VideoDataListener mReceivedVideoDataListener = null;
     DJICodecManager mCodecManager = null;
     TextureView mVideoSurface = null;
@@ -344,20 +338,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             communication_down_link.setResult(gson.toJson(upLinkBean, StringsBean.class));
             NettyClient.getInstance().sendMessage(communication_down_link, null);
 
-            //每秒返回设置中的图传参数
-            TransmissionSetBean transmissionSetBean = new TransmissionSetBean();
-            transmissionSetBean.setChannelBandwidth(channelBandwidth);
-            transmissionSetBean.setFrequencyBand(frequencyBand);
-            transmissionSetBean.setInterferencePower(interferencePower);
-            transmissionSetBean.setTranscodingDataRate(transcodingDataRate);
-            if (communication_TSB == null) {
-                communication_TSB = new Communication();
-            }
-            communication_TSB.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-            communication_TSB.setEquipmentId(MApplication.EQUIPMENT_ID);
-            communication_TSB.setMethod((Constant.TRANSMISSION_SET_BEAN));
-            communication_TSB.setResult(gson.toJson(transmissionSetBean, TransmissionSetBean.class));
-            NettyClient.getInstance().sendMessage(communication_TSB, null);
+
         }
     };
     private Handler handlerStartDownload = new Handler();
@@ -510,15 +491,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
         removeWaypointMissionListener();
         uninitPreviewer();
-        if (mMediaManager != null) {
-            mMediaManager.stop(null);
-            mMediaManager.removeFileListStateCallback(this.updateFileListStateListener);
-//            调用exitMediaDownloading()方法以退出MEDIA_DOWNLOAD模式并进入SHOOT_PHOTO模式
-            mMediaManager.exitMediaDownloading();
-//            if (scheduler!=null) {
-//                scheduler.removeAllTasks();
-//            }
-        }
         planeStatusHandler.removeCallbacks(planeStatusTask);//关闭轮询
         if (DJISDKManager.getInstance().getProduct() != null) {
             DJISDKManager.getInstance().getProduct().setDiagnosticsInformationCallback(this);//关闭错误日志
@@ -932,26 +904,26 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                     }
 
                                 }
-                                Log.d(TAG, "=====================================================");
-                                Log.d(TAG, "卫星数=" + flightControllerState.getSatelliteCount() + "");
-//                        Log.d(TAG, "windDirection=" + windDirection + "");
-//                        Log.d(TAG, "windSpeed=" + windSpeed + "");
-                                Log.d(TAG, "飞机的高度=" + flightControllerState.getUltrasonicHeightInMeters());//低于5米才有参考价值
-                                Log.d(TAG, "getFlightModeString=" + flightControllerState.getFlightModeString());
-                                Log.d(TAG, "getAircraftHeadDirection=" + flightControllerState.getAircraftHeadDirection());
-                                Log.d(TAG, "当前电量能干嘛=" + flightControllerState.getBatteryThresholdBehavior());
-                                Log.d(TAG, "getVelocityX=" + flightControllerState.getVelocityX());
-                                Log.d(TAG, "getVelocityY=" + flightControllerState.getVelocityY());
-                                Log.d(TAG, "getVelocityZ=" + flightControllerState.getVelocityZ());
-                                Log.d(TAG, "HomeLocation.getLatitude=" + flightControllerState.getHomeLocation().getLatitude());
-                                Log.d(TAG, "HomeLocation.getLongitude=" + flightControllerState.getHomeLocation().getLongitude());
-                                Log.d(TAG, "pitch=" + flightControllerState.getAttitude().pitch);
-                                Log.d(TAG, "roll=" + flightControllerState.getAttitude().roll);
-                                Log.d(TAG, "yaw=" + flightControllerState.getAttitude().yaw);
-                                Log.d(TAG, "纬度=" + flightControllerState.getAircraftLocation().getLatitude());
-                                Log.d(TAG, "经度=" + flightControllerState.getAircraftLocation().getLongitude());
-                                Log.d(TAG, "海拔=" + flightControllerState.getAircraftLocation().getAltitude());
-                                Log.d(TAG, "IslandingConfirmationNeeded=" + flightControllerState.isLandingConfirmationNeeded() + "");
+//                                Log.d(TAG, "=====================================================");
+//                                Log.d(TAG, "卫星数=" + flightControllerState.getSatelliteCount() + "");
+////                        Log.d(TAG, "windDirection=" + windDirection + "");
+////                        Log.d(TAG, "windSpeed=" + windSpeed + "");
+//                                Log.d(TAG, "飞机的高度=" + flightControllerState.getUltrasonicHeightInMeters());//低于5米才有参考价值
+//                                Log.d(TAG, "getFlightModeString=" + flightControllerState.getFlightModeString());
+//                                Log.d(TAG, "getAircraftHeadDirection=" + flightControllerState.getAircraftHeadDirection());
+//                                Log.d(TAG, "当前电量能干嘛=" + flightControllerState.getBatteryThresholdBehavior());
+//                                Log.d(TAG, "getVelocityX=" + flightControllerState.getVelocityX());
+//                                Log.d(TAG, "getVelocityY=" + flightControllerState.getVelocityY());
+//                                Log.d(TAG, "getVelocityZ=" + flightControllerState.getVelocityZ());
+//                                Log.d(TAG, "HomeLocation.getLatitude=" + flightControllerState.getHomeLocation().getLatitude());
+//                                Log.d(TAG, "HomeLocation.getLongitude=" + flightControllerState.getHomeLocation().getLongitude());
+//                                Log.d(TAG, "pitch=" + flightControllerState.getAttitude().pitch);
+//                                Log.d(TAG, "roll=" + flightControllerState.getAttitude().roll);
+//                                Log.d(TAG, "yaw=" + flightControllerState.getAttitude().yaw);
+//                                Log.d(TAG, "纬度=" + flightControllerState.getAircraftLocation().getLatitude());
+//                                Log.d(TAG, "经度=" + flightControllerState.getAircraftLocation().getLongitude());
+//                                Log.d(TAG, "海拔=" + flightControllerState.getAircraftLocation().getAltitude());
+//                                Log.d(TAG, "IslandingConfirmationNeeded=" + flightControllerState.isLandingConfirmationNeeded() + "");
                                 double length = LocationUtils.getDistance(flightControllerState.getHomeLocation().getLongitude() + "", flightControllerState.getHomeLocation().getLatitude() + ""
                                         , flightControllerState.getAircraftLocation().getLongitude() + "", flightControllerState.getAircraftLocation().getLatitude() + "");
                                 boolean nowdistance = length > 3000;
@@ -1889,6 +1861,22 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     }
                 });
 
+                camera.getLens(2).getDisplayMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.DisplayMode>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.DisplayMode displayMode) {
+                        webInitializationBean.setHyDisplayMode(displayMode.value()+"");
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+
+
+//
+
+
 
                 //获取变焦距离
 //            camera.getLens(camera.getIndex()).getHybridZoomSpec(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.HybridZoomSpec>() {
@@ -2089,8 +2077,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 public void onUpdate(GimbalState gimbalState) {//左右y 上下p
                     webInitializationBean.setHorizontalAngle(gimbalState.getAttitudeInDegrees().getYaw() + "");
                     webInitializationBean.setPitchAngle(gimbalState.getAttitudeInDegrees().getPitch() + "");
-//                Log.d("DDDDDD","y="+gimbalState.getAttitudeInDegrees().getYaw()+"--P="+gimbalState.getAttitudeInDegrees().getPitch()+"--R="+
-//                        gimbalState.getAttitudeInDegrees().getRoll()+"");
                 }
             });
             //云台俯仰限位扩展
@@ -2163,408 +2149,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
 
-//    private void initMediaManager() {
-//        if (FPVDemoApplication.getProductInstance() == null) {
-//            mediaFileList.clear();
-//            Log.e(TAG, "Product disconnected");
-//            return;
-//        } else {
-//            if (null != FPVDemoApplication.getCameraInstance() && FPVDemoApplication.getCameraInstance().isMediaDownloadModeSupported()) {
-//                mMediaManager = FPVDemoApplication.getCameraInstance().getMediaManager();
-//                if (null != mMediaManager) {
-//                    mMediaManager.addUpdateFileListStateListener(this.updateFileListStateListener);
-//                    //这个是老方法 m300不适用
-////                    调用的setMode()方法，Camera并将CameraMode设置为MEDIA_DOWNLOAD。
-////                    并调用该getFileList()方法以获取媒体文件列表。
-////                    最后，初始化FetchMediaTaskScheduler来安排获取媒体文件任务。
-////                    camera.setMode(SettingsDefinitions.CameraMode.MEDIA_DOWNLOAD, new CommonCallbacks.CompletionCallback() {
-////                        @Override
-////                        public void onResult(DJIError error) {
-////                            if (error == null) {
-////                                Toast.makeText(ConnectionActivity.this, "Set cameraMode success", Toast.LENGTH_SHORT).show();
-////                                getFileList();
-////                            } else {
-////                                Log.e(TAG, "Set cameraMode failed " + error.toString());
-////                                Toast.makeText(ConnectionActivity.this, "Set cameraMode failed " + error.toString(), Toast.LENGTH_LONG).show();
-////                                Communication communication = new Communication();
-////                                communication.setResult(error.getDescription());
-////                                communication.setCode(-1);
-////                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-////                                NettyClient.getInstance().sendMessage(communication, null);
-////                            }
-////                        }
-////                    });
-//
-//                    camera.enterPlayback(new CommonCallbacks.CompletionCallback() {
-//                        @Override
-//                        public void onResult(DJIError djiError) {
-//                            if (djiError == null) {
-////                                Toast.makeText(ConnectionActivity.this, "Set cameraMode success", Toast.LENGTH_SHORT).show();
-//                                Log.e("downLoadPic", "Set cameraDownloadMode success ");
-//                                getFileList();
-//                            } else {
-//
-////                                if (mMediaManager != null) {
-////                                    mMediaManager.stop(null);
-//////                                    mMediaManager.removeFileListStateCallback(this.updateFileListStateListener);
-//////            调用exitMediaDownloading()方法以退出MEDIA_DOWNLOAD模式并进入SHOOT_PHOTO模式
-////                                    mMediaManager.exitMediaDownloading();
-////                                }
-//                                Log.e("downLoadPic", "Set cameraDownloadMode failed " + djiError.toString());
-//                                Toast.makeText(ConnectionActivity.this, "Set cameraMode failed " + djiError.toString(), Toast.LENGTH_LONG).show();
-//                                Communication communication = new Communication();
-//                                communication.setResult(djiError.getDescription());
-//                                communication.setCode(-1);
-//                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                                NettyClient.getInstance().sendMessage(communication, null);
-//
-//                            }
-//                        }
-//                    });
-//
-////                    if (mMediaManager.isVideoPlaybackSupported()) {
-////                        Log.e(TAG, "Camera support video playback!");
-////                    } else {
-////                        Log.e(TAG, "Camera does not support video playback!");
-////                    }
-////                    scheduler = mMediaManager.getScheduler();
-//                }
-//
-//            } else if (null != FPVDemoApplication.getCameraInstance()
-//                    && !FPVDemoApplication.getCameraInstance().isMediaDownloadModeSupported()) {
-//                Log.e(TAG, "Media Download Mode not Supported");
-//            }
-//        }
-//        return;
-//    }
-
-    /**
-     * 在该getFileList()方法中，我们获取最新的mMediaManager对象并检查其是否不为null。
-     * 然后检查currentFileListState变量的值。如果状态既不是SYNCING也不为DELETING，
-     * 则调用的refreshFileListOfStorageLocation()方法MediaManager以从SD卡刷新文件列表
-     */
-//    private void getFileList() {
-//        mMediaManager = FPVDemoApplication.getCameraInstance().getMediaManager();
-//        if (mMediaManager != null) {
-//
-//            if ((currentFileListState == MediaManager.FileListState.SYNCING) || (currentFileListState == MediaManager.FileListState.DELETING)) {
-////                Toast.makeText(ConnectionActivity.this, "Media Manager is busy.", Toast.LENGTH_SHORT).show();
-//                Log.e("downLoadPic", "Media Manager is busy.");
-//            } else {
-//
-//                mMediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.SDCARD, new CommonCallbacks.CompletionCallback() {
-//                    //                    在onResult()回调方法中，如果没有错误，则检查currentFileListState值是否不相等，
-////                    MediaManager.FileListState.INCOMPLETE
-////                    然后重置mediaFileList列表，lastClickViewIndex和lastClickView变量。
-//                    @Override
-//                    public void onResult(DJIError djiError) {
-//                        if (null == djiError) {
-////                            hideProgressDialog();
-//
-//                            //Reset data
-//                            if (currentFileListState != MediaManager.FileListState.INCOMPLETE) {
-//                                mediaFileList.clear();
-////                                lastClickViewIndex = -1;
-////                                lastClickView = null;
-//                            }
-////                            mediaFileList根据创建的时间对中的媒体文件进行排序。然后，
-////                            调用的resume()方法FetchMediaTaskScheduler以恢复调度程序，
-////                            并getThumbnails()在onResult()回调方法中调用该方法。
-////                            如果存在错误，请调用该hideProgressDialog()方法以隐藏进度对话框。
-//
-//                            mediaFileList = mMediaManager.getSDCardFileListSnapshot();
-//                            //这是排序
-//                            Collections.sort(mediaFileList, new Comparator<MediaFile>() {
-//                                @Override
-//                                public int compare(MediaFile lhs, MediaFile rhs) {
-//                                    if (lhs.getTimeCreated() < rhs.getTimeCreated()) {
-//                                        return 1;
-//                                    } else if (lhs.getTimeCreated() > rhs.getTimeCreated()) {
-//                                        return -1;
-//                                    }
-//                                    return 0;
-//                                }
-//                            });
-//                            //拿到起飞后最新的列表只要起飞后拍的
-//
-//
-//                            for (int i = 0; i < mediaFileList.size(); i++) {
-//                                Log.e("downLoadPic", "StartFlyTime:" + planeStartFlyTime + "TimeCreated:" + mediaFileList.get(i).getTimeCreated());
-//                                if (mediaFileList.get(i).getTimeCreated() - planeStartFlyTime < 0) {
-//                                    mediaFileList.remove(i);
-//                                    i--;
-//                                }
-//                            }
-//                            //测试 只传一个
-////                            for (int i = 0; i < mediaFileList.size(); i++) {
-////                                if (i == 1) {
-////                                    mediaFileList.remove(i);
-////                                    i--;
-////                                }
-////                            }
-//                            if (mediaFileList.size() > 0) {
-//                                Log.e("downLoadPic", "可以去下载 ");
-//                                downloadPic();
-//                                //发消息给后台开始下载
-//                                //循环1s去传开始下载传给后台
-//                                handlerStartDownload.post(runnableStartDownload);
-//                                StringsBean beans = new StringsBean();
-//                                beans.setValue("1");
-//                                if (communication_havePic == null) {
-//                                    communication_havePic = new Communication();
-//                                }
-//                                communication_havePic.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                                communication_havePic.setEquipmentId(MApplication.EQUIPMENT_ID);
-//                                communication_havePic.setMethod((Constant.HAVEPIC));
-////                                communication_havePic.setResult(gson.toJson(beans, StringsBean.class));
-//                                communication_havePic.setResult("1");
-//                            } else {
-//                                Log.e("downLoadPic", "没有图片可下载 ");
-//                                StringsBean beans = new StringsBean();
-//                                beans.setValue("0");
-//                                if (communication_havePic == null) {
-//                                    communication_havePic = new Communication();
-//                                }
-//                                communication_havePic.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                                communication_havePic.setEquipmentId(MApplication.EQUIPMENT_ID);
-//                                communication_havePic.setMethod((Constant.HAVEPIC));
-////                                communication_havePic.setResult(gson.toJson(beans, StringsBean.class));
-//                                communication_havePic.setResult("0");
-//
-//                            }
-//
-////                            Toast.makeText(ConnectionActivity.this, "拿到list去下载" + mediaFileList.size(), Toast.LENGTH_SHORT).show();
-////                            scheduler.resume(new CommonCallbacks.CompletionCallback() {
-////                                @Override
-////                                public void onResult(DJIError error) {
-////                                    if (error == null) {
-////                                        getThumbnails();
-////                                    }
-////                                }
-////                            });
-//                        } else {
-////                            hideProgressDialog();
-////                            setResultToToast("Get Media File List Failed:" + djiError.getDescription());
-//                            if (communication_takePhoto == null) {
-//                                communication_takePhoto = new Communication();
-//                            }
-//                            communication_takePhoto.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                            communication_takePhoto.setEquipmentId(MApplication.EQUIPMENT_ID);
-//                            communication_takePhoto.setCode(-1);
-//                            communication_takePhoto.setMethod((Constant.PHOTO_UP_LOAD));
-//                            communication_takePhoto.setResult(djiError.getDescription());
-//                            NettyClient.getInstance().sendMessage(communication_takePhoto, null);
-//                        }
-//                    }
-//                });
-//            }
-//        }
-//    }
 
 
-    private void downloadPic() {
-        Log.e("downLoadPic", "文件个数： " + mediaFileList.size());
-        downloadToPadCount = 0;
-        for (int i = 0; i < mediaFileList.size(); i++) {
-            if ((mediaFileList.get(i).getMediaType() == MediaFile.MediaType.PANORAMA)
-                    || (mediaFileList.get(i).getMediaType() == MediaFile.MediaType.SHALLOW_FOCUS)) {
-                return;
-            }
-//        if(mediaFileList.get(0).getMediaType()==MediaFile.MediaType.MOV||mediaFileList.get(0).getMediaType()==MediaFile.MediaType.MP4){
-//            downloadFileType="0";//视频
-//        }else{
-//            downloadFileType="1";//图片
-//        }
-//            FileName = mediaFileList.get(i).getFileName();
-            mediaFileList.get(i).fetchFileData(destDir, mediaFileList.get(i).getTimeCreated() + "", new DownloadListener<String>() {
-                @Override
-                public void onFailure(DJIError error) {
-//                    Toast.makeText(ConnectionActivity.this, "Download File Failed" + error.getDescription(), Toast.LENGTH_SHORT).show();
-                    if (communication_takePhoto == null) {
-                        communication_takePhoto = new Communication();
-                    }
-                    communication_takePhoto.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    communication_takePhoto.setEquipmentId(MApplication.EQUIPMENT_ID);
-                    communication_takePhoto.setCode(-1);
-                    communication_takePhoto.setMethod((Constant.PHOTO_UP_LOAD));
-                    communication_takePhoto.setResult(error.getDescription());
-                    NettyClient.getInstance().sendMessage(communication_takePhoto, null);
-                    Log.e("downLoadPic", "下载到平板失败 " + error.toString());
-                    downloadToPadCount++;
-                    if (downloadToPadCount == mediaFileList.size()) {//下载到平板成功
-                        Log.e("downLoadPic", "下载到平板全部完成（虽然有些失败了） ");
-                        uploadToServer();
-                        handlerStartDownload.removeCallbacks(runnableStartDownload);//关闭发送下载的轮询
-                        //通知后台已下载完
-                        StringsBean sb = new StringsBean();
-                        sb.setValue("0");
-                        if (communication_download_pic == null) {
-                            communication_download_pic = new Communication();
-                        }
-                        communication_download_pic.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                        communication_download_pic.setEquipmentId(MApplication.EQUIPMENT_ID);
-                        communication_download_pic.setMethod((Constant.IS_DOWNLOAD));
-//                        communication_download_pic.setResult(gson.toJson(sb, StringsBean.class));
-                        communication_download_pic.setResult("0");
-                        NettyClient.getInstance().sendMessage(communication_download_pic, null);
-                    }
 
-//                    if (mMediaManager != null) {
-//                        mMediaManager.stop(null);
-////                                    mMediaManager.removeFileListStateCallback(this.updateFileListStateListener);
-////            调用exitMediaDownloading()方法以退出MEDIA_DOWNLOAD模式并进入SHOOT_PHOTO模式
-//                        mMediaManager.exitMediaDownloading();
-//                    }
-                }
-
-                @Override
-                public void onProgress(long total, long current) {
-                    int tmpProgress = (int) (1.0 * current / total * 100);
-                    if (tmpProgress != currentProgress) {
-                        currentProgress = tmpProgress;
-                        btn_gaode.setText(currentProgress + "");
-                    }
-                }
-
-                @Override
-                public void onRateUpdate(long total, long current, long persize) {
-//                    int tmpProgress = (int) (1.0 * current / total * 100);
-//                    if (tmpProgress != currentProgress) {
-//                        currentProgress = tmpProgress;
-//                        btn_download.setText(currentProgress + "");
-//                    }
-                }
-
-                @Override
-                public void onStart() {
-                    currentProgress = -1;
-//                ShowDownloadProgressDialog();
-                }
-
-                @Override
-                public void onSuccess(String filePath) {
-//                HideDownloadProgressDialog();
-//                    Toast.makeText(ConnectionActivity.this, "Download File Success" + ":" + filePath, Toast.LENGTH_LONG).show();
-                    currentProgress = -1;
-                    downloadToPadCount++;
-                    Log.e("downLoadPic", "下载到平板成功 ");
-                    if (downloadToPadCount == mediaFileList.size()) {//下载到平板成功
-                        Log.e("downLoadPic", "下载到平板全部完成 ");
-                        uploadToServer();
-                        handlerStartDownload.removeCallbacks(runnableStartDownload);//关闭发送下载的轮询
-                        //通知后台已下载完
-                        StringsBean sb = new StringsBean();
-                        sb.setValue("0");
-                        if (communication_download_pic == null) {
-                            communication_download_pic = new Communication();
-                        }
-                        communication_download_pic.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                        communication_download_pic.setEquipmentId(MApplication.EQUIPMENT_ID);
-                        communication_download_pic.setMethod((Constant.IS_DOWNLOAD));
-                        communication_download_pic.setResult(gson.toJson(sb, StringsBean.class));
-                        NettyClient.getInstance().sendMessage(communication_download_pic, null);
-                    }
-                }
-            });
-
-
-        }
-
-    }
-
-    private MediaManager.FileListStateListener updateFileListStateListener = new MediaManager.FileListStateListener() {
-        @Override
-        public void onFileListStateChange(MediaManager.FileListState state) {
-            currentFileListState = state;
-        }
-    };
-
-    private void uploadToServer() {
-        String[] allfile = destDir.list();
-        for (int i = 0; i < allfile.length; i++) {
-            String everFile = destDirName + allfile[i];
-            Log.e("downLoadPic", "fileallname=" + everFile);
-            if (everFile.endsWith(".JPG") || everFile.endsWith(".jpg") || everFile.endsWith(".JPEG") || everFile.endsWith(".jpeg")) {//图片压缩
-                //不要压缩直接传
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        String result = null;
-                        File file = new File(everFile);
-                        try {
-                            result = ClientUploadUtils.upload(MApplication.UPLOAD_URL, file, file.getName(), "image").string();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            Log.e("downLoadPic", "不压缩后上传报错=" + e.toString());
-                        }
-                        Log.e("downLoadPic", "不压缩后上传=" + "result:" + result);
-                    }
-                }).start();
-
-//                Luban.with(ConnectionActivity.this)
-//                        .load(everFile)
-////                        .ignoreBy(100)
-//                        .setTargetDir(Environment.getExternalStorageDirectory().getPath())
-////                        .setTargetDir(destDirCompress.getPath())
-////                            .filter(new CompressionPredicate() {
-////                                @Override
-////                                public boolean apply(String path) {
-////                                    return !(TextUtils.isEmpty(path) || path.toLowerCase().endsWith(".gif"));
-////                                }
-////                            })
-//                        .setCompressListener(new OnCompressListener() {
-//                            @Override
-//                            public void onStart() {
-//                                // 压缩开始前调用，可以在方法内启动 loading UI
-//                            }
-//
-//                            @Override
-//                            public void onSuccess(File file) {
-//                                //压缩成功后调用，返回压缩后的图片文件
-//                                Toast.makeText(ConnectionActivity.this, "压缩成功", Toast.LENGTH_SHORT).show();
-//                                Log.e("downLoadPic", "压缩onSuccess=" + file.getPath());
-//                                new Thread(new Runnable() {
-//                                    @Override
-//                                    public void run() {
-//                                        String result = null;
-//                                        try {
-//                                            result = ClientUploadUtils.upload(MApplication.UPLOAD_URL, file, file.getName(), "image").string();
-//                                        } catch (Exception e) {
-//                                            e.printStackTrace();
-//                                            Log.e("downLoadPic", "压缩后上传报错=" + e.toString());
-//                                        }
-//                                        Log.e("downLoadPic", "压缩后上传=" + "result:" + result);
-//                                    }
-//                                }).start();
-//
-//                            }
-//
-//                            @Override
-//                            public void onError(Throwable e) {
-//                                //当压缩过程出现问题时调用
-//                                Log.e("downLoadPic", "压缩onError=" + e.toString());
-//                            }
-//                        }).launch();
-            }
-            //视频
-            else {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        String result = null;
-                        try {
-                            File file = new File(everFile);
-                            result = ClientUploadUtils.upload(MApplication.UPLOAD_URL, file, file.getName(), "mp4").string();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        Log.e("downLoadPic", "视频result:" + result);
-
-                    }
-                }).start();
-            }
-        }
-    }
 
     //长连接最终返回
     @Override
@@ -2574,7 +2161,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             return;
         }
         Communication communication = gson.fromJson(json, Communication.class);
-//        String method = RsaUtil.decrypt(communication.getMethod());
         String method = communication.getMethod();
         communication.setMethod((method));
 
@@ -3017,7 +2603,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     //降落
     private void startLanding(Communication communication) {
         if (mFlightController != null) {
-//            mFlightController.getState().setIslandingConfirmationNeeded(false);
             mFlightController.startLanding(
                     new CommonCallbacks.CompletionCallback() {
                         @Override
@@ -3176,51 +2761,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             NettyClient.getInstance().sendMessage(communication, null);
         }
 
-//        double HorizontalAngle=Double.parseDouble(webInitializationBean.getHorizontalAngle());
-//        boolean canmove;
-//        if(HorizontalAngle>0){
-//            if(HorizontalAngle<320){
-//                canmove=true;
-//            }else{
-//                canmove=false;
-//            }
-//        }else if(HorizontalAngle<0){
-//            if(HorizontalAngle>-320){
-//                canmove=true;
-//            }else{
-//                canmove=false;
-//            }
-//        }else{
-//            canmove=true;
-//        }
-//        if(canmove){
-//            String angle = communication.getPara().get(Constant.ANGLE);
-//            if (!TextUtils.isEmpty(angle)) {
-////            Rotation.Builder builder = new Rotation.Builder().mode(RotationMode.ABSOLUTE_ANGLE).time(2);
-//                if (gimbal == null) {
-//                    gimbal = FPVDemoApplication.getProductInstance().getGimbal();
-//                }
-//                Rotation.Builder builder = new Rotation.Builder().mode(RotationMode.RELATIVE_ANGLE).time(2);
-//                builder.yaw(Float.parseFloat(angle));
-//                builder.build();
-//                gimbal.rotate(builder.build(), new CommonCallbacks.CompletionCallback() {
-//                    @Override
-//                    public void onResult(DJIError djiError) {
-//                        CommonDjiCallback(djiError, communication);
-//                    }
-//                });
-//            } else {
-//                communication.setResult("");
-//                communication.setCode(-1);
-//                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                NettyClient.getInstance().sendMessage(communication, null);
-//            }
-//        }else{
-//            communication.setResult("云台角度已达到最大值");
-//            communication.setCode(-1);
-//            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//            NettyClient.getInstance().sendMessage(communication, null);
-//        }
 
     }
 
@@ -3347,9 +2887,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     //设置相机模式
     private void camere_set_mode(Communication communication) {
-//        if(mMediaManager!=null){
-//            mMediaManager.exitMediaDownloading();
-//        }
 
         camera.exitPlayback(new CommonCallbacks.CompletionCallback() {
             @Override
@@ -3409,13 +2946,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 shootPhoto = SettingsDefinitions.ShootPhotoMode.TIME_LAPSE;
 //                                shootPhoto = SettingsDefinitions.ShootPhotoMode.BURST;
                                 break;
-//                            case "2":
-//                                shootPhoto = SettingsDefinitions.ShootPhotoMode.INTERVAL;
-//
-//                                break;
-//                            case "3":
-//                                shootPhoto = SettingsDefinitions.ShootPhotoMode.TIME_LAPSE;
-//                                break;
                         }
                         camera.setShootPhotoMode(shootPhoto, new CommonCallbacks.CompletionCallback() {
                             @Override
@@ -3709,8 +3239,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         Log.d("DDDDDD", "beacons=" + beacons + " front=" + front + " rear=" + rear + " statusIndicator=" + statusIndicator);
         if (mFlightController != null) {
             if (!TextUtils.isEmpty(beacons)) {
-                LEDsSettings.Builder builder = new LEDsSettings.Builder().beaconsOn(beacons.equals("1") ? true : false);
-//                    .frontLEDsOn(front.equals("0") ? true : false).rearLEDsOn(rear.equals("0") ? true : false).statusIndicatorOn(statusIndicator.equals("0") ? true : false);
+                LEDsSettings.Builder builder = new LEDsSettings.Builder().beaconsOn(beacons.equals("1") ? true : false)
+                    .frontLEDsOn(front_b.equals("1") ? true : false).rearLEDsOn(front_b.equals("1") ? true : false).statusIndicatorOn(statusIndicator_b.equals("1") ? true : false);
                 mFlightController.setLEDsEnabledSettings(builder.build(), new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
@@ -3724,23 +3254,15 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
             if (!TextUtils.isEmpty(front)) {
                 LEDsSettings.Builder builder = new LEDsSettings.Builder()
-                        .frontLEDsOn(front.equals("1") ? true : false);
+                        .frontLEDsOn(front.equals("1") ? true : false)
+                        .rearLEDsOn(front.equals("1") ? true : false)
+                        .beaconsOn(beacons_b.equals("1") ? true : false)
+                        .statusIndicatorOn(statusIndicator_b.equals("1") ? true : false);
                 mFlightController.setLEDsEnabledSettings(builder.build(), new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
                         front_b = front;
                         webInitializationBean.setFront(front_b);
-                        CommonDjiCallback(djiError, communication);
-                    }
-                });
-            }
-
-            if (!TextUtils.isEmpty(rear)) {
-                LEDsSettings.Builder builder = new LEDsSettings.Builder()
-                        .rearLEDsOn(rear.equals("1") ? true : false);
-                mFlightController.setLEDsEnabledSettings(builder.build(), new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(DJIError djiError) {
                         rear_b = rear;
                         webInitializationBean.setRear(rear_b);
                         CommonDjiCallback(djiError, communication);
@@ -3748,8 +3270,24 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 });
             }
 
+//            if (!TextUtils.isEmpty(rear)) {
+//                LEDsSettings.Builder builder = new LEDsSettings.Builder()
+//                        .rearLEDsOn(rear.equals("1") ? true : false);
+//                mFlightController.setLEDsEnabledSettings(builder.build(), new CommonCallbacks.CompletionCallback() {
+//                    @Override
+//                    public void onResult(DJIError djiError) {
+//                        rear_b = rear;
+//                        webInitializationBean.setRear(rear_b);
+//                        CommonDjiCallback(djiError, communication);
+//                    }
+//                });
+//            }
+
             if (!TextUtils.isEmpty(statusIndicator)) {
-                LEDsSettings.Builder builder = new LEDsSettings.Builder().statusIndicatorOn(statusIndicator.equals("1") ? true : false);
+                LEDsSettings.Builder builder = new LEDsSettings.Builder().statusIndicatorOn(statusIndicator.equals("1") ? true : false)
+                        .frontLEDsOn(front_b.equals("1") ? true : false)
+                        .rearLEDsOn(front_b.equals("1") ? true : false)
+                        .beaconsOn(beacons_b.equals("1") ? true : false);
                 mFlightController.setLEDsEnabledSettings(builder.build(), new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
@@ -4595,6 +4133,38 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         ocuSyncLink.setFrequencyBand(OcuSyncFrequencyBand.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
+                if(djiError==null){
+
+                    switch (type) {
+                        case "0":
+                            frequencyBand = "双频";
+                            break;
+                        case "1":
+                            frequencyBand = "2.4G";
+                            break;
+                        case "2":
+                            frequencyBand = "5.8G";
+                            break;
+                    }
+
+
+                    TransmissionSetBean transmissionSetBean = new TransmissionSetBean();
+                    transmissionSetBean.setChannelBandwidth(channelBandwidth);
+                    transmissionSetBean.setFrequencyBand(frequencyBand);
+                    transmissionSetBean.setInterferencePower(interferencePower);
+                    transmissionSetBean.setTranscodingDataRate(transcodingDataRate);
+                    communication.setResult(gson.toJson(transmissionSetBean, TransmissionSetBean.class));
+                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                    communication.setCode(200);
+                    NettyClient.getInstance().sendMessage(communication, null);
+                }else{
+                    communication.setResult(djiError.getDescription());
+                    communication.setCode(-1);
+                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                    NettyClient.getInstance().sendMessage(communication, null);
+                }
+
+
                 CommonDjiCallback(djiError, communication);
             }
         });
@@ -4621,6 +4191,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError == null) {
+                        webInitializationBean.setHyDisplayMode("type");
                         if (type.equals("2")) {
                             camera.setCameraVideoStreamSource(ZOOM, new CommonCallbacks.CompletionCallback() {
                                 @Override
@@ -4679,17 +4250,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
     //所有错误返回
-    // the list contains all "type == DJIDiagnostics.DJIDiagnosticsType.DEVICE_HEALTH_INFORMATION" element at real time.
     @Override
     public void onUpdate(List<DJIDiagnostics> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
         String errorMsg = "";
-//        for (DJIDiagnostics diagnostics : list) {
-//            Log.d("ErrorUpdate", diagnostics.getSolution());
-//            errorMsg.append(diagnostics.getSolution()).append(",");
-//        }
         for (int i = 0; i < list.size(); i++) {
             if (!TextUtils.isEmpty(list.get(i).getSolution().trim())) {
                 errorMsg += list.get(i).getSolution() + ",";
@@ -4758,9 +4324,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
     Communication mCommunication;
-//    TimeCount1 timeCount1;
-//    TimeCount2 timeCount2;
-//    TimeCount3 timeCount3;
 
 
     //飞机前进后退 -10~10
@@ -4773,16 +4336,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             mYaw = 0;
             mThrottle = 0;
             mCommunication = communication;
-//            if (null == mSendVirtualStickDataTimer) {
-//                mSendVirtualStickDataTask = new SendVirtualStickDataTask();
-//                mSendVirtualStickDataTimer = new Timer();
-//                mSendVirtualStickDataTimer.schedule(mSendVirtualStickDataTask, 100, 200);
             if (mFlightController != null) {
                 mFlightController.sendVirtualStickFlightControlData(new FlightControlData(mPitch, mRoll, mYaw, mThrottle), new CommonCallbacks.CompletionCallback() {
                             @Override
                             public void onResult(DJIError djiError) {
-//                                isQianHouGet = true;
-//                                CommonDjiCallback(djiError, mCommunication);
                             }
                         }
                 );
@@ -4791,9 +4348,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             mCommunication.setCode(200);
             mCommunication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
             NettyClient.getInstance().sendMessage(mCommunication, null);
-//            timeCount1 = new TimeCount1(1000 * 2, 1000);
-//            timeCount1.start();
-//            }
         } else {
             communication.setResult("");
             communication.setCode(-1);
@@ -4801,26 +4355,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             NettyClient.getInstance().sendMessage(communication, null);
         }
     }
-
-//    private class TimeCount1 extends CountDownTimer {
-//        public TimeCount1(long millisInFuture, long countDownInterval) {
-//            super(millisInFuture, countDownInterval);// 参数依次为总时长,和计时的时间间隔
-//        }
-//
-//        @Override
-//        public void onFinish() {// 计时完毕时触发
-//            if (!isQianHouGet) {
-//                mCommunication.setResult("超时返回");
-//                mCommunication.setCode(-1);
-//                mCommunication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                NettyClient.getInstance().sendMessage(mCommunication, null);
-//            }
-//        }
-//
-//        @Override
-//        public void onTick(long millisUntilFinished) {// 计时过程显示
-//        }
-//    }
 
     //飞机往左往右 -10~10
     private void fly_left_and_right(Communication communication) {
@@ -4832,12 +4366,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             mThrottle = 0;
             mCommunication = communication;
 
-//            if (null == mSendVirtualStickDataTimer) {
-//                mSendVirtualStickDataTask = new SendVirtualStickDataTask();
-//                mSendVirtualStickDataTimer = new Timer();
-//                mSendVirtualStickDataTimer.schedule(mSendVirtualStickDataTask, 100, 200);
-//            }
-
             if (mFlightController != null) {
                 mFlightController.sendVirtualStickFlightControlData(
                         new FlightControlData(
@@ -4863,26 +4391,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     }
 
-//    private class TimeCount2 extends CountDownTimer {
-//        public TimeCount2(long millisInFuture, long countDownInterval) {
-//            super(millisInFuture, countDownInterval);// 参数依次为总时长,和计时的时间间隔
-//        }
-//
-//        @Override
-//        public void onFinish() {// 计时完毕时触发
-//            if (!isZuoYouGet) {
-//                mCommunication.setResult("超时返回");
-//                mCommunication.setCode(-1);
-//                mCommunication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                NettyClient.getInstance().sendMessage(mCommunication, null);
-//            }
-//        }
-//
-//        @Override
-//        public void onTick(long millisUntilFinished) {// 计时过程显示
-//        }
-//    }
-
     //飞机上升下降 -30~30
     private void fly_rise_and_fall(Communication communication) {
         Log.d(TAG, "communication=" + communication.toString());
@@ -4893,12 +4401,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             mRoll = 0;
             mYaw = 0;
             mCommunication = communication;
-
-//            if (null == mSendVirtualStickDataTimer) {
-//                mSendVirtualStickDataTask = new SendVirtualStickDataTask();
-//                mSendVirtualStickDataTimer = new Timer();
-//                mSendVirtualStickDataTimer.schedule(mSendVirtualStickDataTask, 0, 200);
-//            }
             if (mFlightController != null) {
                 mFlightController.sendVirtualStickFlightControlData(
                         new FlightControlData(
@@ -4922,7 +4424,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
             NettyClient.getInstance().sendMessage(communication, null);
         }
-
 
     }
 
@@ -4935,11 +4436,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             mPitch = 0;
             mRoll = 0;
             mCommunication = communication;
-//            if (null == mSendVirtualStickDataTimer) {
-////                mSendVirtualStickDataTask = new SendVirtualStickDataTask();
-////                mSendVirtualStickDataTimer = new Timer();
-////                mSendVirtualStickDataTimer.schedule(mSendVirtualStickDataTask, 0, 200);
-////            }
             if (mFlightController != null) {
                 mFlightController.sendVirtualStickFlightControlData(
                         new FlightControlData(
@@ -4989,47 +4485,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
         String finishedAction = communication.getPara().get(Constant.FINISHED_ACTION);
         if (!TextUtils.isEmpty(finishedAction)) {
-            switch (finishedAction) {
-                case "0":
-                    mFinishedAction = WaypointMissionFinishedAction.NO_ACTION;
-                    break;
-                case "2":
-                    mFinishedAction = WaypointMissionFinishedAction.AUTO_LAND;
-                    break;
-                case "3":
-                    mFinishedAction = WaypointMissionFinishedAction.GO_FIRST_WAYPOINT;
-                    break;
-                case "4":
-                    mFinishedAction = WaypointMissionFinishedAction.CONTINUE_UNTIL_END;
-                    break;
-                case "1":
-                default:
-                    mFinishedAction = WaypointMissionFinishedAction.GO_HOME;
-                    break;
-
-            }
+            mFinishedAction=WaypointMissionFinishedAction.find(Integer.parseInt(finishedAction));
         }
 
         String headingMode = communication.getPara().get(Constant.HEADING_MODE);
         if (TextUtils.isEmpty(headingMode)) {
-            switch (headingMode) {
-                case "1":
-                    mHeadingMode = WaypointMissionHeadingMode.USING_INITIAL_DIRECTION;
-                    break;
-                case "2":
-                    mHeadingMode = WaypointMissionHeadingMode.CONTROL_BY_REMOTE_CONTROLLER;
-                    break;
-                case "3":
-                    mHeadingMode = WaypointMissionHeadingMode.USING_WAYPOINT_HEADING;
-                    break;
-                case "4":
-                    mHeadingMode = WaypointMissionHeadingMode.TOWARD_POINT_OF_INTEREST;
-                    break;
-                case "0":
-                default:
-                    mHeadingMode = WaypointMissionHeadingMode.AUTO;
-                    break;
-            }
+            mHeadingMode =WaypointMissionHeadingMode.find(Integer.parseInt(headingMode));
         }
 
 
@@ -5062,7 +4523,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         // add点
         wayPoints = communication.getPara().get(Constant.WAY_POINTS);
         Log.d("wayPoints", wayPoints);
-//            List<WayPointsBean> myWayPointList=new ArrayList<>();
         if (!TextUtils.isEmpty(wayPoints)) {
             List<WayPointsBean> myWayPointList = gson.fromJson(wayPoints, new TypeToken<List<WayPointsBean>>() {
             }.getType());
@@ -5090,12 +4550,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     .flightPathMode(mFlightPathMode);
 
         }
-//        if (waypointMissionBuilder.getWaypointList().size() > 0) {
-//            for (int i = 0; i < waypointMissionBuilder.getWaypointList().size(); i++) {
-//                waypointMissionBuilder.getWaypointList().get(i).altitude = altitude;
-//            }
-////            setResultToToast("Set Waypoint attitude successfully");
-//        }
 //        将其waypointMissionBuilder.build()作为参数传递给操作员加载航路点任务
         DJIError error = getWaypointMissionOperator().loadMission(waypointMissionBuilder.build());
         if (error == null) {
@@ -5110,17 +4564,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 public void onResult(DJIError error) {
                     String currentState = getWaypointMissionOperator().getCurrentState().toString();
                     if (error == null) {
-//                        setResultToToast("Mission upload successfully!");
                         //这里不返回给后台 改到监听回调里
                         communication_upload_mission = communication;
-//                        communication.setResult("Mission upload successfully!+currentState=" + currentState);
-//                        communication.setCode(200);
-//                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                        NettyClient.getInstance().sendMessage(communication, null);
-
-
                     } else {
-//                        setResultToToast("Mission upload failed, error: " + error.getDescription() + " retrying...");
                         getWaypointMissionOperator().retryUploadMission(null);
                         communication.setResult(error.getDescription() + "currentState=" + currentState);
                         communication.setCode(-1);
@@ -5132,7 +4578,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
 
         } else {
-//            setResultToToast("loadWaypoint failed " + error.getDescription());
             communication.setResult(error.getDescription());
             communication.setCode(-1);
             communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
@@ -5167,7 +4612,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                     NettyClient.getInstance().sendMessage(communication, null);
                 }
-//                setResultToToast("Mission Start: " + (error == null ? "Successfully" : error.getDescription()));
             }
         });
 
@@ -5178,17 +4622,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         getWaypointMissionOperator().stopMission(new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError error) {
-//                if (error != null) {
-//                    communication.setResult(error.getDescription());
-//                    communication.setCode(-1);
-//                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                    NettyClient.getInstance().sendMessage(communication, null);
-//                } else {
-//                    communication.setResult("Success");
-//                    communication.setCode(200);
-//                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                    NettyClient.getInstance().sendMessage(communication, null);
-//                }
             }
         });
         communication.setResult("Success");
@@ -5223,8 +4656,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     } else if (isHangXianResume.equals("2")) {
                         add_point(myWayPointList.get(i), mSpeed + "", mGimbalPitch + "", mTurnMode, sgpre);
                     }
-
-
                 }
             }
 
@@ -5262,39 +4693,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         if (error == null) {
                             //开始恢复航线飞行
                             communication_upload_mission = communication;
-//                            startWaypointMission(communication);
-
-//                            new Thread(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    try {
-//                                        Thread.sleep(2000);
-//                                        getWaypointMissionOperator().startMission(new CommonCallbacks.CompletionCallback() {
-//                                            @Override
-//                                            public void onResult(DJIError error) {
-//                                                if (error != null) {
-//                                                    Log.d("WMUEWMUE", "startWaypointMission报错");
-//                                                    communication.setResult("startMission报错:" + error.getDescription() + "currentState:" + currentState);
-//                                                    communication.setCode(-1);
-//                                                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                                                    NettyClient.getInstance().sendMessage(communication, null);
-//                                                } else {
-//                                                    Log.d("WMUEWMUE", "startWaypointMission成功");
-//                                                    communication.setResult("Success");
-//                                                    communication.setCode(200);
-//                                                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                                                    NettyClient.getInstance().sendMessage(communication, null);
-//                                                }
-//                                            }
-//                                        });
-//                                    } catch (InterruptedException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                }
-//                            }).start();
-
                         } else {
-//                        setResultToToast("Mission upload failed, error: " + error.getDescription() + " retrying...");
                             getWaypointMissionOperator().retryUploadMission(null);
                             communication.setResult("uploadMission报错" + error.getDescription() + "currentState=" + currentState);
                             communication.setCode(-1);
@@ -5306,108 +4705,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
 
             } else {
-//            setResultToToast("loadWaypoint failed " + error.getDescription());
                 communication.setResult("loadMission报错" + error2.getDescription());
                 communication.setCode(-1);
                 communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                 NettyClient.getInstance().sendMessage(communication, null);
             }
-//                    }
-
-//            getWaypointMissionOperator().stopMission(new CommonCallbacks.CompletionCallback() {
-//                @Override
-//                public void onResult(DJIError error) {
-////                setResultToToast("Mission Stop: " + (error == null ? "Successfully" : error.getDescription()));
-////                    if (error != null) {
-////                        communication.setResult("stopMission报错：" + error.getDescription());
-////                        communication.setCode(-1);
-////                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-////                        NettyClient.getInstance().sendMessage(communication, null);
-////                    } else {
-//
-//                    Log.d("WMUEWMUE","stopMission");
-//                        //添加航点
-//                        if (!TextUtils.isEmpty(wayPoints)) {
-//                            List<WayPointsBean> myWayPointList = gson.fromJson(wayPoints, new TypeToken<List<WayPointsBean>>() {
-//                            }.getType());
-//                            waypointList.clear();
-//                            //为0 说明没拿到
-//                            for (int i =targetWaypointIndex==0?0: targetWaypointIndex - 1; i < myWayPointList.size(); i++) {
-//                                if (i == targetWaypointIndex - 1) {
-//                                    WayPointsBean wb = myWayPointList.get(i);
-//                                    wb.setLatitude(HangXianPauselatitude + "");
-//                                    wb.setLongitude(HangXianPauselongitude + "");
-//                                    add_point(wb, mSpeed + "", mGimbalPitch + "", mTurnMode, sgpre);
-//                                } else {
-//                                    add_point(myWayPointList.get(i), mSpeed + "", mGimbalPitch + "", mTurnMode, sgpre);
-//                                }
-//
-//                            }
-//                        }
-//
-//                        if (waypointMissionBuilder == null) {
-//                            Log.d("WMUEWMUE","waypointMissionBuilder=null");
-//                            waypointMissionBuilder = new WaypointMission.Builder().finishedAction(mFinishedAction)
-//                                    .headingMode(mHeadingMode)
-//                                    .autoFlightSpeed(mSpeed)
-//                                    .maxFlightSpeed(mSpeed)
-//                                    .setGimbalPitchRotationEnabled(sgpre)
-//                                    .flightPathMode(mFlightPathMode);
-//
-//                        } else {
-//                            waypointMissionBuilder.finishedAction(mFinishedAction)
-//                                    .headingMode(mHeadingMode)
-//                                    .autoFlightSpeed(mSpeed)
-//                                    .maxFlightSpeed(mSpeed)
-//                                    .setGimbalPitchRotationEnabled(sgpre)
-//                                    .flightPathMode(mFlightPathMode);
-//
-//                        }
-//                        DJIError error2 = getWaypointMissionOperator().loadMission(waypointMissionBuilder.build());
-//                        if (error2 == null) {
-//                            Log.d("WMUEWMUE","loadMissionsuccess");
-//                            Gson gson = new Gson();
-//                            String MSlist = gson.toJson(waypointList);
-//                            Log.d("MSlist", MSlist);
-//
-//                            //成功之后upload
-//                            getWaypointMissionOperator().uploadMission(new CommonCallbacks.CompletionCallback() {
-//                                @Override
-//                                public void onResult(DJIError error) {
-//                                    String currentState = getWaypointMissionOperator().getCurrentState().toString();
-//                                    if (error == null) {
-//                                        Log.d("WMUEWMUE","uploadMissionsuccess");
-////                        setResultToToast("Mission upload successfully!");
-//
-////                                        communication.setResult("Mission upload successfully!+currentState=" + currentState);
-////                                        communication.setCode(200);
-////                                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-////                                        NettyClient.getInstance().sendMessage(communication, null);
-//                                        //开始恢复航线飞行
-//                                        startWaypointMission(communication);
-//
-//                                    } else {
-////                        setResultToToast("Mission upload failed, error: " + error.getDescription() + " retrying...");
-//                                        getWaypointMissionOperator().retryUploadMission(null);
-//                                        communication.setResult("uploadMission报错" + error.getDescription() + "currentState=" + currentState);
-//                                        communication.setCode(-1);
-//                                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                                        NettyClient.getInstance().sendMessage(communication, null);
-//                                    }
-//                                }
-//                            });
-//
-//
-//                        } else {
-////            setResultToToast("loadWaypoint failed " + error.getDescription());
-//                            communication.setResult("loadMission报错" + error.getDescription());
-//                            communication.setCode(-1);
-//                            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                            NettyClient.getInstance().sendMessage(communication, null);
-//                        }
-////                    }
-//                }
-//            });
 
         }
         //正常的恢复
@@ -5585,13 +4887,16 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                     NettyClient.getInstance().sendMessage(communication_upload_mission, null);
                 }
+            }else{
+                if(waypointMissionUploadEvent.getError()!=null){
+                    communication_upload_mission.setResult(waypointMissionUploadEvent.getError().getDescription());
+                    communication_upload_mission.setCode(-1);
+                    communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                    NettyClient.getInstance().sendMessage(communication_upload_mission, null);
+                }
             }
-//            } else {
-//                communication_upload_mission.setResult("onUploadUpdate报错:" + waypointMissionUploadEvent.getError());
-//                communication_upload_mission.setCode(-1);
-//                communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                NettyClient.getInstance().sendMessage(communication_upload_mission, null);
-//            }
+
+
 
         }
 

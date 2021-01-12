@@ -41,6 +41,22 @@ public class WebInitializationBean {
     private String rear;
     private String statusIndicator;
 
+    //红外分屏
+    private String hyDisplayMode;
+
+
+    public String getHyDisplayMode() {
+        return hyDisplayMode;
+    }
+
+    public void setHyDisplayMode(String hyDisplayMode) {
+        this.hyDisplayMode = hyDisplayMode;
+    }
+
+
+
+
+
     public String getCurrentVideoSource() {
         return currentVideoSource;
     }

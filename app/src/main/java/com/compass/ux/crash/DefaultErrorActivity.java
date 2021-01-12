@@ -62,6 +62,8 @@ public final class DefaultErrorActivity extends AppCompatActivity {
 
         final CaocConfig config = CustomActivityOnCrash.getConfigFromIntent(getIntent());
 
+        CustomActivityOnCrash.restartApplication(DefaultErrorActivity.this, config);
+
         if (config.isShowRestartButton() && config.getRestartActivityClass()!=null) {
             restartButton.setText(R.string.customactivityoncrash_error_activity_restart_app);
             restartButton.setOnClickListener(new View.OnClickListener() {

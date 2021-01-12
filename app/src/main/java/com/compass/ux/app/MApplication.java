@@ -9,7 +9,6 @@ import com.compass.ux.crash.CaocConfig;
 import com.compass.ux.takephoto.FPVDemoApplication;
 import com.compass.ux.ui.ConnectionActivity;
 import com.secneo.sdk.Helper;
-import com.squareup.leakcanary.LeakCanary;
 import com.tencent.bugly.crashreport.CrashReport;
 
 /**
@@ -18,7 +17,7 @@ import com.tencent.bugly.crashreport.CrashReport;
 public class MApplication extends Application {
 //    public static String EQUIPMENT_ID= "Mobile_01";
     public static String EQUIPMENT_ID="";
-    public static String UPLOAD_URL="http://61.155.157.42:7070/oauth/file/upload";
+//    public static String UPLOAD_URL="http://61.155.157.42:7070/oauth/file/upload";
     public static boolean HAVE_Permission=false;
 
 
@@ -63,9 +62,9 @@ public class MApplication extends Application {
 
 
         //内存泄漏检测
-        if (!LeakCanary.isInAnalyzerProcess(this)) {
-            LeakCanary.install(this);
-        }
+//        if (!LeakCanary.isInAnalyzerProcess(this)) {
+//            LeakCanary.install(this);
+//        }
 
 
     }

@@ -105,14 +105,13 @@ public class FirstActivity extends AppCompatActivity {
 
 
      void getvalues(){
-        if (TextUtils.isEmpty(MApplication.EQUIPMENT_ID) || TextUtils.isEmpty(MApplication.UPLOAD_URL)) {
+        if (TextUtils.isEmpty(MApplication.EQUIPMENT_ID) ) {
             String text_message = FileUtils.readString(file.getAbsolutePath(), "utf-8");
 
             if (!TextUtils.isEmpty(text_message)) {
                 TextMessageBean textMessageBean = gson.fromJson(text_message, TextMessageBean.class);
                 String mobile_Id = textMessageBean.getEquip_id();
                 MApplication.EQUIPMENT_ID = mobile_Id;
-                MApplication.UPLOAD_URL = textMessageBean.getUpload_url();
                 Log.d("FileUtils", "FileUtils=" + mobile_Id);
 
                 Intent intent=new Intent(FirstActivity.this,ConnectionActivity.class);
@@ -165,14 +164,14 @@ public class FirstActivity extends AppCompatActivity {
         } else {
 //            havePermission = true;
 
-            if (TextUtils.isEmpty(MApplication.EQUIPMENT_ID) || TextUtils.isEmpty(MApplication.UPLOAD_URL)) {
+            if (TextUtils.isEmpty(MApplication.EQUIPMENT_ID) ) {
                 String text_message = FileUtils.readString(file.getAbsolutePath(), "utf-8");
 
                 if (!TextUtils.isEmpty(text_message)) {
                     TextMessageBean textMessageBean = gson.fromJson(text_message, TextMessageBean.class);
                     String mobile_Id = textMessageBean.getEquip_id();
                     MApplication.EQUIPMENT_ID = mobile_Id;
-                    MApplication.UPLOAD_URL = textMessageBean.getUpload_url();
+//                    MApplication.UPLOAD_URL = textMessageBean.getUpload_url();
                     Log.d("FileUtils", "FileUtils=" + mobile_Id);
                     Intent intent=new Intent(FirstActivity.this,ConnectionActivity.class);
                     startActivity(intent);
