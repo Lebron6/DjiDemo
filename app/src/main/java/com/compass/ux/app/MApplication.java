@@ -8,6 +8,7 @@ import com.compass.ux.R;
 import com.compass.ux.crash.CaocConfig;
 import com.compass.ux.takephoto.FPVDemoApplication;
 import com.compass.ux.ui.ConnectionActivity;
+import com.compass.ux.ui.FirstActivity;
 import com.secneo.sdk.Helper;
 import com.tencent.bugly.crashreport.CrashReport;
 
@@ -79,7 +80,7 @@ public class MApplication extends Application {
                 .trackActivities(true) //是否跟踪Activity
                 .minTimeBetweenCrashesMs(2000) //崩溃的间隔时间(毫秒)
                 .errorDrawable(R.mipmap.ic_launcher) //错误图标
-                .restartActivity(ConnectionActivity.class) //重新启动后的activity
+                .restartActivity(FirstActivity.class) //重新启动后的activity
 //                .errorActivity(YourCustomErrorActivity.class) //崩溃后的错误activity
 //                .eventListener(new YourCustomEventListener()) //崩溃后的错误监听
                 .apply();

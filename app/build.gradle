@@ -16,6 +16,7 @@ android {
             // On x86 devices that run Android API 23 or above, if the application is targeted with API 23 or
             // above, FFmpeg lib might lead to runtime crashes or warnings.
             abiFilters 'armeabi-v7a', 'x86', 'arm64-v8a'
+//            abiFilters 'armeabi', 'armeabi-v7a' , 'arm64-v8a', 'x86', 'x86_64', 'mips', 'mips64'
         }
     }
     buildTypes {
@@ -29,29 +30,7 @@ android {
     }
 
     packagingOptions {
-        doNotStrip "*/*/libdjivideo.so"
-        doNotStrip "*/*/libSDKRelativeJNI.so"
-        doNotStrip "*/*/libFlyForbid.so"
-        doNotStrip "*/*/libduml_vision_bokeh.so"
-        doNotStrip "*/*/libyuv2.so"
-        doNotStrip "*/*/libGroudStation.so"
-        doNotStrip "*/*/libFRCorkscrew.so"
-        doNotStrip "*/*/libUpgradeVerify.so"
-        doNotStrip "*/*/libFR.so"
-        doNotStrip "*/*/libDJIFlySafeCore.so"
-        doNotStrip "*/*/libdjifs_jni.so"
-        doNotStrip "*/*/libsfjni.so"
-        exclude 'META-INF/rxjava.properties'
-
-        doNotStrip "*/*/libDJICommonJNI.so"
-        doNotStrip "*/*/libDJICSDKCommon.so"
-        doNotStrip "*/*/libDJIUpgradeCore.so"
-        doNotStrip "*/*/libDJIUpgradeJNI.so"
-        doNotStrip "*/*/libDJIWaypointV2Core.so"
-        doNotStrip "*/*/libAMapSDK_MAP_v6_9_2.so"
-        doNotStrip "*/*/libDJIMOP.so"
-        exclude 'META-INF/rxjava.properties'
-
+        //4.13
 //        doNotStrip "*/*/libdjivideo.so"
 //        doNotStrip "*/*/libSDKRelativeJNI.so"
 //        doNotStrip "*/*/libFlyForbid.so"
@@ -64,6 +43,8 @@ android {
 //        doNotStrip "*/*/libDJIFlySafeCore.so"
 //        doNotStrip "*/*/libdjifs_jni.so"
 //        doNotStrip "*/*/libsfjni.so"
+//        exclude 'META-INF/rxjava.properties'
+//
 //        doNotStrip "*/*/libDJICommonJNI.so"
 //        doNotStrip "*/*/libDJICSDKCommon.so"
 //        doNotStrip "*/*/libDJIUpgradeCore.so"
@@ -71,8 +52,34 @@ android {
 //        doNotStrip "*/*/libDJIWaypointV2Core.so"
 //        doNotStrip "*/*/libAMapSDK_MAP_v6_9_2.so"
 //        doNotStrip "*/*/libDJIMOP.so"
-//        doNotStrip "*/*/libDJISDKLOGJNI.so"
 //        exclude 'META-INF/rxjava.properties'
+
+        //4.14
+        doNotStrip "*/*/libdjivideo.so"
+        doNotStrip "*/*/libSDKRelativeJNI.so"
+        doNotStrip "*/*/libFlyForbid.so"
+        doNotStrip "*/*/libduml_vision_bokeh.so"
+        doNotStrip "*/*/libyuv2.so"
+        doNotStrip "*/*/libGroudStation.so"
+        doNotStrip "*/*/libFRCorkscrew.so"
+        doNotStrip "*/*/libUpgradeVerify.so"
+        doNotStrip "*/*/libFR.so"
+        doNotStrip "*/*/libDJIFlySafeCore.so"
+        doNotStrip "*/*/libdjifs_jni.so"
+        doNotStrip "*/*/libsfjni.so"
+        doNotStrip "*/*/libDJICommonJNI.so"
+        doNotStrip "*/*/libDJICSDKCommon.so"
+        doNotStrip "*/*/libDJIUpgradeCore.so"
+        doNotStrip "*/*/libDJIUpgradeJNI.so"
+        doNotStrip "*/*/libDJIWaypointV2Core.so"
+        doNotStrip "*/*/libAMapSDK_MAP_v6_9_2.so"
+        doNotStrip "*/*/libDJIMOP.so"
+        doNotStrip "*/*/libDJISDKLOGJNI.so"
+        exclude 'META-INF/rxjava.properties'
+        exclude 'assets/location_map_gps_locked.png'
+        exclude 'assets/location_map_gps_3d.png'
+
+
 
     }
 
@@ -97,15 +104,12 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     //集成大疆无人机
-//    implementation 'com.dji:dji-sdk:4.14-trial1'
-//    compileOnly 'com.dji:dji-sdk-provided:4.14-trial1'
+    implementation 'com.dji:dji-sdk:4.14-trial1'
+    compileOnly 'com.dji:dji-sdk-provided:4.14-trial1'
 
-    implementation 'com.dji:dji-sdk:4.13.1'
-    compileOnly 'com.dji:dji-sdk-provided:4.13.1'
+//    implementation 'com.dji:dji-sdk:4.13.1'
+//    compileOnly 'com.dji:dji-sdk-provided:4.13.1'
 
-
-//    implementation 'com.dji:dji-sdk:4.14-trial1'
-//    compileOnly 'com.dji:dji-sdk-provided:4.14-trial1'
 
 
 

@@ -1,7 +1,7 @@
 //
 //
 package com.compass.ux.ui;
-//
+
 //import android.content.Context;
 //import android.view.View;
 //
@@ -792,4 +792,4 @@ package com.compass.ux.ui;
 //        return R.string.component_listview_waypointv2;
 //    }
 //}
-//
+

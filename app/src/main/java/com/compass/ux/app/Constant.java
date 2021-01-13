@@ -19,10 +19,15 @@ public class Constant {
     public static final String CAMERA_CENTER_PITCH="cameraCenterPitch";
     public static final String CAMERA_CENTER_YAW="cameraCenterYaw";
     public static final String WAYPOINT_PLAN="waypointPlan";
+    public static final String WAYPOINT_PLAN_V2="waypointPlanV2";
     public static final String WAYPOINT_FLY_START="waypointFlyStart";
+    public static final String WAYPOINT_FLY_START_V2="waypointFlyStartV2";
     public static final String WAYPOINT_FLY_STOP="waypointFlyStop";
+    public static final String WAYPOINT_FLY_STOP_V2="waypointFlyStopV2";
     public static final String WAYPOINT_FLY_RESUME="waypointFlyResume";
+    public static final String WAYPOINT_FLY_RESUME_V2="waypointFlyResumeV2";
     public static final String WAYPOINT_FLY_PAUSE="waypointFlyPause";
+    public static final String WAYPOINT_FLY_PAUSE_V2="waypointFlyPauseV2";
     public static final String GO_HOME="goHome";
     public static final String CANCEL_GO_HOME="cancelGoHome";
     public static final String GIMBAL_VISUAL="gimbalVisual";
