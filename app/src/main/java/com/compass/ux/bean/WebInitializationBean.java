@@ -45,6 +45,24 @@ public class WebInitializationBean {
     private String hyDisplayMode;
 
 
+    //用户当前状态
+    private String userAccountState;
+
+    public String getUserAccountState() {
+        return userAccountState;
+    }
+
+    public void setUserAccountState(String userAccountState) {
+        this.userAccountState = userAccountState;
+    }
+
+
+
+
+
+
+
+
     public String getHyDisplayMode() {
         return hyDisplayMode;
     }

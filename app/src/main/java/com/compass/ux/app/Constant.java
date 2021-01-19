@@ -110,6 +110,7 @@ public class Constant {
     public static final String CONNECT_BS="connectToBaseStation";
     public static final String SET_RSS="setReferenceStationSource";
     public static final String SET_NSCS="setNetworkServiceCoordinateSystem";
+    public static final String SET_RTK_NETWORK="setRTKNetwork";
     public static final String LIVE_PATH="livePath";
     public static final String PITCH_RANGE_EXTENSION="pitchRangeExtension";
     public static final String SET_FREQUENCY_BAND="setFrequencyBand";

@@ -176,6 +176,20 @@ public class FlightControllerBean {
      */
     private String FlightModeString;
 
+    //云台度数
+    private String gimbalStatePitch;
+
+    public String getGimbalStatePitch() {
+        return gimbalStatePitch;
+    }
+
+    public void setGimbalStatePitch(String gimbalStatePitch) {
+        this.gimbalStatePitch = gimbalStatePitch;
+    }
+
+
+
+
 
 
     /**

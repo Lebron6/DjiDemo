@@ -10,6 +10,7 @@ import dji.common.airlink.OcuSyncFrequencyBand;
 import dji.common.airlink.PhysicalSource;
 import dji.common.airlink.SignalQualityCallback;
 import dji.common.airlink.WifiChannelInterference;
+import dji.common.battery.BatteryState;
 import dji.common.camera.CameraVideoStreamSource;
 import dji.common.camera.LaserMeasureInformation;
 import dji.common.camera.PhotoTimeLapseSettings;
@@ -31,6 +32,7 @@ import dji.common.flightcontroller.flightassistant.ObstacleAvoidanceSensorState;
 import dji.common.flightcontroller.flightassistant.PerceptionInformation;
 import dji.common.flightcontroller.rtk.CoordinateSystem;
 import dji.common.flightcontroller.rtk.NetworkServicePlansState;
+import dji.common.flightcontroller.rtk.NetworkServiceSettings;
 import dji.common.flightcontroller.rtk.NetworkServiceState;
 import dji.common.flightcontroller.rtk.RTKBaseStationInformation;
 import dji.common.flightcontroller.rtk.ReferenceStationSource;
@@ -62,6 +64,7 @@ import dji.common.mission.waypointv2.Action.ActionTypes;
 import dji.common.mission.waypointv2.Action.ActionUploadEvent;
 import dji.common.mission.waypointv2.Action.WaypointActuator;
 import dji.common.mission.waypointv2.Action.WaypointAircraftControlParam;
+import dji.common.mission.waypointv2.Action.WaypointAircraftControlRotateYawParam;
 import dji.common.mission.waypointv2.Action.WaypointAircraftControlStartStopFlyParam;
 import dji.common.mission.waypointv2.Action.WaypointCameraActuatorParam;
 import dji.common.mission.waypointv2.Action.WaypointCameraCustomNameParam;
@@ -159,6 +162,7 @@ import com.compass.ux.bean.StorageStateBean;
 import com.compass.ux.bean.StringsBean;
 import com.compass.ux.bean.TransmissionSetBean;
 import com.compass.ux.bean.WayPointsBean;
+import com.compass.ux.bean.WayPointsV2Bean;
 import com.compass.ux.bean.WebInitializationBean;
 import com.compass.ux.netty_lib.NettyService;
 import com.compass.ux.netty_lib.activity.NettyActivity;
@@ -226,7 +230,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private FlightAssistant mFlightAssistant;
     private OcuSyncLink ocuSyncLink;
     private RTK mRTK;
-//    private Battery battery;
+    private Battery battery;
     private Gimbal gimbal;
     private Timer mSendVirtualStickDataTimer;
     private float mPitch;
@@ -304,6 +308,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     int targetWaypointIndex = 0;
     boolean sgpre;
     String wayPoints = "";
+    String wayPointAction = "";
+    double goHomeLat=0,goHomeLong=0;
     boolean visionAssistedPosition, precisionLand, upwardsAvoidance, collisionAvoidance;
     FlightControllerKey flightControllerKey1 = FlightControllerKey.create(FlightControllerKey.VISION_ASSISTED_POSITIONING_ENABLED);
     FlightControllerKey flightControllerKey2 = FlightControllerKey.create(FlightControllerKey.PRECISION_LANDING_ENABLED);
@@ -317,6 +323,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     String channelBandwidth = "", frequencyBand = "", transcodingDataRate = "", interferencePower = "", currentVideoSource = "";
     int downloadToPadCount = 0;//下载到pad时记录当前下载了第几个
     WebInitializationBean webInitializationBean = new WebInitializationBean();
+    String gimbalStatePitch = "";//云台度数
     //这是获取左上角飞行状态的
     private Handler planeStatusHandler = new Handler();
     private Runnable planeStatusTask = new Runnable() {
@@ -856,6 +863,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 + error.getDescription());
                     }
                 });
+
+
     }
 
     private void loginOut() {
@@ -1037,6 +1046,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                            flightControllerBean.setAircraftLongitude(flightControllerState.getAircraftLocation().getLongitude());
                                     flightControllerBean.setAircraftLongitude(latLng.longitude);
                                 }
+                                flightControllerBean.setGimbalStatePitch(gimbalStatePitch);
                                 //航线暂停飞行时记录
                                 if (isHangXianPause) {
                                     HangXianPauselongitude = latLng.longitude;
@@ -1535,6 +1545,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         }
                     });
 
+                    int loginvalue = UserAccountManager.getInstance().getUserAccountState().value();
+                    webInitializationBean.setUserAccountState(loginvalue + "");
+
+
                 }
             }
 
@@ -1567,6 +1581,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         camera = FPVDemoApplication.getCameraInstance();
         if (camera != null) {
             //设置比例为16：9
+            camera.setPhotoAspectRatio(RATIO_16_9, new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+
+                }
+            });
             camera.getLens(0).setPhotoAspectRatio(RATIO_16_9, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
@@ -1777,14 +1797,37 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     boolean is_battery_one_change = false, is_battery_two_change = false;
 
     private void initBattery() {
-//        getChargeRemainingInPercent
-//        if(FPVDemoApplication.getProductInstance().getBattery()!=null){
-//            battery = FPVDemoApplication.getProductInstance().getBattery();
-//        }
+////        getChargeRemainingInPercent
+        if (FPVDemoApplication.getProductInstance().getBattery() != null) {
+            battery = FPVDemoApplication.getProductInstance().getBattery();
+            battery.setStateCallback(new BatteryState.Callback() {
+                @Override
+                public void onUpdate(BatteryState batteryState) {
+                    batteryState.getChargeRemainingInPercent();
+                }
+            });
+
+            FPVDemoApplication.getProductInstance().getBatteries().get(0).setStateCallback(new BatteryState.Callback() {
+                @Override
+                public void onUpdate(BatteryState batteryState) {
+                    Log.d("getBatteries0", batteryState.getChargeRemainingInPercent() + "");
+                }
+            });
+
+            FPVDemoApplication.getProductInstance().getBatteries().get(1).setStateCallback(new BatteryState.Callback() {
+                @Override
+                public void onUpdate(BatteryState batteryState) {
+                    Log.d("getBatteries1", batteryState.getChargeRemainingInPercent() + "");
+                }
+            });
+        }
+//
 
 
         BatteryKey battery_per_one = BatteryKey.create(BatteryKey.CHARGE_REMAINING_IN_PERCENT);
         BatteryKey battery_per_two = BatteryKey.create(BatteryKey.CHARGE_REMAINING_IN_PERCENT, 1);
+
+
         BatteryKey battery_voltage_one = BatteryKey.create(BatteryKey.CELL_VOLTAGES);
         BatteryKey battery_voltage_two = BatteryKey.create(BatteryKey.CELL_VOLTAGES, 1);
         BatteryKey temperature_one = BatteryKey.create(BatteryKey.TEMPERATURE);
@@ -1898,6 +1941,34 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 submitBatteryPersentAndV();
             }
         });
+        //第一次获取电量
+        KeyManager.getInstance().getValue(battery_per_one, new GetCallback() {
+            @Override
+            public void onSuccess(Object o) {
+                int b_one = (Integer) o;
+                battery_one = b_one + "";
+                KeyManager.getInstance().getValue(battery_per_two, new GetCallback() {
+                    @Override
+                    public void onSuccess(Object o) {
+                        int b_two = (Integer) o;
+                        battery_two = b_two + "";
+                        submitBatteryPersentAndV();
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(DJIError djiError) {
+
+            }
+        });
+
+
     }
 
     String gimbal_pitch_speed = "", gimbal_yaw_speed = "";
@@ -1935,6 +2006,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 public void onUpdate(GimbalState gimbalState) {//左右y 上下p
                     webInitializationBean.setHorizontalAngle(gimbalState.getAttitudeInDegrees().getYaw() + "");
                     webInitializationBean.setPitchAngle(gimbalState.getAttitudeInDegrees().getPitch() + "");
+                    gimbalStatePitch = gimbalState.getAttitudeInDegrees().getPitch() + "";
                 }
             });
             //云台俯仰限位扩展
@@ -2379,9 +2451,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 setRSS(communication);
                 break;
             //设置坐标系
-            case Constant.SET_NSCS:
-                setNSCS(communication);
+            case Constant.SET_RTK_NETWORK:
+                setRTKNetwork(communication);
                 break;
+
+
             //设置云台限位扩展
             case Constant.PITCH_RANGE_EXTENSION:
                 setPitchRangeExtension(communication);
@@ -2400,6 +2474,21 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 break;
             case "print":
                 TestPrint(communication);
+                break;
+            //判断是否在飞
+            case "getIsFlying":
+                communication.setResult(lastFlying?"1":"0");
+                communication.setCode(200);
+                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                NettyClient.getInstance().sendMessage(communication, null);
+                break;
+            //获取返航点经纬度
+            case "getSLngLat":
+                double[] latAndLng = MapConvertUtils.getDJILatLng(goHomeLat,goHomeLong);
+                communication.setResult(latAndLng[1]+","+latAndLng[0]);
+                communication.setCode(200);
+                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                NettyClient.getInstance().sendMessage(communication, null);
                 break;
 
 
@@ -3185,7 +3274,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     //设置iso
     private void setISO(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
-        if (isM300Product() && camera != null) {
+        if (isM300Product() && camera != null && !TextUtils.isEmpty(type)) {
             camera.getLens(0).setISO(SettingsDefinitions.ISO.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
@@ -3200,7 +3289,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     //设置曝光补偿
     private void setExposureCom(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
-        if (isM300Product() && camera != null) {
+        if (isM300Product() && camera != null && !TextUtils.isEmpty(type)) {
             camera.getLens(0).setExposureCompensation(SettingsDefinitions.ExposureCompensation.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
@@ -3255,13 +3344,16 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private void setCameraZoom(Communication communication) {
         if (isM300Product() && camera != null) {
             String type = communication.getPara().get(Constant.TYPE);
-            camera.getLens(0).setHybridZoomFocalLength(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
-                    CommonDjiCallback(djiError, communication);
-                    webInitializationBean.setHybridZoom(Integer.parseInt(type));
-                }
-            });
+            if (!TextUtils.isEmpty(type)) {
+                camera.getLens(0).setHybridZoomFocalLength(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        CommonDjiCallback(djiError, communication);
+                        webInitializationBean.setHybridZoom(Integer.parseInt(type));
+                    }
+                });
+            }
+
         }
     }
 
@@ -3399,30 +3491,33 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     //设置返航高度
     private void setGoHomeHeight(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
-        mFlightController.setGoHomeHeightInMeters(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                if (djiError == null) {
-                    goHomeHeightInMeters = type;
+        if (mFlightController != null && !TextUtils.isEmpty(type)) {
+            mFlightController.setGoHomeHeightInMeters(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if (djiError == null) {
+                        goHomeHeightInMeters = type;
+                    }
+                    CommonDjiCallback(djiError, communication);
                 }
-                CommonDjiCallback(djiError, communication);
-            }
-        });
+            });
+        }
     }
 
     //设置限高20~500
     private void setMaxHeight(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
-        mFlightController.setMaxFlightHeight(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                if (djiError == null) {
-                    maxFlightHeight = type;
+        if (mFlightController != null) {
+            mFlightController.setMaxFlightHeight(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if (djiError == null) {
+                        maxFlightHeight = type;
+                    }
+                    CommonDjiCallback(djiError, communication);
                 }
-                CommonDjiCallback(djiError, communication);
-            }
-        });
-
+            });
+        }
     }
 
     //设置失控状态做的操作
@@ -3466,7 +3561,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 public void onResult(DJIError djiError) {
                     if (djiError == null) {
                         maxFlightRadiusLimitationEnabled = type.equals("1") ? true : false;
-                        if (maxFlightRadiusLimitationEnabled) {
+                        if (maxFlightRadiusLimitationEnabled && !TextUtils.isEmpty(value)) {
+
                             mFlightController.setMaxFlightRadius(Integer.parseInt(value), new CommonCallbacks.CompletionCallback() {
                                 @Override
                                 public void onResult(DJIError djiError) {
@@ -3964,7 +4060,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     //设置参考站源
     private void setRSS(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
-        if (mRTK != null) {
+        if (mRTK != null && !TextUtils.isEmpty(type)) {
             mRTK.setReferenceStationSource(ReferenceStationSource.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
@@ -3982,8 +4078,46 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     //设置坐标系
     private void setNSCS(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
+        if (!TextUtils.isEmpty(type)) {
+            RTKNetworkServiceProvider provider = DJISDKManager.getInstance().getRTKNetworkServiceProvider().getInstance();
+            provider.setNetworkServiceCoordinateSystem(CoordinateSystem.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    CommonDjiCallback(djiError, communication);
+                }
+            });
+
+//            https://bbs.dji.com/thread-247389-1-1.html
+            //设置千寻网
+//            NetworkServiceSettings.Builder builder=new NetworkServiceSettings.Builder().userName("").password("")
+//            provider.setCustomNetworkSettings(builder.build());
+
+        }
+    }
+
+    //设置网络rtk
+//    https://bbs.dji.com/thread-247389-1-1.html
+    private void setRTKNetwork(Communication communication) {
+        String username = communication.getPara().get("username");
+        String password = communication.getPara().get("password");
+        String ip = communication.getPara().get("ip");
+        String mountPoint = communication.getPara().get("mountPoint");
+        int port = Integer.parseInt(communication.getPara().get("port"));
         RTKNetworkServiceProvider provider = DJISDKManager.getInstance().getRTKNetworkServiceProvider().getInstance();
-        provider.setNetworkServiceCoordinateSystem(CoordinateSystem.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
+        if (mRTK != null) {
+            mRTK.setReferenceStationSource(ReferenceStationSource.NETWORK_RTK, new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                }
+            });
+        }
+        //设置网络坐标系
+//        provider.setNetworkServiceCoordinateSystem();
+
+        NetworkServiceSettings.Builder builder = new NetworkServiceSettings.Builder()
+                .userName(username).password(password).ip(ip).mountPoint(mountPoint).port(port);
+        provider.setCustomNetworkSettings(builder.build());
+        provider.startNetworkService(new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
                 CommonDjiCallback(djiError, communication);
@@ -3992,64 +4126,71 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     }
 
+
     //设置云台俯仰限位扩展
     private void setPitchRangeExtension(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
-        gimbal.setPitchRangeExtensionEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                CommonDjiCallback(djiError, communication);
-            }
-        });
+        if (!TextUtils.isEmpty(type)) {
+            gimbal.setPitchRangeExtensionEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    CommonDjiCallback(djiError, communication);
+                }
+            });
+        }
+
     }
 
     //设置工作频段
     private void setFrequencyBand(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
-        ocuSyncLink.setFrequencyBand(OcuSyncFrequencyBand.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                if (djiError == null) {
+        if (!TextUtils.isEmpty(type)) {
+            ocuSyncLink.setFrequencyBand(OcuSyncFrequencyBand.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if (djiError == null) {
 
-                    switch (type) {
-                        case "0":
-                            frequencyBand = "双频";
-                            break;
-                        case "1":
-                            frequencyBand = "2.4G";
-                            break;
-                        case "2":
-                            frequencyBand = "5.8G";
-                            break;
+                        switch (type) {
+                            case "0":
+                                frequencyBand = "双频";
+                                break;
+                            case "1":
+                                frequencyBand = "2.4G";
+                                break;
+                            case "2":
+                                frequencyBand = "5.8G";
+                                break;
+                        }
+
+
+                        TransmissionSetBean transmissionSetBean = new TransmissionSetBean();
+                        transmissionSetBean.setChannelBandwidth(channelBandwidth);
+                        transmissionSetBean.setFrequencyBand(frequencyBand);
+                        transmissionSetBean.setInterferencePower(interferencePower);
+                        transmissionSetBean.setTranscodingDataRate(transcodingDataRate);
+                        communication.setResult(gson.toJson(transmissionSetBean, TransmissionSetBean.class));
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        communication.setCode(200);
+                        NettyClient.getInstance().sendMessage(communication, null);
+                    } else {
+                        communication.setResult(djiError.getDescription());
+                        communication.setCode(-1);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
                     }
 
 
-                    TransmissionSetBean transmissionSetBean = new TransmissionSetBean();
-                    transmissionSetBean.setChannelBandwidth(channelBandwidth);
-                    transmissionSetBean.setFrequencyBand(frequencyBand);
-                    transmissionSetBean.setInterferencePower(interferencePower);
-                    transmissionSetBean.setTranscodingDataRate(transcodingDataRate);
-                    communication.setResult(gson.toJson(transmissionSetBean, TransmissionSetBean.class));
-                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    communication.setCode(200);
-                    NettyClient.getInstance().sendMessage(communication, null);
-                } else {
-                    communication.setResult(djiError.getDescription());
-                    communication.setCode(-1);
-                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    NettyClient.getInstance().sendMessage(communication, null);
+                    CommonDjiCallback(djiError, communication);
                 }
+            });
+        }
 
-
-                CommonDjiCallback(djiError, communication);
-            }
-        });
     }
 
     //设置云台模式
     private void setGimbalMode(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
-        if (gimbal != null) {
+        if (gimbal != null && !TextUtils.isEmpty(type)) {
             gimbal.setMode(GimbalMode.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
@@ -4827,7 +4968,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private void waypoint_plan_V2(Communication communication) {
         waypointV2MissionOperator = MissionControl.getInstance().getWaypointMissionV2Operator();
         setWayV2UpListener();
-        Log.d("WV2MOperator",waypointV2MissionOperator.getCurrentState()+"");
+        Log.d("WV2MOperator", waypointV2MissionOperator.getCurrentState() + "");
         //loadMission
         if (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.READY_TO_UPLOAD) || waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.READY_TO_EXECUTE)) {
             waypointV2MissionOperator.loadMission(createWaypointMission(communication), new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
@@ -4838,7 +4979,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         Toast.makeText(ConnectionActivity.this, "Mission is loaded successfully", Toast.LENGTH_SHORT).show();
                         //uploadMission
                         if (canUploadMission) {
-                            communication_upload_mission=communication;
+                            communication_upload_mission = communication;
                             waypointV2MissionOperator.uploadMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                                 @Override
                                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
@@ -4893,7 +5034,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     communication_upload_mission.setCode(200);
                     communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                     NettyClient.getInstance().sendMessage(communication_upload_mission, null);
-                }else{
+                } else {
                     communication_upload_mission.setResult("Mission is uploaded failed");
                     communication_upload_mission.setCode(-1);
                     communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
@@ -4936,7 +5077,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             public void onUploadUpdate(ActionUploadEvent actionUploadEvent) {
                 if (actionUploadEvent.getCurrentState().equals(ActionState.READY_TO_UPLOAD)) {
                     //添加执行操作
-//                    uploadWaypointAction(waypointV2ActionList);
+                    uploadWaypointAction();
                 }
                 //上传航线成功
                 if (actionUploadEvent.getPreviousState() == ActionState.UPLOADING
@@ -4960,7 +5101,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             public void onExecutionFinish(int i, DJIWaypointV2Error djiWaypointV2Error) {
 
 
-
             }
         };
 
@@ -4968,333 +5108,123 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         waypointV2MissionOperator.addActionListener(waypointV2ActionListener);
     }
 
-    private void uploadWaypointAction(List<WaypointV2Action> waypointV2ActionList) {
+    private void uploadWaypointAction() {
 
-        WaypointTrigger waypointAction0Trigger = new WaypointTrigger.Builder()
-                .setTriggerType(ActionTypes.ActionTriggerType.REACH_POINT)
-                .setReachPointParam(new WaypointReachPointTriggerParam.Builder()
-                        .setStartIndex(0)
-                        .setAutoTerminateCount(0)
-                        .build())
-                .build();
+        if (!TextUtils.isEmpty(wayPointAction)) {
+            List<WayPointsV2Bean.ActionBean> myWayPointActionList = gson.fromJson(wayPointAction, new TypeToken<WayPointsV2Bean.ActionBean>() {
+            }.getType());
+            waypointV2ActionList.clear();
+            for (int i = 0; i < myWayPointActionList.size(); i++) {
+                WaypointTrigger waypointAction0Trigger = null;
+                WaypointActuator waypointAction0Actuator = null;
+                switch (myWayPointActionList.get(i).getTrigger().getTriggerType()) {
+                    case "5"://reachPoint
+                        waypointAction0Trigger = new WaypointTrigger.Builder()
+                                .setTriggerType(ActionTypes.ActionTriggerType.REACH_POINT)
+                                .setReachPointParam(new WaypointReachPointTriggerParam.Builder()
+                                        .setStartIndex(Integer.parseInt(myWayPointActionList.get(i).getTrigger().getReachPointParam().getStartIndex()))
+                                        .setAutoTerminateCount(Integer.parseInt(myWayPointActionList.get(i).getTrigger().getReachPointParam().getAutoTerminateCount()))
+                                        .build())
+                                .build();
+                        break;
+                    case "1"://ASSOCIATE
+                        waypointAction0Trigger = new WaypointTrigger.Builder()
+                                .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
+                                .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
+                                        .setAssociateActionID(Integer.parseInt(myWayPointActionList.get(i).getTrigger().getAssociateParam().getAssociateActionID()))
+                                        .setAssociateType(ActionTypes.AssociatedTimingType.find(Integer.parseInt(myWayPointActionList.get(i).getTrigger().getAssociateParam().getAssociateType())))
+                                        .setWaitingTime(Integer.parseInt(myWayPointActionList.get(i).getTrigger().getAssociateParam().getAssociateType()))
+                                        .build())
+                                .build();
 
-        WaypointActuator waypointAction0Actuator = new WaypointActuator.Builder()
-                .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
-                .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
-                        .setCameraOperationType(ActionTypes.CameraOperationType.CUSTOM_NAME)
-                        .setCustomNameParam(new WaypointCameraCustomNameParam.Builder()
-                                .type(ActionTypes.CameraCustomNameType.DIR)
-                                .customName("testFolder")
-                                .build())
-                        .build())
-                .build();
+                        break;
+                    case "2"://TRAJECTORY
+                        waypointAction0Trigger = new WaypointTrigger.Builder()
+                                .setTriggerType(ActionTypes.ActionTriggerType.TRAJECTORY)
+                                .setTrajectoryParam(new WaypointTrajectoryTriggerParam.Builder()
+                                        .setStartIndex(Integer.parseInt(myWayPointActionList.get(i).getTrigger().getTrajectoryParam().getStartIndex()))
+                                        .setEndIndex(Integer.parseInt(myWayPointActionList.get(i).getTrigger().getTrajectoryParam().getStartIndex()))
+                                        .build())
+                                .build();
+                        break;
+                    case "3"://SIMPLE_INTERVAL
+                        waypointAction0Trigger = new WaypointTrigger.Builder()
+                                .setTriggerType(ActionTypes.ActionTriggerType.SIMPLE_INTERVAL)
+                                .setIntervalTriggerParam(new WaypointIntervalTriggerParam.Builder()
+                                        .setType(ActionTypes.ActionIntervalType.TIME)
+                                        .setStartIndex(Integer.parseInt(myWayPointActionList.get(i).getTrigger().getIntervalTriggerParam().getStartIndex()))
+                                        .setInterval(Integer.parseInt(myWayPointActionList.get(i).getTrigger().getIntervalTriggerParam().getInterval()))
+                                        .build())
+                                .build();
+                        break;
 
-        WaypointV2Action waypointAction0 = new WaypointV2Action.Builder()
-                .setActionID(0)
-                .setTrigger(waypointAction0Trigger)
-                .setActuator(waypointAction0Actuator)
-                .build();
-        waypointV2ActionList.add(waypointAction0);
 
-        WaypointTrigger waypointAction1Trigger = new WaypointTrigger.Builder()
-                .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
-                .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
-                        .setAssociateActionID(0)
-                        .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
-                        .setWaitingTime(0)
-                        .build())
-                .build();
+                }
 
-        WaypointActuator waypointAction1Actuator = new WaypointActuator.Builder()
-                .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
-                .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
-                        .setAircraftControlType(ActionTypes.AircraftControlType.START_STOP_FLY)
-                        .setFlyControlParam(new WaypointAircraftControlStartStopFlyParam.Builder()
-                                .setStartFly(false)
-                                .build())
-                        .build())
-                .build();
+                switch (myWayPointActionList.get(i).getActuator().getActuatorType()) {
+                    case "0"://camera
+                        waypointAction0Actuator = new WaypointActuator.Builder()
+                                .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
+                                .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
+                                        .setCameraOperationType(ActionTypes.CameraOperationType.find(Integer.parseInt(myWayPointActionList.get(i).getActuator().getCameraOperationType().getOperationType())))
+                                        .build())
+                                .build();
+                        break;
+                    case "3"://AIRCRAFT_CONTROL
+                        if (myWayPointActionList.get(i).getActuator().getAircraftControlType().getOperationType().equals("1")) {//悬停
+                            waypointAction0Actuator = new WaypointActuator.Builder()
+                                    .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
+                                    .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
+                                            .setAircraftControlType(ActionTypes.AircraftControlType.START_STOP_FLY)
+                                            .setFlyControlParam(new WaypointAircraftControlStartStopFlyParam.Builder()
+                                                    .setStartFly(myWayPointActionList.get(i).getActuator().getAircraftControlType().getStartFly().equals("1") ? true : false)
+                                                    .build())
+                                            .build())
+                                    .build();
+                        } else if (myWayPointActionList.get(i).getActuator().getAircraftControlType().getOperationType().equals("2")) {
+                            waypointAction0Actuator = new WaypointActuator.Builder()
+                                    .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
+                                    .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
+                                            .setAircraftControlType(ActionTypes.AircraftControlType.ROTATE_YAW)
+                                            .setRotateYawParam(new WaypointAircraftControlRotateYawParam.Builder()
+                                                    .setYawAngle(Float.parseFloat(myWayPointActionList.get(i).getActuator().getAircraftControlType().getYawAngle()))
+                                                    .setDirection(WaypointV2MissionTypes.WaypointV2TurnMode.find(Integer.parseInt(myWayPointActionList.get(i).getActuator().getAircraftControlType().getDirection())))
+//                                            .setRelative()
+                                                    .build())
+                                            .build())
+                                    .build();
+                        }
+                        break;
 
-        WaypointV2Action waypointAction1 = new WaypointV2Action.Builder()
-                .setActionID(1)
-                .setTrigger(waypointAction1Trigger)
-                .setActuator(waypointAction1Actuator)
-                .build();
-        waypointV2ActionList.add(waypointAction1);
+                    case "1"://GIMBAL
+                        waypointAction0Actuator = new WaypointActuator.Builder()
+                                .setActuatorType(ActionTypes.ActionActuatorType.GIMBAL)
+                                .setGimbalActuatorParam(new WaypointGimbalActuatorParam.Builder()
+                                        .operationType(ActionTypes.GimbalOperationType.find(Integer.parseInt(myWayPointActionList.get(i).getActuator().getGimbalActuatorParam().getOperationType())))
+                                        .rotation(new Rotation.Builder()
+                                                .mode(RotationMode.ABSOLUTE_ANGLE)
+                                                .pitch(Float.parseFloat(myWayPointActionList.get(i).getActuator().getGimbalActuatorParam().getPitch()))
+                                                .roll(0)
+                                                .yaw(Float.parseFloat(myWayPointActionList.get(i).getActuator().getGimbalActuatorParam().getYaw()))
+                                                .time(Integer.parseInt(myWayPointActionList.get(i).getActuator().getGimbalActuatorParam().getTime()))
+                                                .build())
+                                        .build())
+                                .build();
+                        break;
 
-        WaypointTrigger waypointAction2Trigger = new WaypointTrigger.Builder()
-                .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
-                .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
-                        .setAssociateActionID(1)
-                        .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
-                        .setWaitingTime(0)
-                        .build())
-                .build();
+                }
 
-        WaypointActuator waypointAction2Actuator = new WaypointActuator.Builder()
-                .setActuatorType(ActionTypes.ActionActuatorType.GIMBAL)
-                .setGimbalActuatorParam(new WaypointGimbalActuatorParam.Builder()
-                        .operationType(ActionTypes.GimbalOperationType.ROTATE_GIMBAL)
-                        .rotation(new Rotation.Builder()
-                                .mode(RotationMode.ABSOLUTE_ANGLE)
-                                .pitch(0)
-                                .roll(0)
-                                .yaw(-60.0f)
-                                .time(3)
-                                .build())
-                        .build())
-                .build();
 
-        WaypointV2Action waypointAction2 = new WaypointV2Action.Builder()
-                .setActionID(2)
-                .setTrigger(waypointAction2Trigger)
-                .setActuator(waypointAction2Actuator)
-                .build();
-        waypointV2ActionList.add(waypointAction2);
+                int actionId = i++;
+                WaypointV2Action waypointAction0 = new WaypointV2Action.Builder()
+                        .setActionID(actionId)//0会报错sdkbug
+                        .setTrigger(waypointAction0Trigger)
+                        .setActuator(waypointAction0Actuator)
+                        .build();
+                waypointV2ActionList.add(waypointAction0);
 
-        WaypointTrigger waypointAction3Trigger = new WaypointTrigger.Builder()
-                .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
-                .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
-                        .setAssociateActionID(2)
-                        .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
-                        .setWaitingTime(0)
-                        .build())
-                .build();
-
-        WaypointActuator waypointAction3Actuator = new WaypointActuator.Builder()
-                .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
-                .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
-                        .setCameraOperationType(ActionTypes.CameraOperationType.SHOOT_SINGLE_PHOTO)
-                        .build())
-                .build();
-
-        WaypointV2Action waypointAction3 = new WaypointV2Action.Builder()
-                .setActionID(3)
-                .setTrigger(waypointAction3Trigger)
-                .setActuator(waypointAction3Actuator)
-                .build();
-        waypointV2ActionList.add(waypointAction3);
-
-        WaypointTrigger waypointAction4Trigger = new WaypointTrigger.Builder()
-                .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
-                .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
-                        .setAssociateActionID(3)
-                        .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
-                        .setWaitingTime(0)
-                        .build())
-                .build();
-
-        WaypointActuator waypointAction4Actuator = new WaypointActuator.Builder()
-                .setActuatorType(ActionTypes.ActionActuatorType.GIMBAL)
-                .setGimbalActuatorParam(new WaypointGimbalActuatorParam.Builder()
-                        .operationType(ActionTypes.GimbalOperationType.ROTATE_GIMBAL)
-                        .rotation(new Rotation.Builder()
-                                .mode(RotationMode.ABSOLUTE_ANGLE)
-                                .pitch(0)
-                                .roll(0)
-                                .yaw(0)
-                                .time(3)
-                                .build())
-                        .build())
-                .build();
-
-        WaypointV2Action waypointAction4 = new WaypointV2Action.Builder()
-                .setActionID(4)
-                .setTrigger(waypointAction4Trigger)
-                .setActuator(waypointAction4Actuator)
-                .build();
-        waypointV2ActionList.add(waypointAction4);
-
-        WaypointTrigger waypointAction5Trigger = new WaypointTrigger.Builder()
-                .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
-                .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
-                        .setAssociateActionID(4)
-                        .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
-                        .setWaitingTime(0)
-                        .build())
-                .build();
-
-        WaypointActuator waypointAction5Actuator = new WaypointActuator.Builder()
-                .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
-                .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
-                        .setAircraftControlType(ActionTypes.AircraftControlType.START_STOP_FLY)
-                        .setFlyControlParam(new WaypointAircraftControlStartStopFlyParam.Builder()
-                                .setStartFly(true)
-                                .build())
-                        .build())
-                .build();
-
-        WaypointV2Action waypointAction5 = new WaypointV2Action.Builder()
-                .setActionID(5)
-                .setTrigger(waypointAction5Trigger)
-                .setActuator(waypointAction5Actuator)
-                .build();
-        waypointV2ActionList.add(waypointAction5);
-
-        /*
-         *  Action combo 2 - Start recording video at waypoint1 and fly to waypoint2
-         *  From waypoint1 to waypoint2, the camera will gradually rotate toward to the ground
-         *  From waypoint2 to waypoint3, the camera will gradually rotate back to the original position
-         *  The video recording will be stopped at waypoint3
-         */
-
-        WaypointTrigger waypointAction6Trigger = new WaypointTrigger.Builder()
-                .setTriggerType(ActionTypes.ActionTriggerType.REACH_POINT)
-                .setReachPointParam(new WaypointReachPointTriggerParam.Builder()
-                        .setStartIndex(1)
-                        .setAutoTerminateCount(1)
-                        .build())
-                .build();
-
-        WaypointActuator waypointAction6Actuator = new WaypointActuator.Builder()
-                .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
-                .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
-                        .setCameraOperationType(ActionTypes.CameraOperationType.START_RECORD_VIDEO)
-                        .build())
-                .build();
-
-        WaypointV2Action waypointAction6 = new WaypointV2Action.Builder()
-                .setActionID(6)
-                .setTrigger(waypointAction6Trigger)
-                .setActuator(waypointAction6Actuator)
-                .build();
-        waypointV2ActionList.add(waypointAction6);
-
-        WaypointTrigger waypointAction7Trigger = new WaypointTrigger.Builder()
-                .setTriggerType(ActionTypes.ActionTriggerType.TRAJECTORY)
-                .setTrajectoryParam(new WaypointTrajectoryTriggerParam.Builder()
-                        .setStartIndex(1)
-                        .setEndIndex(2)
-                        .build())
-                .build();
-
-        WaypointActuator waypointAction7Actuator = new WaypointActuator.Builder()
-                .setActuatorType(ActionTypes.ActionActuatorType.GIMBAL)
-                .setGimbalActuatorParam(new WaypointGimbalActuatorParam.Builder()
-                        .operationType(ActionTypes.GimbalOperationType.AIRCRAFT_CONTROL_GIMBAL)
-                        .rotation(new Rotation.Builder()
-                                .mode(RotationMode.ABSOLUTE_ANGLE)
-                                .pitch(-90.0f)
-                                .roll(0)
-                                .yaw(0)
-                                .time(5)
-                                .build())
-                        .build())
-                .build();
-
-        WaypointV2Action waypointAction7 = new WaypointV2Action.Builder()
-                .setActionID(7)
-                .setTrigger(waypointAction7Trigger)
-                .setActuator(waypointAction7Actuator)
-                .build();
-        waypointV2ActionList.add(waypointAction7);
-
-        WaypointTrigger waypointAction8Trigger = new WaypointTrigger.Builder()
-                .setTriggerType(ActionTypes.ActionTriggerType.TRAJECTORY)
-                .setTrajectoryParam(new WaypointTrajectoryTriggerParam.Builder()
-                        .setStartIndex(2)
-                        .setEndIndex(3)
-                        .build())
-                .build();
-
-        WaypointActuator waypointAction8Actuator = new WaypointActuator.Builder()
-                .setActuatorType(ActionTypes.ActionActuatorType.GIMBAL)
-                .setGimbalActuatorParam(new WaypointGimbalActuatorParam.Builder()
-                        .operationType(ActionTypes.GimbalOperationType.AIRCRAFT_CONTROL_GIMBAL)
-                        .rotation(new Rotation.Builder()
-                                .mode(RotationMode.ABSOLUTE_ANGLE)
-                                .pitch(0)
-                                .roll(0)
-                                .yaw(0)
-                                .time(5)
-                                .build())
-                        .build())
-                .build();
-
-        WaypointV2Action waypointAction8 = new WaypointV2Action.Builder()
-                .setActionID(8)
-                .setTrigger(waypointAction8Trigger)
-                .setActuator(waypointAction8Actuator)
-                .build();
-        waypointV2ActionList.add(waypointAction8);
-
-        WaypointTrigger waypointAction9Trigger = new WaypointTrigger.Builder()
-                .setTriggerType(ActionTypes.ActionTriggerType.REACH_POINT)
-                .setReachPointParam(new WaypointReachPointTriggerParam.Builder()
-                        .setStartIndex(3)
-                        .setAutoTerminateCount(3)
-                        .build())
-                .build();
-
-        WaypointActuator waypointAction9Actuator = new WaypointActuator.Builder()
-                .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
-                .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
-                        .setCameraOperationType(ActionTypes.CameraOperationType.STOP_RECORD_VIDEO)
-                        .build())
-                .build();
-
-        WaypointV2Action waypointAction9 = new WaypointV2Action.Builder()
-                .setActionID(9)
-                .setTrigger(waypointAction9Trigger)
-                .setActuator(waypointAction9Actuator)
-                .build();
-        waypointV2ActionList.add(waypointAction9);
-
-        /*
-         *  Action combo 3 - The aircraft will start shooting photos every 2 seconds from waypoint5 to finish, and all photos will have "testfile" at the end of their name
-         *
-         */
-
-        WaypointTrigger waypointAction10Trigger = new WaypointTrigger.Builder()
-                .setTriggerType(ActionTypes.ActionTriggerType.SIMPLE_INTERVAL)
-                .setIntervalTriggerParam(new WaypointIntervalTriggerParam.Builder()
-                        .setType(ActionTypes.ActionIntervalType.TIME)
-                        .setStartIndex(4)
-                        .setInterval(2)
-                        .build())
-                .build();
-
-        WaypointActuator waypointAction10Actuator = new WaypointActuator.Builder()
-                .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
-                .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
-                        .setCameraOperationType(ActionTypes.CameraOperationType.CUSTOM_NAME)
-                        .setCustomNameParam(new WaypointCameraCustomNameParam.Builder()
-                                .type(ActionTypes.CameraCustomNameType.FILE)
-                                .customName("testFile")
-                                .build())
-                        .build())
-                .build();
-
-        WaypointV2Action waypointAction10 = new WaypointV2Action.Builder()
-                .setActionID(10)
-                .setTrigger(waypointAction10Trigger)
-                .setActuator(waypointAction10Actuator)
-                .build();
-        waypointV2ActionList.add(waypointAction10);
-
-        WaypointTrigger waypointAction11Trigger = new WaypointTrigger.Builder()
-                .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
-                .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
-                        .setAssociateActionID(10)
-                        .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
-                        // Because set file name and shoot photo is the same module, it is better to set a waiting time.
-                        .setWaitingTime(0.5f)
-                        .build())
-                .build();
-
-        WaypointActuator waypointAction11Actuator = new WaypointActuator.Builder()
-                .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
-                .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
-                        .setCameraOperationType(ActionTypes.CameraOperationType.SHOOT_SINGLE_PHOTO)
-                        .build())
-                .build();
-
-        WaypointV2Action waypointAction11 = new WaypointV2Action.Builder()
-                .setActionID(11)
-                .setTrigger(waypointAction11Trigger)
-                .setActuator(waypointAction11Actuator)
-                .build();
-        waypointV2ActionList.add(waypointAction11);
+            }
+        }
 
         waypointV2MissionOperator.uploadWaypointActions(waypointV2ActionList, new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
             @Override
@@ -5304,42 +5234,380 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 }
             }
         });
+
+
+//        WaypointTrigger waypointAction0Trigger = new WaypointTrigger.Builder()
+//                .setTriggerType(ActionTypes.ActionTriggerType.REACH_POINT)
+//                .setReachPointParam(new WaypointReachPointTriggerParam.Builder()
+//                        .setStartIndex(0)
+//                        .setAutoTerminateCount(0)
+//                        .build())
+//                .build();
+//
+//        WaypointActuator waypointAction0Actuator = new WaypointActuator.Builder()
+//                .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
+//                .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
+//                        .setCameraOperationType(ActionTypes.CameraOperationType.CUSTOM_NAME)
+//                        .setCustomNameParam(new WaypointCameraCustomNameParam.Builder()
+//                                .type(ActionTypes.CameraCustomNameType.DIR)
+//                                .customName("testFolder")
+//                                .build())
+//                        .build())
+//                .build();
+//
+//        WaypointV2Action waypointAction0 = new WaypointV2Action.Builder()
+//                .setActionID(0)//0会报错
+//                .setTrigger(waypointAction0Trigger)
+//                .setActuator(waypointAction0Actuator)
+//                .build();
+//        waypointV2ActionList.add(waypointAction0);
+//
+//        WaypointTrigger waypointAction1Trigger = new WaypointTrigger.Builder()
+//                .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
+//                .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
+//                        .setAssociateActionID(0)
+//                        .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
+//                        .setWaitingTime(0)
+//                        .build())
+//                .build();
+//
+//
+////        new WaypointAircraftControlRotateYawParam.Builder().setDirection().setYawAngle()
+//
+//
+//        WaypointActuator waypointAction1Actuator = new WaypointActuator.Builder()
+//                .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
+//                .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
+//                        .setAircraftControlType(ActionTypes.AircraftControlType.START_STOP_FLY)
+////                        .setFlyControlParam(new WaypointAircraftControlStartStopFlyParam.Builder()
+////                                .setStartFly(false)
+////                                .build())
+//
+//                        .build())
+//                .build();
+//
+//        WaypointV2Action waypointAction1 = new WaypointV2Action.Builder()
+//                .setActionID(1)
+//                .setTrigger(waypointAction1Trigger)
+//                .setActuator(waypointAction1Actuator)
+//                .build();
+//        waypointV2ActionList.add(waypointAction1);
+//
+//        WaypointTrigger waypointAction2Trigger = new WaypointTrigger.Builder()
+//                .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
+//                .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
+//                        .setAssociateActionID(1)
+//                        .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
+//                        .setWaitingTime(0)
+//                        .build())
+//                .build();
+//
+//        WaypointActuator waypointAction2Actuator = new WaypointActuator.Builder()
+//                .setActuatorType(ActionTypes.ActionActuatorType.GIMBAL)
+//                .setGimbalActuatorParam(new WaypointGimbalActuatorParam.Builder()
+//                        .operationType(ActionTypes.GimbalOperationType.ROTATE_GIMBAL)
+//                        .rotation(new Rotation.Builder()
+//                                .mode(RotationMode.ABSOLUTE_ANGLE)
+//                                .pitch(0)
+//                                .roll(0)
+//                                .yaw(-60.0f)
+//                                .time(3)
+//                                .build())
+//                        .build())
+//                .build();
+//
+//        WaypointV2Action waypointAction2 = new WaypointV2Action.Builder()
+//                .setActionID(2)
+//                .setTrigger(waypointAction2Trigger)
+//                .setActuator(waypointAction2Actuator)
+//                .build();
+//        waypointV2ActionList.add(waypointAction2);
+//
+//        WaypointTrigger waypointAction3Trigger = new WaypointTrigger.Builder()
+//                .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
+//                .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
+//                        .setAssociateActionID(2)
+//                        .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
+//                        .setWaitingTime(0)
+//                        .build())
+//                .build();
+//
+//        WaypointActuator waypointAction3Actuator = new WaypointActuator.Builder()
+//                .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
+//                .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
+//                        .setCameraOperationType(ActionTypes.CameraOperationType.SHOOT_SINGLE_PHOTO)
+//                        .build())
+//                .build();
+//
+//        WaypointV2Action waypointAction3 = new WaypointV2Action.Builder()
+//                .setActionID(3)
+//                .setTrigger(waypointAction3Trigger)
+//                .setActuator(waypointAction3Actuator)
+//                .build();
+//        waypointV2ActionList.add(waypointAction3);
+//
+//        WaypointTrigger waypointAction4Trigger = new WaypointTrigger.Builder()
+//                .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
+//                .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
+//                        .setAssociateActionID(3)
+//                        .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
+//                        .setWaitingTime(0)
+//                        .build())
+//                .build();
+//
+//        WaypointActuator waypointAction4Actuator = new WaypointActuator.Builder()
+//                .setActuatorType(ActionTypes.ActionActuatorType.GIMBAL)
+//                .setGimbalActuatorParam(new WaypointGimbalActuatorParam.Builder()
+//                        .operationType(ActionTypes.GimbalOperationType.ROTATE_GIMBAL)
+//                        .rotation(new Rotation.Builder()
+//                                .mode(RotationMode.ABSOLUTE_ANGLE)
+//                                .pitch(0)
+//                                .roll(0)
+//                                .yaw(0)
+//                                .time(3)
+//                                .build())
+//                        .build())
+//                .build();
+//
+//        WaypointV2Action waypointAction4 = new WaypointV2Action.Builder()
+//                .setActionID(4)
+//                .setTrigger(waypointAction4Trigger)
+//                .setActuator(waypointAction4Actuator)
+//                .build();
+//        waypointV2ActionList.add(waypointAction4);
+//
+//        WaypointTrigger waypointAction5Trigger = new WaypointTrigger.Builder()
+//                .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
+//                .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
+//                        .setAssociateActionID(4)
+//                        .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
+//                        .setWaitingTime(0)
+//                        .build())
+//                .build();
+//
+//        WaypointActuator waypointAction5Actuator = new WaypointActuator.Builder()
+//                .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
+//                .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
+//                        .setAircraftControlType(ActionTypes.AircraftControlType.START_STOP_FLY)
+//                        .setFlyControlParam(new WaypointAircraftControlStartStopFlyParam.Builder()
+//                                .setStartFly(true)
+//                                .build())
+//                        .build())
+//                .build();
+//
+//        WaypointV2Action waypointAction5 = new WaypointV2Action.Builder()
+//                .setActionID(5)
+//                .setTrigger(waypointAction5Trigger)
+//                .setActuator(waypointAction5Actuator)
+//                .build();
+//        waypointV2ActionList.add(waypointAction5);
+//
+//        /*
+//         *  Action combo 2 - Start recording video at waypoint1 and fly to waypoint2
+//         *  From waypoint1 to waypoint2, the camera will gradually rotate toward to the ground
+//         *  From waypoint2 to waypoint3, the camera will gradually rotate back to the original position
+//         *  The video recording will be stopped at waypoint3
+//         */
+//
+//        WaypointTrigger waypointAction6Trigger = new WaypointTrigger.Builder()
+//                .setTriggerType(ActionTypes.ActionTriggerType.REACH_POINT)
+//                .setReachPointParam(new WaypointReachPointTriggerParam.Builder()
+//                        .setStartIndex(1)
+//                        .setAutoTerminateCount(1)
+//                        .build())
+//                .build();
+//
+//        WaypointActuator waypointAction6Actuator = new WaypointActuator.Builder()
+//                .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
+//                .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
+//                        .setCameraOperationType(ActionTypes.CameraOperationType.START_RECORD_VIDEO)
+//                        .build())
+//                .build();
+//
+//        WaypointV2Action waypointAction6 = new WaypointV2Action.Builder()
+//                .setActionID(6)
+//                .setTrigger(waypointAction6Trigger)
+//                .setActuator(waypointAction6Actuator)
+//                .build();
+//        waypointV2ActionList.add(waypointAction6);
+//
+//        WaypointTrigger waypointAction7Trigger = new WaypointTrigger.Builder()
+//                .setTriggerType(ActionTypes.ActionTriggerType.TRAJECTORY)
+//                .setTrajectoryParam(new WaypointTrajectoryTriggerParam.Builder()
+//                        .setStartIndex(1)
+//                        .setEndIndex(2)
+//                        .build())
+//                .build();
+//
+//        WaypointActuator waypointAction7Actuator = new WaypointActuator.Builder()
+//                .setActuatorType(ActionTypes.ActionActuatorType.GIMBAL)
+//                .setGimbalActuatorParam(new WaypointGimbalActuatorParam.Builder()
+//                        .operationType(ActionTypes.GimbalOperationType.AIRCRAFT_CONTROL_GIMBAL)
+//                        .rotation(new Rotation.Builder()
+//                                .mode(RotationMode.ABSOLUTE_ANGLE)
+//                                .pitch(-90.0f)
+//                                .roll(0)
+//                                .yaw(0)
+//                                .time(5)
+//                                .build())
+//                        .build())
+//                .build();
+//
+//        WaypointV2Action waypointAction7 = new WaypointV2Action.Builder()
+//                .setActionID(7)
+//                .setTrigger(waypointAction7Trigger)
+//                .setActuator(waypointAction7Actuator)
+//                .build();
+//        waypointV2ActionList.add(waypointAction7);
+//
+//        WaypointTrigger waypointAction8Trigger = new WaypointTrigger.Builder()
+//                .setTriggerType(ActionTypes.ActionTriggerType.TRAJECTORY)
+//                .setTrajectoryParam(new WaypointTrajectoryTriggerParam.Builder()
+//                        .setStartIndex(2)
+//                        .setEndIndex(3)
+//                        .build())
+//                .build();
+//
+//        WaypointActuator waypointAction8Actuator = new WaypointActuator.Builder()
+//                .setActuatorType(ActionTypes.ActionActuatorType.GIMBAL)
+//                .setGimbalActuatorParam(new WaypointGimbalActuatorParam.Builder()
+//                        .operationType(ActionTypes.GimbalOperationType.AIRCRAFT_CONTROL_GIMBAL)
+//                        .rotation(new Rotation.Builder()
+//                                .mode(RotationMode.ABSOLUTE_ANGLE)
+//                                .pitch(0)
+//                                .roll(0)
+//                                .yaw(0)
+//                                .time(5)
+//                                .build())
+//                        .build())
+//                .build();
+//
+//        WaypointV2Action waypointAction8 = new WaypointV2Action.Builder()
+//                .setActionID(8)
+//                .setTrigger(waypointAction8Trigger)
+//                .setActuator(waypointAction8Actuator)
+//                .build();
+//        waypointV2ActionList.add(waypointAction8);
+//
+//        WaypointTrigger waypointAction9Trigger = new WaypointTrigger.Builder()
+//                .setTriggerType(ActionTypes.ActionTriggerType.REACH_POINT)
+//                .setReachPointParam(new WaypointReachPointTriggerParam.Builder()
+//                        .setStartIndex(3)
+//                        .setAutoTerminateCount(3)
+//                        .build())
+//                .build();
+//
+//        WaypointActuator waypointAction9Actuator = new WaypointActuator.Builder()
+//                .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
+//                .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
+//                        .setCameraOperationType(ActionTypes.CameraOperationType.STOP_RECORD_VIDEO)
+//                        .build())
+//                .build();
+//
+//        WaypointV2Action waypointAction9 = new WaypointV2Action.Builder()
+//                .setActionID(9)
+//                .setTrigger(waypointAction9Trigger)
+//                .setActuator(waypointAction9Actuator)
+//                .build();
+//        waypointV2ActionList.add(waypointAction9);
+//
+//        /*
+//         *  Action combo 3 - The aircraft will start shooting photos every 2 seconds from waypoint5 to finish, and all photos will have "testfile" at the end of their name
+//         *
+//         */
+//
+//        WaypointTrigger waypointAction10Trigger = new WaypointTrigger.Builder()
+//                .setTriggerType(ActionTypes.ActionTriggerType.SIMPLE_INTERVAL)
+//                .setIntervalTriggerParam(new WaypointIntervalTriggerParam.Builder()
+//                        .setType(ActionTypes.ActionIntervalType.TIME)
+//                        .setStartIndex(4)
+//                        .setInterval(2)
+//                        .build())
+//                .build();
+//
+//        WaypointActuator waypointAction10Actuator = new WaypointActuator.Builder()
+//                .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
+//                .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
+//                        .setCameraOperationType(ActionTypes.CameraOperationType.CUSTOM_NAME)
+//                        .setCustomNameParam(new WaypointCameraCustomNameParam.Builder()
+//                                .type(ActionTypes.CameraCustomNameType.FILE)
+//                                .customName("testFile")
+//                                .build())
+//                        .build())
+//                .build();
+//
+//        WaypointV2Action waypointAction10 = new WaypointV2Action.Builder()
+//                .setActionID(10)
+//                .setTrigger(waypointAction10Trigger)
+//                .setActuator(waypointAction10Actuator)
+//                .build();
+//        waypointV2ActionList.add(waypointAction10);
+//
+//        WaypointTrigger waypointAction11Trigger = new WaypointTrigger.Builder()
+//                .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
+//                .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
+//                        .setAssociateActionID(10)
+//                        .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
+//                        // Because set file name and shoot photo is the same module, it is better to set a waiting time.
+//                        .setWaitingTime(0.5f)
+//                        .build())
+//                .build();
+//
+//        WaypointActuator waypointAction11Actuator = new WaypointActuator.Builder()
+//                .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
+//                .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
+//                        .setCameraOperationType(ActionTypes.CameraOperationType.SHOOT_SINGLE_PHOTO)
+//                        .build())
+//                .build();
+//
+//        WaypointV2Action waypointAction11 = new WaypointV2Action.Builder()
+//                .setActionID(11)
+//                .setTrigger(waypointAction11Trigger)
+//                .setActuator(waypointAction11Actuator)
+//                .build();
+//        waypointV2ActionList.add(waypointAction11);
+//
+//        waypointV2MissionOperator.uploadWaypointActions(waypointV2ActionList, new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
+//            @Override
+//            public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
+//                if (djiWaypointV2Error != null) {
+//                    Toast.makeText(ConnectionActivity.this, djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//        });
     }
 
     private WaypointV2Mission createWaypointMission(Communication communication) {
 
         String speed = communication.getPara().get(Constant.SPEED);
-        Log.d("WMUEWMUE", "speed=" + speed);
-        String gimbalPitch = communication.getPara().get(Constant.GIMBAL_PITCH);
         String turnMode = communication.getPara().get(Constant.TURN_MODE);
-        String altitude=communication.getPara().get("altitude");
-//        Log.d("HHHHH","speed="+speed);
+        String altitude = communication.getPara().get("altitude");
+        String finishedAction = communication.getPara().get(Constant.FINISHED_ACTION);
+        String headingMode = communication.getPara().get(Constant.HEADING_MODE);
         if (!TextUtils.isEmpty(speed)) {
             mSpeed = Float.parseFloat(speed);
         }
-        String finishedAction = communication.getPara().get(Constant.FINISHED_ACTION);
-
-        String headingMode = communication.getPara().get(Constant.HEADING_MODE);
         String mPathMode = communication.getPara().get(Constant.FLIGHT_PATH_MODE);
-        wayPoints = communication.getPara().get(Constant.WAY_POINTS);
-        if (!TextUtils.isEmpty(wayPoints)) {
-            List<WayPointsBean> myWayPointList = gson.fromJson(wayPoints, new TypeToken<List<WayPointsBean>>() {
-            }.getType());
-            waypointList.clear();
-            for (int i = 0; i < myWayPointList.size(); i++) {
-                add_point(myWayPointList.get(i), mSpeed + "", mGimbalPitch + "", mTurnMode, sgpre);
+        String wayPoints = communication.getPara().get(Constant.WAY_POINTS);
 
+        wayPointAction = communication.getPara().get("action");
+        if (!TextUtils.isEmpty(wayPoints)) {
+            List<WayPointsV2Bean.WayPointsBean> myWayPointList = gson.fromJson(wayPoints, new TypeToken<WayPointsV2Bean.WayPointsBean>() {
+            }.getType());
+            waypointV2List.clear();
+            for (int i = 0; i < myWayPointList.size(); i++) {
 
                 WaypointV2 waypoint0 = new WaypointV2.Builder()
                         //设置经纬度
-                        .setCoordinate(new LocationCoordinate2D(Double.parseDouble(myWayPointList.get(i).getLatitude()),Double.parseDouble(myWayPointList.get(i).getLongitude())))
+                        .setCoordinate(new LocationCoordinate2D(Double.parseDouble(myWayPointList.get(i).getLatitude()), Double.parseDouble(myWayPointList.get(i).getLongitude())))
                         //高度[-200,500]
                         .setAltitude(Double.parseDouble(myWayPointList.get(i).getAltitude()))
                         //设置路径模式
-//                        .setFlightPathMode(WaypointV2MissionTypes.WaypointV2FlightPathMode.find(TextUtils.isEmpty(mPathMode)?0:Integer.parseInt(mPathMode)))
-//                        .setHeadingMode(WaypointV2MissionTypes.WaypointV2HeadingMode.find(TextUtils.isEmpty(mPathMode)?0:Integer.parseInt(myWayPointList.get(i).ge)))
-                        .setTurnMode(WaypointV2MissionTypes.WaypointV2TurnMode.find(TextUtils.isEmpty(mPathMode)?0:Integer.parseInt(turnMode)))
-                        .setAutoFlightSpeed(TextUtils.isEmpty(mPathMode)?2f:Float.parseFloat(myWayPointList.get(i).getSpeed()))
+                        .setFlightPathMode(WaypointV2MissionTypes.WaypointV2FlightPathMode.find(Integer.parseInt(myWayPointList.get(i).getFlightPathMode())))
+                        .setHeadingMode(WaypointV2MissionTypes.WaypointV2HeadingMode.find(Integer.parseInt(myWayPointList.get(i).getHeadingMode())))
+                        .setTurnMode(WaypointV2MissionTypes.WaypointV2TurnMode.find(Integer.parseInt(myWayPointList.get(i).getTurnMode())))
+                        .setAutoFlightSpeed(Float.parseFloat(myWayPointList.get(i).getSpeed()))
+
                         .build();
                 waypointV2List.add(waypoint0);
             }
@@ -5347,106 +5615,16 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
         waypointV2MissionBuilder = new WaypointV2Mission.Builder();
         waypointV2MissionBuilder.setMissionID(new Random().nextInt(65535))
-                .setMaxFlightSpeed(TextUtils.isEmpty(mPathMode)?15f:Float.parseFloat(speed))
-                .setAutoFlightSpeed(TextUtils.isEmpty(mPathMode)?15f:Float.parseFloat(speed))
-                .setFinishedAction(WaypointV2MissionTypes.MissionFinishedAction.AUTO_LAND)
+                .setMaxFlightSpeed(TextUtils.isEmpty(mPathMode) ? 15f : Float.parseFloat(speed))
+                .setAutoFlightSpeed(TextUtils.isEmpty(mPathMode) ? 15f : Float.parseFloat(speed))
+//                .setFinishedAction(WaypointV2MissionTypes.MissionFinishedAction.AUTO_LAND)
+                .setFinishedAction(WaypointV2MissionTypes.MissionFinishedAction.find(Integer.parseInt(finishedAction)))
                 .setGotoFirstWaypointMode(WaypointV2MissionTypes.MissionGotoWaypointMode.SAFELY)
                 .setExitMissionOnRCSignalLostEnabled(true)
                 .setRepeatTimes(1)
                 .addwaypoints(waypointV2List);
 
         return waypointV2MissionBuilder.build();
-
-
-
-
-
-//        // Basic parameters' setup
-//        double baseLatitude = 22;
-//        double baseLongitude = 113;
-//        Object latitudeValue = KeyManager.getInstance().getValue((FlightControllerKey.create(HOME_LOCATION_LATITUDE)));
-//        Object longitudeValue = KeyManager.getInstance().getValue((FlightControllerKey.create(HOME_LOCATION_LONGITUDE)));
-//
-//        if (latitudeValue != null && latitudeValue instanceof Double) {
-//            baseLatitude = (double) latitudeValue;
-//        }
-//        if (longitudeValue != null && longitudeValue instanceof Double) {
-//            baseLongitude = (double) longitudeValue;
-//        }
-//
-//        final float baseAltitude = 15.0f;
-//
-//        // Waypoint 0: (0,30)
-//        WaypointV2 waypoint0 = new WaypointV2.Builder()
-//                .setCoordinate(new LocationCoordinate2D(baseLatitude, baseLongitude + VERTICAL_DISTANCE * ONE_METER_OFFSET))
-//                .setAltitude(baseAltitude)
-//                .setFlightPathMode(WaypointV2MissionTypes.WaypointV2FlightPathMode.GOTO_POINT_STRAIGHT_LINE_AND_STOP)
-//                .setHeadingMode(WaypointV2MissionTypes.WaypointV2HeadingMode.AUTO)
-//                .build();
-//        waypointV2List.add(waypoint0);
-//
-//        // Waypoint 1: (30,30)
-//        WaypointV2 waypoint1 = new WaypointV2.Builder()
-//                .setCoordinate(new LocationCoordinate2D(baseLatitude + HORIZONTAL_DISTANCE * ONE_METER_OFFSET, baseLongitude + VERTICAL_DISTANCE * ONE_METER_OFFSET))
-//                .setAltitude(baseAltitude)
-//                .setFlightPathMode(WaypointV2MissionTypes.WaypointV2FlightPathMode.GOTO_POINT_STRAIGHT_LINE_AND_STOP)
-//                .setHeadingMode(WaypointV2MissionTypes.WaypointV2HeadingMode.AUTO)
-//                .build();
-//        waypointV2List.add(waypoint1);
-//
-//        // Waypoint 2: (30,0)
-//        WaypointV2 waypoint2 = new WaypointV2.Builder()
-//                .setCoordinate(new LocationCoordinate2D(baseLatitude + HORIZONTAL_DISTANCE * ONE_METER_OFFSET, baseLongitude))
-//                .setAltitude(baseAltitude)
-//                .setFlightPathMode(WaypointV2MissionTypes.WaypointV2FlightPathMode.GOTO_POINT_STRAIGHT_LINE_AND_STOP)
-//                .setHeadingMode(WaypointV2MissionTypes.WaypointV2HeadingMode.AUTO)
-//                .build();
-//        waypointV2List.add(waypoint2);
-//
-//        // Waypoint 3: (60,0)
-//        WaypointV2 waypoint3 = new WaypointV2.Builder()
-//                .setCoordinate(new LocationCoordinate2D(baseLatitude + HORIZONTAL_DISTANCE * ONE_METER_OFFSET * 2, baseLongitude))
-//                .setAltitude(baseAltitude)
-//                .setFlightPathMode(WaypointV2MissionTypes.WaypointV2FlightPathMode.GOTO_POINT_STRAIGHT_LINE_AND_STOP)
-//                .setHeadingMode(WaypointV2MissionTypes.WaypointV2HeadingMode.AUTO)
-//                .build();
-//        waypointV2List.add(waypoint3);
-//
-//        // Waypoint 4: (60,30)
-//        WaypointV2 waypoint4 = new WaypointV2.Builder()
-//                .setCoordinate(new LocationCoordinate2D(baseLatitude + HORIZONTAL_DISTANCE * ONE_METER_OFFSET * 2, baseLongitude + VERTICAL_DISTANCE * ONE_METER_OFFSET))
-//                .setAltitude(baseAltitude)
-//                .setFlightPathMode(WaypointV2MissionTypes.WaypointV2FlightPathMode.GOTO_POINT_STRAIGHT_LINE_AND_STOP)
-//                .setHeadingMode(WaypointV2MissionTypes.WaypointV2HeadingMode.AUTO)
-//                .build();
-//        waypointV2List.add(waypoint4);
-//
-//        // Waypoint 5: (90,30)
-//        WaypointV2 waypoint5 = new WaypointV2.Builder()
-//                .setCoordinate(new LocationCoordinate2D(baseLatitude + HORIZONTAL_DISTANCE * ONE_METER_OFFSET * 3, baseLongitude + VERTICAL_DISTANCE * ONE_METER_OFFSET))
-//                .setAltitude(baseAltitude)
-//                .setFlightPathMode(WaypointV2MissionTypes.WaypointV2FlightPathMode.GOTO_POINT_STRAIGHT_LINE_AND_STOP)
-//                .setHeadingMode(WaypointV2MissionTypes.WaypointV2HeadingMode.AUTO)
-//                .build();
-//        waypointV2List.add(waypoint5);
-//
-//        // Waypoint 6: (90,0)
-//        WaypointV2 waypoint6 = new WaypointV2.Builder()
-//                .setCoordinate(new LocationCoordinate2D(baseLatitude + HORIZONTAL_DISTANCE * ONE_METER_OFFSET * 3, baseLongitude))
-//                .setAltitude(baseAltitude)
-//                .setFlightPathMode(WaypointV2MissionTypes.WaypointV2FlightPathMode.GOTO_POINT_STRAIGHT_LINE_AND_STOP)
-//                .setHeadingMode(WaypointV2MissionTypes.WaypointV2HeadingMode.AUTO)
-//                .build();
-//        waypointV2List.add(waypoint6);
-//
-//        // Waypoint 7: (0,0)
-//        WaypointV2 waypoint7 = new WaypointV2.Builder()
-//                .setCoordinate(new LocationCoordinate2D(baseLatitude, baseLongitude))
-//                .setAltitude(baseAltitude)
-//                .setFlightPathMode(WaypointV2MissionTypes.WaypointV2FlightPathMode.GOTO_POINT_STRAIGHT_LINE_AND_STOP)
-//                .setHeadingMode(WaypointV2MissionTypes.WaypointV2HeadingMode.AUTO)
-//                .build();
-//        waypointV2List.add(waypoint7);
 
 
     }
@@ -5548,8 +5726,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
     private void tearDownListener() {
-        waypointV2MissionOperator.removeWaypointListener(waypointV2MissionOperatorListener);
-        waypointV2MissionOperator.removeActionListener(waypointV2ActionListener);
+        if (waypointV2MissionOperator != null) {
+            waypointV2MissionOperator.removeWaypointListener(waypointV2MissionOperatorListener);
+            waypointV2MissionOperator.removeActionListener(waypointV2ActionListener);
+        }
     }
 
 
