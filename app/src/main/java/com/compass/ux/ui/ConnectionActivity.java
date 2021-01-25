@@ -686,14 +686,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }.start();
     }
 
-    private void isLiveShowOn() {
-        if (!isLiveStreamManagerOn()) {
-            return;
-        }
-        //wang
-        Toast.makeText(getApplicationContext(), "Is Live Show On:" + DJISDKManager.getInstance().getLiveStreamManager().isStreaming(), Toast.LENGTH_SHORT).show();
-        //ToastUtils.setResultToToast("Is Live Show On:" + DJISDKManager.getInstance().getLiveStreamManager().isStreaming());
-    }
 
 
     private void showToast(final String toastMsg) {
@@ -2100,14 +2092,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             //起飞
             case Constant.START_TAKE_OFF:
                 DeleteUtil.deleteDirectory(destDirName);//删除本地文件
-                if (camera != null) {
-                    camera.exitPlayback(new CommonCallbacks.CompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-
-                        }
-                    });
-                }
                 startTakeoff(communication);
                 break;
             //获取控制权限
@@ -2490,8 +2474,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                 NettyClient.getInstance().sendMessage(communication, null);
                 break;
-
-
         }
     }
 

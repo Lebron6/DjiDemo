@@ -8,9 +8,10 @@ import java.lang.ref.WeakReference;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import dji.sdk.flightcontroller.FlightController;
 
 /**
- * Created by 张俨 on 2018/2/7.
+ *
  */
 
 public abstract class NettyActivity extends AppCompatActivity {
@@ -18,6 +19,8 @@ public abstract class NettyActivity extends AppCompatActivity {
     public final static int MSG_NET_WORK_ERROR = 0x2;
     protected String TAG;
     protected MHandler handler;
+
+
 
     /**
      * 暴露handler给Service

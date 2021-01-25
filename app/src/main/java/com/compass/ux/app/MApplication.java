@@ -21,11 +21,7 @@ public class MApplication extends Application {
 //    public static String UPLOAD_URL="http://61.155.157.42:7070/oauth/file/upload";
     public static boolean HAVE_Permission=false;
 
-
-
     private FPVDemoApplication fpvDemoApplication;
-//    private DJISimulatorApplication simulatorApplication;
-//    private DJIDemoApplication djiDemoApplication;
     @Override
     protected void attachBaseContext(Context paramContext) {
         super.attachBaseContext(paramContext);
@@ -38,24 +34,12 @@ public class MApplication extends Application {
             fpvDemoApplication = new FPVDemoApplication();
             fpvDemoApplication.setContext(this);
         }
-        //控制飞行及云台
-//        if (simulatorApplication == null) {
-//            simulatorApplication = new DJISimulatorApplication();
-//            simulatorApplication.setContext(this);
-//        }
-        //  高德航点
-//        if (djiDemoApplication == null) {
-//            djiDemoApplication = new DJIDemoApplication();
-//            djiDemoApplication.setContext(this);
-//        }
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
         fpvDemoApplication.onCreate();
-//        simulatorApplication.onCreate();
-//        djiDemoApplication.onCreate();
         //bugly
         CrashReport.initCrashReport(getApplicationContext(), "4a94e8a682", true);
         //初始化全局异常崩溃
