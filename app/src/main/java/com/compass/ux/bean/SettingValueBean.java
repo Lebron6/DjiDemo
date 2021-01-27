@@ -19,6 +19,9 @@ public class SettingValueBean {
     private boolean collisionAvoidance;
     //上避障
     private boolean upwardsAvoidance;
+
+    //下避障
+    private boolean landingProtection;
 //    上避障安全距离范围为[1.0，10]
     private String avoidanceDistanceUpward;
 //    下避障安全距离范围为[0.1，3]
@@ -275,6 +278,14 @@ public class SettingValueBean {
 
     public void setCollisionAvoidance(boolean collisionAvoidance) {
         this.collisionAvoidance = collisionAvoidance;
+    }
+
+    public boolean isLandingProtection() {
+        return landingProtection;
+    }
+
+    public void setLandingProtection(boolean landingProtection) {
+        this.landingProtection = landingProtection;
     }
 
 }

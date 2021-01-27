@@ -10,6 +10,7 @@ import com.compass.ux.takephoto.FPVDemoApplication;
 import com.compass.ux.ui.ConnectionActivity;
 import com.compass.ux.ui.FirstActivity;
 import com.secneo.sdk.Helper;
+import com.squareup.leakcanary.LeakCanary;
 import com.tencent.bugly.crashreport.CrashReport;
 
 /**
@@ -47,9 +48,9 @@ public class MApplication extends Application {
 
 
         //内存泄漏检测
-//        if (!LeakCanary.isInAnalyzerProcess(this)) {
-//            LeakCanary.install(this);
-//        }
+        if (!LeakCanary.isInAnalyzerProcess(this)) {
+            LeakCanary.install(this);
+        }
 
 
     }
