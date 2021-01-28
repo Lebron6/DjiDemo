@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
 import dji.common.airlink.FrequencyInterference;
 import dji.common.airlink.OcuSyncBandwidth;
 import dji.common.airlink.OcuSyncFrequencyBand;
@@ -59,10 +60,13 @@ import dji.common.useraccount.UserAccountState;
 import dji.common.util.CommonCallbacks;
 import dji.keysdk.AirLinkKey;
 import dji.keysdk.BatteryKey;
+import dji.keysdk.DJIKey;
 import dji.keysdk.DiagnosticsKey;
 import dji.keysdk.FlightControllerKey;
 import dji.keysdk.GimbalKey;
 import dji.keysdk.KeyManager;
+import dji.keysdk.PayloadKey;
+import dji.keysdk.callback.ActionCallback;
 import dji.keysdk.callback.GetCallback;
 import dji.keysdk.callback.KeyListener;
 import dji.keysdk.callback.SetCallback;
@@ -82,6 +86,7 @@ import dji.sdk.gimbal.Gimbal;
 import dji.sdk.mission.waypoint.WaypointMissionOperator;
 import dji.sdk.mission.waypoint.WaypointMissionOperatorListener;
 import dji.sdk.network.RTKNetworkServiceProvider;
+import dji.sdk.payload.Payload;
 import dji.sdk.products.Aircraft;
 import dji.sdk.remotecontroller.RemoteController;
 import dji.sdk.sdkmanager.DJISDKInitEvent;
@@ -130,6 +135,7 @@ import com.compass.ux.bean.StringsBean;
 import com.compass.ux.bean.TransmissionSetBean;
 import com.compass.ux.bean.WayPointsBean;
 import com.compass.ux.bean.WebInitializationBean;
+import com.compass.ux.live.live.Helper;
 import com.compass.ux.netty_lib.NettyService;
 import com.compass.ux.netty_lib.activity.NettyActivity;
 import com.compass.ux.netty_lib.netty.NettyClient;
@@ -145,9 +151,15 @@ import com.compass.ux.utils.fastClick;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.Closeable;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -182,7 +194,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private TextView mTextConnectionStatus;
     private TextView mTextProduct;
     private TextView mVersionTv;
-    private Button mBtnOpen, btn_download, btn_gaode, btn_simulator, btn_login;
+    private Button mBtnOpen, btn_download, btn_gaode, btn_simulator, btn_login, btn_payload_send, btn_cancel;
     private EditText et_zoom;
     private EditText et_url;
 
@@ -371,7 +383,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private String maxFlightHeight = "";
     private String maxFlightRadius = "";
     private boolean maxFlightRadiusLimitationEnabled;
-    private String wrj_heading="";
+    private String wrj_heading = "";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -412,7 +424,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         et_url = findViewById(R.id.et_url);
         et_url.setText(liveShowUrl);
 
-
+        initListener();
     }
 
     private void initAllKeys() {
@@ -482,6 +494,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     protected void onDestroy() {
         Log.e(TAG, "onDestroy");
         unregisterReceiver(mReceiver);
+        unInitListener();
         if (null != mSendVirtualStickDataTimer) {
             mSendVirtualStickDataTask.cancel();
             mSendVirtualStickDataTask = null;
@@ -516,6 +529,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         btn_simulator.setOnClickListener(this);
         btn_login = findViewById(R.id.btn_login);
         btn_login.setOnClickListener(this);
+        btn_payload_send = findViewById(R.id.btn_payload_send);
+        btn_payload_send.setOnClickListener(this);
+        btn_cancel = findViewById(R.id.btn_cancel);
+        btn_cancel.setOnClickListener(this);
         et_zoom = findViewById(R.id.et_zoom);
 
         mVideoSurface = (TextureView) findViewById(R.id.video_previewer_surface);
@@ -561,6 +578,14 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 DJISDKManager.getInstance().getLiveStreamManager().stopStream();
                 Toast.makeText(getApplicationContext(), "Stop Live Show", Toast.LENGTH_SHORT).show();
 
+                break;
+            case R.id.btn_payload_send://
+                if (isSendInstantVoiceCode) {
+                    sendInstantVoice();
+                }
+
+            case R.id.btn_cancel://
+                sendStopInstantVoiceAction();
                 break;
             default:
                 break;
@@ -685,7 +710,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     public void onUpdate(float v) {
 
                         transcodingDataRate = v + "";
-                        Log.d("WifiChannelInterference","transcodingDataRate="+transcodingDataRate);
+                        Log.d("WifiChannelInterference", "transcodingDataRate=" + transcodingDataRate);
                     }
                 });
 
@@ -704,7 +729,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 channelBandwidth = "40MHz";
                                 break;
                         }
-                        Log.d("WifiChannelInterference","channelBandwidth="+channelBandwidth);
+                        Log.d("WifiChannelInterference", "channelBandwidth=" + channelBandwidth);
 
                     }
 
@@ -742,9 +767,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 FPVDemoApplication.getAirLinkInstance().getWiFiLink().setChannelInterferenceCallback(new WiFiLink.ChannelInterferenceCallback() {
                     @Override
                     public void onUpdate(WifiChannelInterference[] wifiChannelInterferences) {
-                        if(wifiChannelInterferences.length>0){
+                        if (wifiChannelInterferences.length > 0) {
                             interferencePower = wifiChannelInterferences[0].getPower() + "";
-                            Log.d("WifiChannelInterference","interferencePower"+interferencePower);
+                            Log.d("WifiChannelInterference", "interferencePower" + interferencePower);
                         }
 
                     }
@@ -1015,7 +1040,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 flightControllerBean.setFlightCount(flightControllerState.getFlightCount());
                                 //获取度数
                                 if (mFlightController.getCompass() != null) {
-                                    wrj_heading=mFlightController.getCompass().getHeading() + "";
+                                    wrj_heading = mFlightController.getCompass().getHeading() + "";
                                     flightControllerBean.setHeading(wrj_heading);
 //                            Log.d("DDDDDD","无人机的航向度数："+mFlightController.getCompass().getHeading());
                                 }
@@ -1252,7 +1277,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     @Override
                     public void onSuccess(Boolean aBoolean) {
                         maxFlightRadiusLimitationEnabled = aBoolean;
-                        Toast.makeText(ConnectionActivity.this,"FRLimitation"+maxFlightRadiusLimitationEnabled,Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ConnectionActivity.this, "FRLimitation" + maxFlightRadiusLimitationEnabled, Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
@@ -1510,7 +1535,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //
 //                    }
 //                });
-                        //避障4.14没用了
+                    //避障4.14没用了
 //                    mFlightController.getFlightAssistant().setObstacleAvoidanceSensorStateListener(new CommonCallbacks.CompletionCallbackWith<ObstacleAvoidanceSensorState>() {
 //                        @Override
 //                        public void onSuccess(ObstacleAvoidanceSensorState obstacleAvoidanceSensorState) {
@@ -1863,7 +1888,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 camera.getLens(2).getDisplayMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.DisplayMode>() {
                     @Override
                     public void onSuccess(SettingsDefinitions.DisplayMode displayMode) {
-                        webInitializationBean.setHyDisplayMode(displayMode.value()+"");
+                        webInitializationBean.setHyDisplayMode(displayMode.value() + "");
                     }
 
                     @Override
@@ -1874,7 +1899,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
 
 //
-
 
 
                 //获取变焦距离
@@ -2146,10 +2170,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         communication_battery.setResult(gson.toJson(batteryPersentAndVoltageBean, BatteryPersentAndVoltageBean.class));
         NettyClient.getInstance().sendMessage(communication_battery, null);
     }
-
-
-
-
 
 
     //长连接最终返回
@@ -3239,7 +3259,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         if (mFlightController != null) {
             if (!TextUtils.isEmpty(beacons)) {
                 LEDsSettings.Builder builder = new LEDsSettings.Builder().beaconsOn(beacons.equals("1") ? true : false)
-                    .frontLEDsOn(front_b.equals("1") ? true : false).rearLEDsOn(front_b.equals("1") ? true : false).statusIndicatorOn(statusIndicator_b.equals("1") ? true : false);
+                        .frontLEDsOn(front_b.equals("1") ? true : false).rearLEDsOn(front_b.equals("1") ? true : false).statusIndicatorOn(statusIndicator_b.equals("1") ? true : false);
                 mFlightController.setLEDsEnabledSettings(builder.build(), new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
@@ -3585,7 +3605,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private void setMaxFlightRadiusLimit(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
         String value = communication.getPara().get(Constant.VALUE);
-        if(mFlightController!=null){
+        if (mFlightController != null) {
             mFlightController.setMaxFlightRadiusLimitationEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
@@ -3617,7 +3637,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 }
             });
         }
-
 
 
     }
@@ -4135,7 +4154,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         ocuSyncLink.setFrequencyBand(OcuSyncFrequencyBand.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
-                if(djiError==null){
+                if (djiError == null) {
 
                     switch (type) {
                         case "0":
@@ -4159,7 +4178,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                     communication.setCode(200);
                     NettyClient.getInstance().sendMessage(communication, null);
-                }else{
+                } else {
                     communication.setResult(djiError.getDescription());
                     communication.setCode(-1);
                     communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
@@ -4487,12 +4506,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
         String finishedAction = communication.getPara().get(Constant.FINISHED_ACTION);
         if (!TextUtils.isEmpty(finishedAction)) {
-            mFinishedAction=WaypointMissionFinishedAction.find(Integer.parseInt(finishedAction));
+            mFinishedAction = WaypointMissionFinishedAction.find(Integer.parseInt(finishedAction));
         }
 
         String headingMode = communication.getPara().get(Constant.HEADING_MODE);
         if (TextUtils.isEmpty(headingMode)) {
-            mHeadingMode =WaypointMissionHeadingMode.find(Integer.parseInt(headingMode));
+            mHeadingMode = WaypointMissionHeadingMode.find(Integer.parseInt(headingMode));
         }
 
 
@@ -4889,15 +4908,14 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                     NettyClient.getInstance().sendMessage(communication_upload_mission, null);
                 }
-            }else{
-                if(waypointMissionUploadEvent.getError()!=null){
+            } else {
+                if (waypointMissionUploadEvent.getError() != null) {
                     communication_upload_mission.setResult(waypointMissionUploadEvent.getError().getDescription());
                     communication_upload_mission.setCode(-1);
                     communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                     NettyClient.getInstance().sendMessage(communication_upload_mission, null);
                 }
             }
-
 
 
         }
@@ -4964,12 +4982,194 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
     }
 
-    private void TestPrint(Communication communication){
+    private void TestPrint(Communication communication) {
         communication.setResult("true");
         communication.setCode(200);
         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
         NettyClient.getInstance().sendMessage(communication, null);
     }
 
+    /**
+     * 扩音器
+     */
+    private int receiveSizeTotal;
 
+    private DJIKey getDataKey;
+    private DJIKey sendDataKey;
+    private DJIKey payloadNameKey;
+    private String payloadName = "";
+
+    private void initListener() {
+        getDataKey = PayloadKey.create(PayloadKey.GET_DATA_FROM_PAYLOAD);
+        sendDataKey = PayloadKey.create(PayloadKey.SEND_DATA_TO_PAYLOAD);
+        payloadNameKey = PayloadKey.create(PayloadKey.PAYLOAD_PRODUCT_NAME);
+        if (KeyManager.getInstance() != null) {
+            KeyManager.getInstance().addListener(getDataKey, getDataListener);
+            KeyManager.getInstance().addListener(payloadNameKey, getNameListener);
+        }
+        Object name = KeyManager.getInstance().getValue(payloadNameKey);
+        if (name != null) {
+            payloadName = name.toString();
+            Log.e(TAG, "Payload Name:" + (TextUtils.isEmpty(payloadName) ? "N/A" : payloadName));
+        }
+        sendStartInstantVoiceAction();
+    }
+
+    private void unInitListener() {
+        KeyManager.getInstance().removeListener(getDataListener);
+        KeyManager.getInstance().removeListener(getNameListener);
+
+    }
+
+    private KeyListener getDataListener = new KeyListener() {
+        @Override
+        public void onValueChange(@Nullable Object oldValue, @Nullable final Object newValue) {
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (newValue instanceof byte[]) {
+                        //String str = BytesUtil.byte2hex((byte[]) newValue);
+                        byte[] data = (byte[]) newValue;
+                        Log.e(TAG, "receiving data size:" + data.length);
+                        String str = Helper.getString(data);
+                        receiveSizeTotal = data.length + receiveSizeTotal;
+                        Log.e(TAG, "data size:" + String.valueOf(receiveSizeTotal));
+                    }
+                }
+            });
+        }
+    };
+    private KeyListener getNameListener = new KeyListener() {
+        @Override
+        public void onValueChange(@Nullable Object oldValue, @Nullable final Object newValue) {
+            if (payloadName != null) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (newValue instanceof String) {
+                            payloadName = newValue.toString();
+                            Log.e(TAG, "Payload Name:" + (TextUtils.isEmpty(payloadName) ? "N/A" : payloadName));
+                        }
+                    }
+                });
+            }
+        }
+    };
+    private byte[] startInstantVoiceCode = {0x24, 0x00, 0x07, 0x75, 0x01, 0x00, 0x23};
+    private byte[] stopInstantVoiceCode = {0x24, 0x00, 0x07, 0x75, 0x02, 0x00, 0x23};
+    private byte[] instantVoice;
+    private boolean isSendInstantVoiceCode = false;//是否发送指令
+
+    //发送音频指令
+    private void sendStartInstantVoiceAction() {
+        Log.e(TAG, "sending:" + startInstantVoiceCode);
+        KeyManager.getInstance().performAction(sendDataKey, new ActionCallback() {
+            @Override
+            public void onSuccess() {
+                showToast("send data success! ");
+                isSendInstantVoiceCode = true;
+                copyAssetAndWrite("test.mp3");
+                instantVoice = readFile(new File(getCacheDir(), "test.mp3"));
+            }
+
+            @Override
+            public void onFailure(@NonNull DJIError error) {
+                showToast("send data failed:" + error.getDescription());
+                isSendInstantVoiceCode = false;
+            }
+        }, startInstantVoiceCode);
+    }
+
+    //终止音频指令
+    private void sendStopInstantVoiceAction() {
+        Log.e(TAG, "sending:" + stopInstantVoiceCode);
+        KeyManager.getInstance().performAction(sendDataKey, new ActionCallback() {
+            @Override
+            public void onSuccess() {
+                showToast("send data success! ");
+                isSendInstantVoiceCode = false;
+            }
+
+            @Override
+            public void onFailure(@NonNull DJIError error) {
+                showToast("send data failed:" + error.getDescription());
+                isSendInstantVoiceCode = false;
+            }
+        }, stopInstantVoiceCode);
+    }
+
+    //发送音频
+    private void sendInstantVoice() {
+        KeyManager.getInstance().performAction(sendDataKey, new ActionCallback() {
+            @Override
+            public void onSuccess() {
+                showToast("send InstantVoice success! ");
+            }
+
+            @Override
+            public void onFailure(@NonNull DJIError error) {
+                showToast("send InstantVoice failed:" + error.getDescription());
+            }
+        }, instantVoice);
+    }
+
+    public byte[] readFile(File file) {
+        RandomAccessFile rf = null;
+        byte[] data = null;
+        try {
+            rf = new RandomAccessFile(file, "r");
+            data = new byte[(int) rf.length()];
+            rf.readFully(data);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        } finally {
+            closeQuietly(rf);
+        }
+        return data;
+    }
+
+    public void closeQuietly(Closeable closeable) {
+        try {
+            if (closeable != null) {
+                closeable.close();
+            }
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    private boolean copyAssetAndWrite(String fileName) {
+        try {
+            File cacheDir = getCacheDir();
+            if (!cacheDir.exists()) {
+                cacheDir.mkdirs();
+            }
+            File outFile = new File(cacheDir, fileName);
+            if (!outFile.exists()) {
+                boolean res = outFile.createNewFile();
+                if (!res) {
+                    return false;
+                }
+            } else {
+                if (outFile.length() > 10) {//表示已经写入一次
+                    return true;
+                }
+            }
+            InputStream is = getAssets().open(fileName);
+            FileOutputStream fos = new FileOutputStream(outFile);
+            byte[] buffer = new byte[1024];
+            int byteCount;
+            while ((byteCount = is.read(buffer)) != -1) {
+                fos.write(buffer, 0, byteCount);
+            }
+            fos.flush();
+            is.close();
+            fos.close();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
