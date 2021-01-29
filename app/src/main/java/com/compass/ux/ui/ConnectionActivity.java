@@ -90,13 +90,17 @@ import dji.common.useraccount.UserAccountState;
 import dji.common.util.CommonCallbacks;
 import dji.keysdk.AirLinkKey;
 import dji.keysdk.BatteryKey;
+import dji.keysdk.DJIKey;
 import dji.keysdk.DiagnosticsKey;
 import dji.keysdk.FlightControllerKey;
 import dji.keysdk.GimbalKey;
 import dji.keysdk.KeyManager;
+import dji.keysdk.PayloadKey;
+import dji.keysdk.callback.ActionCallback;
 import dji.keysdk.callback.GetCallback;
 import dji.keysdk.callback.KeyListener;
 import dji.keysdk.callback.SetCallback;
+import dji.midware.data.manager.P3.DJIPayloadUsbDataManager;
 import dji.sdk.airlink.OcuSyncLink;
 import dji.sdk.airlink.WiFiLink;
 import dji.sdk.base.BaseComponent;
@@ -117,6 +121,7 @@ import dji.sdk.mission.waypoint.WaypointV2ActionListener;
 import dji.sdk.mission.waypoint.WaypointV2MissionOperator;
 import dji.sdk.mission.waypoint.WaypointV2MissionOperatorListener;
 import dji.sdk.network.RTKNetworkServiceProvider;
+import dji.sdk.payload.Payload;
 import dji.sdk.products.Aircraft;
 import dji.sdk.remotecontroller.RemoteController;
 import dji.sdk.sdkmanager.DJISDKInitEvent;
@@ -223,7 +228,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private TextView mTextConnectionStatus;
     private TextView mTextProduct;
     private TextView mVersionTv;
-    private Button mBtnOpen, btn_download, btn_gaode, btn_simulator, btn_login;
+    private Button mBtnOpen, btn_download, btn_gaode, btn_simulator, btn_login,btn_pl;
     private EditText et_zoom;
     private EditText et_url;
 
@@ -498,6 +503,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
         //waypointV2destory
         tearDownListener();
+        unInitListener();
         super.onDestroy();
 
     }
@@ -518,6 +524,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         btn_simulator.setOnClickListener(this);
         btn_login = findViewById(R.id.btn_login);
         btn_login.setOnClickListener(this);
+        btn_pl = findViewById(R.id.btn_pl);
+        btn_pl.setOnClickListener(this);
         et_zoom = findViewById(R.id.et_zoom);
 
         mVideoSurface = (TextureView) findViewById(R.id.video_previewer_surface);
@@ -566,10 +574,16 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                Toast.makeText(getApplicationContext(), "Stop Live Show", Toast.LENGTH_SHORT).show();
                 pauseWaypointV2(null);
                 break;
+            case R.id.btn_pl:
+                initListener();
+//                sendData();
+                break;
             default:
                 break;
         }
     }
+
+
 
     private boolean isLiveStreamManagerOn() {
         if (DJISDKManager.getInstance().getLiveStreamManager() == null) {
@@ -2882,7 +2896,13 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     //切换镜头
     private void change_lens(Communication communication) {
-        String type = communication.getPara().get(Constant.TYPE);
+        String type="";
+        if(isCapture){
+            type="2";
+        }else{
+            type = communication.getPara().get(Constant.TYPE);
+        }
+
         if (isM300Product()) {
             CameraVideoStreamSource source = DEFAULT;
             switch (type) {
@@ -3458,8 +3478,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         if(isCapture){
                             isCapture=false;
                         }else{
-                            CommonDjiCallback(djiError, communication);
+
                         }
+                        CommonDjiCallback(djiError, communication);
                         webInitializationBean.setHybridZoom(Integer.parseInt(type));
                     }
                 });
@@ -5253,8 +5274,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             @Override
             public void onUploadUpdate(ActionUploadEvent actionUploadEvent) {
                 if (actionUploadEvent.getCurrentState().equals(ActionState.READY_TO_UPLOAD)) {
-                    //添加执行操作
-                    uploadWaypointAction();
+                    //TODO 添加执行操作
+//                    uploadWaypointAction();
                 }
                 //上传航线成功
                 if (actionUploadEvent.getPreviousState() == ActionState.UPLOADING
@@ -5766,8 +5787,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
         String mPathMode = communication.getPara().get(Constant.FLIGHT_PATH_MODE);
         String wayPoints = communication.getPara().get(Constant.WAY_POINTS);
+        Log.d("wayPointsV2",wayPoints);
 
-        wayPointAction = communication.getPara().get("action");
+//        wayPointAction = communication.getPara().get("action");
+//        Log.d("wayPointAction",wayPointAction);
         if (!TextUtils.isEmpty(wayPoints)) {
             List<WayPointsV2Bean.WayPointsBean> myWayPointList = gson.fromJson(wayPoints, new TypeToken<WayPointsV2Bean.WayPointsBean>() {
             }.getType());
@@ -5945,6 +5968,90 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
 
     }
+    private DJIKey getDataKey;
+    private DJIKey sendDataKey;
+    private DJIKey payloadNameKey;
+    private String payloadName = "";
 
+    private void initListener() {
+        getDataKey = PayloadKey.create(PayloadKey.GET_DATA_FROM_PAYLOAD);
+        sendDataKey = PayloadKey.create(PayloadKey.SEND_DATA_TO_PAYLOAD);//可能是通过此标识向设备发送指令
+        payloadNameKey = PayloadKey.create(PayloadKey.PAYLOAD_PRODUCT_NAME);
+        if (!TextUtils.isEmpty(sendDataKey.toString())){
+            showToast("sendDataKey="+sendDataKey.toString());
+        }else{
+            showToast("sendDataKey is null");
+        }
+        if (!TextUtils.isEmpty(payloadNameKey.toString())){
+//            showToast("payloadNameKey="+payloadNameKey.toString());
+        }else{
+            showToast("payloadNameKey is null");
+        }
 
+        if (KeyManager.getInstance() != null) {
+            KeyManager.getInstance().addListener(getDataKey, getDataListener);
+            KeyManager.getInstance().addListener(payloadNameKey, getNameListener);
+        }else{
+            showToast("KeyloadManager null");
+        }
+        Object name = KeyManager.getInstance().getValue(payloadNameKey);
+        if (name != null) {
+            payloadName = name.toString();
+//            showToast(payloadName);
+        }else{
+//            showToast("not found payload");
+        }
+    }
+
+    private void unInitListener() {
+        KeyManager.getInstance().removeListener(getDataListener);
+        KeyManager.getInstance().removeListener(getNameListener);
+    }
+    private KeyListener getDataListener = new KeyListener() {
+        @Override
+        public void onValueChange(@Nullable Object oldValue, @Nullable final Object newValue) {
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (newValue instanceof byte[]) {
+                            //String str = BytesUtil.byte2hex((byte[]) newValue);
+                            byte[] data = (byte[]) newValue;
+                            Log.e(TAG, "receiving data size:" + data.length);
+                        }
+                    }
+                });
+
+        }
+    };
+
+    private KeyListener getNameListener = new KeyListener() {
+        @Override
+        public void onValueChange(@Nullable Object oldValue, @Nullable final Object newValue) {
+            if (payloadName != null) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (newValue instanceof String) {
+                            payloadName = newValue.toString();
+                        }
+                    }
+                });
+            }
+        }
+    };
+    private byte[] data = {0x24,0x00,0x0A,0x54, (byte) 0xc2, (byte) 0xde, (byte) 0xc5, (byte) 0xcc,0x00,0x23};
+    private void sendData() {
+
+        KeyManager.getInstance().performAction(sendDataKey, new ActionCallback() {
+            @Override
+            public void onSuccess() {
+                showToast("send data success! " );
+            }
+            @Override
+            public void onFailure(@NonNull DJIError error) {
+                showToast("send data failed"+error.getDescription()+"code="+error.getErrorCode());
+            }
+        }, data);
+    }
 }

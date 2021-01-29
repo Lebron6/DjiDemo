@@ -12,3 +12,28 @@
 /captures
 .externalNativeBuild
 .cxx
+
+# Gradle
+/local.properties
+/.gradle/
+
+# Build Output
+/build
+/captures
+.externalNativeBuild
+
+.gradle
+.idea*
+/.idea
+gradlew
+gradlew.bat
+
+/local.properties
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+
+*apk
+*build
+.local.properties
