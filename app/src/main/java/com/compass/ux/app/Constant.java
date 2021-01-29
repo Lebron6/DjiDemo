@@ -117,6 +117,7 @@ public class Constant {
     public static final String PITCH_RANGE_EXTENSION="pitchRangeExtension";
     public static final String SET_FREQUENCY_BAND="setFrequencyBand";
     public static final String SET_GIMBAL_MODE="setGimbalMode";
+    public static final String CAPTURE="Capture";
 
 
     public static String LINE_SEPARATOR=System.getProperty("line.separator");

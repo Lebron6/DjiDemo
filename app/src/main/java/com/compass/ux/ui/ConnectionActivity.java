@@ -361,6 +361,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private String maxFlightRadius = "";
     private boolean maxFlightRadiusLimitationEnabled;
     private String wrj_heading = "";
+    private boolean isCapture=false;//抓拍组合动作
 
     //航线V2
     private WaypointV2MissionOperator waypointV2MissionOperator = null;
@@ -921,6 +922,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                                Log.d(TAG, "经度=" + flightControllerState.getAircraftLocation().getLongitude());
 //                                Log.d(TAG, "海拔=" + flightControllerState.getAircraftLocation().getAltitude());
 //                                Log.d(TAG, "IslandingConfirmationNeeded=" + flightControllerState.isLandingConfirmationNeeded() + "");
+                                goHomeLat=flightControllerState.getHomeLocation().getLatitude();
+                                goHomeLong=flightControllerState.getHomeLocation().getLongitude();
                                 double length = LocationUtils.getDistance(flightControllerState.getHomeLocation().getLongitude() + "", flightControllerState.getHomeLocation().getLatitude() + ""
                                         , flightControllerState.getAircraftLocation().getLongitude() + "", flightControllerState.getAircraftLocation().getLatitude() + "");
                                 boolean nowdistance = length > 3000;
@@ -1829,18 +1832,31 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                    batteryState.getChargeRemainingInPercent();
 //                }
 //            });
-//
 //        }
-        Battery.setAggregationStateCallback(new AggregationState.Callback() {
-            @Override
-            public void onUpdate(AggregationState aggregationState) {
-                BatteryOverview[] batteryOverviews= aggregationState.getBatteryOverviews();
-                for (int i = 0; i <batteryOverviews.length ; i++) {
-                    Log.d("batteryOverviews","当前"+i+"电量"+batteryOverviews[i].getChargeRemainingInPercent());
-                }
 
-            }
-        });
+//        FPVDemoApplication.getProductInstance().getBatteries().get(0).setStateCallback(new BatteryState.Callback() {
+//            @Override
+//            public void onUpdate(BatteryState batteryState) {
+//                Log.d("Batteries1",""+batteryState.getChargeRemainingInPercent());
+//            }
+//        });
+//        FPVDemoApplication.getProductInstance().getBatteries().get(1).setStateCallback(new BatteryState.Callback() {
+//            @Override
+//            public void onUpdate(BatteryState batteryState) {
+//                Log.d("Batteries2",""+batteryState.getChargeRemainingInPercent());
+//            }
+//        });
+
+//        Battery.setAggregationStateCallback(new AggregationState.Callback() {
+//            @Override
+//            public void onUpdate(AggregationState aggregationState) {
+//                BatteryOverview[] batteryOverviews= aggregationState.getBatteryOverviews();
+//                for (int i = 0; i <batteryOverviews.length ; i++) {
+//                    Log.d("batteryOverviews","当前"+i+"电量"+batteryOverviews[i].getChargeRemainingInPercent());
+//                }
+//
+//            }
+//        });
 
 
 //
@@ -2506,11 +2522,21 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 break;
             //获取返航点经纬度
             case "getSLngLat":
-                double[] latAndLng = MapConvertUtils.getDJILatLng(goHomeLat,goHomeLong);
-                communication.setResult(latAndLng[1]+","+latAndLng[0]);
+                if(goHomeLat==0&&goHomeLong==0){
+                    communication.setResult("undefined");
+                }else{
+                    LatLng latLngHome = MapConvertUtils.getGDLatLng(goHomeLat,goHomeLong,ConnectionActivity.this);
+                    communication.setResult(latLngHome.longitude+","+ latLngHome.latitude);
+                }
+
                 communication.setCode(200);
                 communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                 NettyClient.getInstance().sendMessage(communication, null);
+                break;
+            //抓拍模式
+            case Constant.CAPTURE:
+                isCapture=true;
+                setCapture(communication);
                 break;
         }
     }
@@ -2637,7 +2663,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     //摄像头上下 30~-90
     private void camera_up_and_down(Communication communication) {
-
         double PitchAngle = Double.parseDouble(webInitializationBean.getPitchAngle());
         double angle = Double.parseDouble(communication.getPara().get(Constant.ANGLE));
         boolean canmove;
@@ -2719,17 +2744,22 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 gimbal.rotate(builder.build(), new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
-                        if (djiError != null) {
-                            communication.setResult(djiError.getDescription());
-                            communication.setCode(-1);
-                            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                            NettyClient.getInstance().sendMessage(communication, null);
-                        } else {
-                            communication.setResult((Double.parseDouble(webInitializationBean.getPitchAngle()) + angle) + "");
-                            communication.setCode(200);
-                            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                            NettyClient.getInstance().sendMessage(communication, null);
+                        if(isCapture){
+                            setCameraZoom(communication);
+                        }else{
+                            if (djiError != null) {
+                                communication.setResult(djiError.getDescription());
+                                communication.setCode(-1);
+                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                NettyClient.getInstance().sendMessage(communication, null);
+                            } else {
+                                communication.setResult((Double.parseDouble(webInitializationBean.getPitchAngle()) + angle) + "");
+                                communication.setCode(200);
+                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                NettyClient.getInstance().sendMessage(communication, null);
+                            }
                         }
+
                     }
                 });
             } else {
@@ -2872,7 +2902,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 camera.setCameraVideoStreamSource(source, new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
-                        CommonDjiCallback(djiError, communication);
+                        if(isCapture){//抓拍
+                            camera_up_and_down_by_a(communication);
+                        }else{
+                            CommonDjiCallback(djiError, communication);
+                        }
                     }
                 });
             }
@@ -2964,8 +2998,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 }
             }
         });
-
-
     }
 
     //切换相机拍照模式
@@ -3413,18 +3445,21 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 }
             });
         }
-
     }
 
     //设置变焦
     private void setCameraZoom(Communication communication) {
         if (isM300Product() && camera != null) {
-            String type = communication.getPara().get(Constant.TYPE);
+            String type = communication.getPara().get("zoom");
             if (!TextUtils.isEmpty(type)) {
                 camera.getLens(0).setHybridZoomFocalLength(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
-                        CommonDjiCallback(djiError, communication);
+                        if(isCapture){
+                            isCapture=false;
+                        }else{
+                            CommonDjiCallback(djiError, communication);
+                        }
                         webInitializationBean.setHybridZoom(Integer.parseInt(type));
                     }
                 });
@@ -3432,6 +3467,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
         }
     }
+
 
     //设置对焦模式
     private void camere_set_focus_mode(Communication communication) {
@@ -4978,6 +5014,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 case 5:
                     mWaypoint.addAction(new WaypointAction(WaypointActionType.GIMBAL_PITCH, wayPointsBean.getWayPointAction().get(i).getActionParam()));
                     break;
+
             }
         }
 //            添加一个航点，并实现uploadWayPointMission()将任务上传到操作员的方法
@@ -5893,6 +5930,20 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         communication.setCode(200);
         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
         NettyClient.getInstance().sendMessage(communication, null);
+    }
+
+
+    private void setCapture(Communication communication) {
+//        String angle = communication.getPara().get("angle");
+//        String zoom = communication.getPara().get("zoom");
+
+        if(webInitializationBean.getCurrentLens().equals("3")){//变焦
+            camera_up_and_down_by_a(communication);
+        }else{//不是变焦要去变
+            change_lens(communication);
+
+        }
+
     }
 
 
