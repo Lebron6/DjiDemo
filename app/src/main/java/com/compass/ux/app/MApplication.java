@@ -9,6 +9,7 @@ import com.compass.ux.crash.CaocConfig;
 import com.compass.ux.takephoto.FPVDemoApplication;
 import com.compass.ux.ui.ConnectionActivity;
 import com.compass.ux.ui.FirstActivity;
+import com.compass.ux.utils.Utils;
 import com.secneo.sdk.Helper;
 import com.squareup.leakcanary.LeakCanary;
 import com.tencent.bugly.crashreport.CrashReport;
@@ -40,6 +41,8 @@ public class MApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        //初始化工具类
+        Utils.init(this);
         fpvDemoApplication.onCreate();
         //bugly
         CrashReport.initCrashReport(getApplicationContext(), "4a94e8a682", true);

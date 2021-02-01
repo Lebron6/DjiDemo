@@ -182,6 +182,7 @@ import com.compass.ux.utils.DateTransformationUtils;
 import com.compass.ux.utils.DeleteUtil;
 import com.compass.ux.utils.LocationUtils;
 import com.compass.ux.utils.MapConvertUtils;
+import com.compass.ux.utils.SPUtils;
 import com.compass.ux.utils.fastClick;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -4736,6 +4737,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
         // add点
         wayPoints = communication.getPara().get(Constant.WAY_POINTS);
+        SPUtils.put(ConnectionActivity.this,"waypoint","wayPoints",wayPoints);
         Log.d("wayPoints", wayPoints);
         if (!TextUtils.isEmpty(wayPoints)) {
             List<WayPointsBean> myWayPointList = gson.fromJson(wayPoints, new TypeToken<List<WayPointsBean>>() {
@@ -4853,6 +4855,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             //手动飞行
             Log.d("WMUEWMUE", "stopMission");
             //添加航点
+            if(TextUtils.isEmpty(wayPoints)){
+                wayPoints=SPUtils.get(ConnectionActivity.this,"waypoint","wayPoints","")+"";
+                targetWaypointIndex=Integer.parseInt(SPUtils.get(ConnectionActivity.this,"waypoint","targetWaypointIndex","0")+"");
+            }
+
             if (!TextUtils.isEmpty(wayPoints)) {
                 List<WayPointsBean> myWayPointList = gson.fromJson(wayPoints, new TypeToken<List<WayPointsBean>>() {
                 }.getType());
@@ -5118,6 +5125,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         public void onExecutionUpdate(WaypointMissionExecutionEvent executionEvent) {
             if (executionEvent.getCurrentState().toString().equals("EXECUTING")) {
                 targetWaypointIndex = executionEvent.getProgress().targetWaypointIndex;
+//                SPUtils.getInstance().put("targetWaypointIndex",targetWaypointIndex);
+                SPUtils.put(ConnectionActivity.this,"waypoint","targetWaypointIndex","0");
             }
 
             Log.d("WMUEWMUE-EU", "targetWaypointIndex:" + targetWaypointIndex);
