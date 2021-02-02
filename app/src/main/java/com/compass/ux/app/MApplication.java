@@ -47,7 +47,6 @@ public class MApplication extends Application {
         //初始化全局异常崩溃
         initCrash();
 
-
         //内存泄漏检测
         if (!LeakCanary.isInAnalyzerProcess(this)) {
             LeakCanary.install(this);
