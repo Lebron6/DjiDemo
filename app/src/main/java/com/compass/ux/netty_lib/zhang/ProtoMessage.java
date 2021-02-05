@@ -3,7 +3,6 @@
 
 package com.compass.ux.netty_lib.zhang;
 
-import com.compass.ux.netty_lib.zhang.Communication;
 
 public final class ProtoMessage {
     private ProtoMessage() {

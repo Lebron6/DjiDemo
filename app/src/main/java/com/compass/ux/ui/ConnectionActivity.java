@@ -229,7 +229,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private TextView mTextConnectionStatus;
     private TextView mTextProduct;
     private TextView mVersionTv;
-    private Button mBtnOpen, btn_download, btn_gaode, btn_simulator, btn_login,btn_pl;
+    private Button mBtnOpen, btn_download, btn_gaode, btn_simulator, btn_login, btn_pl;
     private EditText et_zoom;
     private EditText et_url;
 
@@ -317,8 +317,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     boolean sgpre;
     String wayPoints = "";
     String wayPointAction = "";
-    double goHomeLat=0,goHomeLong=0;
-    boolean visionAssistedPosition, precisionLand, upwardsAvoidance, collisionAvoidance,landingProtection;
+    double goHomeLat = 0, goHomeLong = 0;
+    boolean visionAssistedPosition, precisionLand, upwardsAvoidance, collisionAvoidance, landingProtection;
     FlightControllerKey flightControllerKey1 = FlightControllerKey.create(FlightControllerKey.VISION_ASSISTED_POSITIONING_ENABLED);
     FlightControllerKey flightControllerKey2 = FlightControllerKey.create(FlightControllerKey.PRECISION_LANDING_ENABLED);
     FlightControllerKey flightControllerKey3 = FlightControllerKey.create(FlightControllerKey.UPWARDS_AVOIDANCE_ENABLED);
@@ -336,7 +336,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     //这是获取左上角飞行状态的
 //    private Handler handlerStartDownload = new Handler();
 
-//    //之前的下载
+    //    //之前的下载
 //    private Runnable runnableStartDownload = new Runnable() {
 //        public void run() {
 //            // TODOAuto-generated method stub
@@ -367,7 +367,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private String maxFlightRadius = "";
     private boolean maxFlightRadiusLimitationEnabled;
     private String wrj_heading = "";
-    private boolean isCapture=false;//抓拍组合动作
+    private boolean isCapture = false;//抓拍组合动作
 
     //航线V2
     private WaypointV2MissionOperator waypointV2MissionOperator = null;
@@ -513,7 +513,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
 
-
     private void initUI() {
         mTextConnectionStatus = (TextView) findViewById(R.id.text_connection_status);
         mTextProduct = (TextView) findViewById(R.id.text_product_info);
@@ -595,7 +594,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
 
-
     private boolean isLiveStreamManagerOn() {
         if (DJISDKManager.getInstance().getLiveStreamManager() == null) {
             //    ToastUtils.setResultToToast("No live stream manager!");
@@ -648,8 +646,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         String sss = "startLive:" + result +
                                 "\n isVideoStreamSpeedConfigurable:" + DJISDKManager.getInstance().getLiveStreamManager().isVideoStreamSpeedConfigurable() +
                                 "\n isLiveAudioEnabled:" + DJISDKManager.getInstance().getLiveStreamManager().isLiveAudioEnabled() +
-                                "\n isStreaming:" + DJISDKManager.getInstance().getLiveStreamManager().isStreaming()+
-                                "\n VideoEncodingEnabled:"+DJISDKManager.getInstance().getLiveStreamManager().isVideoEncodingEnabled();
+                                "\n isStreaming:" + DJISDKManager.getInstance().getLiveStreamManager().isStreaming() +
+                                "\n VideoEncodingEnabled:" + DJISDKManager.getInstance().getLiveStreamManager().isVideoEncodingEnabled();
                         Toast.makeText(getApplicationContext(), sss, Toast.LENGTH_SHORT).show();
                         if (communication != null) {
                             communication.setResult(result + "");
@@ -663,7 +661,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }
         }.start();
     }
-
 
 
     private void showToast(final String toastMsg) {
@@ -950,8 +947,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                                Log.d(TAG, "经度=" + flightControllerState.getAircraftLocation().getLongitude());
 //                                Log.d(TAG, "海拔=" + flightControllerState.getAircraftLocation().getAltitude());
 //                                Log.d(TAG, "IslandingConfirmationNeeded=" + flightControllerState.isLandingConfirmationNeeded() + "");
-                                goHomeLat=flightControllerState.getHomeLocation().getLatitude();
-                                goHomeLong=flightControllerState.getHomeLocation().getLongitude();
+                                goHomeLat = flightControllerState.getHomeLocation().getLatitude();
+                                goHomeLong = flightControllerState.getHomeLocation().getLongitude();
                                 double length = LocationUtils.getDistance(flightControllerState.getHomeLocation().getLongitude() + "", flightControllerState.getHomeLocation().getLatitude() + ""
                                         , flightControllerState.getAircraftLocation().getLongitude() + "", flightControllerState.getAircraftLocation().getLatitude() + "");
                                 boolean nowdistance = length > 3000;
@@ -1211,7 +1208,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             communication_down_link.setMethod((Constant.DOWN_LOAD_SIGNAL));
                             communication_down_link.setResult(gson.toJson(upLinkBean, StringsBean.class));
                             NettyClient.getInstance().sendMessage(communication_down_link, null);
-
 
 
                         } catch (Exception e) {
@@ -2536,18 +2532,18 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 break;
             //判断是否在飞
             case "getIsFlying":
-                communication.setResult(lastFlying?"1":"0");
+                communication.setResult(lastFlying ? "1" : "0");
                 communication.setCode(200);
                 communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                 NettyClient.getInstance().sendMessage(communication, null);
                 break;
             //获取返航点经纬度
             case "getSLngLat":
-                if(goHomeLat==0&&goHomeLong==0){
+                if (goHomeLat == 0 && goHomeLong == 0) {
                     communication.setResult("undefined");
-                }else{
-                    LatLng latLngHome = MapConvertUtils.getGDLatLng(goHomeLat,goHomeLong,ConnectionActivity.this);
-                    communication.setResult(latLngHome.longitude+","+ latLngHome.latitude);
+                } else {
+                    LatLng latLngHome = MapConvertUtils.getGDLatLng(goHomeLat, goHomeLong, ConnectionActivity.this);
+                    communication.setResult(latLngHome.longitude + "," + latLngHome.latitude);
                 }
 
                 communication.setCode(200);
@@ -2556,12 +2552,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 break;
             //抓拍模式
             case Constant.CAPTURE:
-                isCapture=true;
+                isCapture = true;
                 setCapture(communication);
                 break;
         }
     }
-
 
 
     //起飞
@@ -2767,9 +2762,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 gimbal.rotate(builder.build(), new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
-                        if(isCapture){
+                        if (isCapture) {
                             setCameraZoom(communication);
-                        }else{
+                        } else {
                             if (djiError != null) {
                                 communication.setResult(djiError.getDescription());
                                 communication.setCode(-1);
@@ -2905,10 +2900,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     //切换镜头
     private void change_lens(Communication communication) {
-        String type="";
-        if(isCapture){
-            type="2";
-        }else{
+        String type = "";
+        if (isCapture) {
+            type = "2";
+        } else {
             type = communication.getPara().get(Constant.TYPE);
         }
 
@@ -2931,9 +2926,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 camera.setCameraVideoStreamSource(source, new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
-                        if(isCapture){//抓拍
+                        if (isCapture) {//抓拍
                             camera_up_and_down_by_a(communication);
-                        }else{
+                        } else {
                             CommonDjiCallback(djiError, communication);
                         }
                     }
@@ -3484,9 +3479,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 camera.getLens(0).setHybridZoomFocalLength(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
-                        if(isCapture){
-                            isCapture=false;
-                        }else{
+                        if (isCapture) {
+                            isCapture = false;
+                        } else {
 
                         }
                         CommonDjiCallback(djiError, communication);
@@ -3693,7 +3688,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         });
     }
 
-    private void setPrecisionLandingEnabled(Communication communication){
+    private void setPrecisionLandingEnabled(Communication communication) {
 
     }
 
@@ -3890,7 +3885,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             KeyManager.getInstance().setValue(flightControllerKey3, type.equals("1") ? true : false, new SetCallback() {
                 @Override
                 public void onSuccess() {
-                    upwardsAvoidance=type.equals("1") ? true : false;
+                    upwardsAvoidance = type.equals("1") ? true : false;
                     communication.setResult("Success");
                     communication.setCode(200);
                     communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
@@ -3907,8 +3902,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             });
         }
     }
+
     //下避障
-    private void setLandingProtection(Communication communication){
+    private void setLandingProtection(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
 //        if(!TextUtils.isEmpty(type)&&mFlightAssistant!=null){
 //            mFlightAssistant.setLandingProtectionEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
@@ -3936,7 +3932,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             KeyManager.getInstance().setValue(flightControllerKey5, type.equals("1") ? true : false, new SetCallback() {
                 @Override
                 public void onSuccess() {
-                    landingProtection=type.equals("1") ? true : false;
+                    landingProtection = type.equals("1") ? true : false;
                     communication.setResult("Success");
                     communication.setCode(200);
                     communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
@@ -4549,8 +4545,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
 
-
     Communication mCommunication;
+
     //飞机前进后退 -10~10
     private void fly_forward_and_back(Communication communication) {
         isQianHouGet = false;
@@ -4747,7 +4743,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
         // add点
         wayPoints = communication.getPara().get(Constant.WAY_POINTS);
-        SPUtils.put(ConnectionActivity.this,"waypoint","wayPoints",wayPoints);
+        SPUtils.put(ConnectionActivity.this, "waypoint", "wayPoints", wayPoints);
         Log.d("wayPoints", wayPoints);
         if (!TextUtils.isEmpty(wayPoints)) {
             List<WayPointsBean> myWayPointList = gson.fromJson(wayPoints, new TypeToken<List<WayPointsBean>>() {
@@ -4865,9 +4861,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             //手动飞行
             Log.d("WMUEWMUE", "stopMission");
             //添加航点
-            if(TextUtils.isEmpty(wayPoints)){
-                wayPoints=SPUtils.get(ConnectionActivity.this,"waypoint","wayPoints","")+"";
-                targetWaypointIndex=Integer.parseInt(SPUtils.get(ConnectionActivity.this,"waypoint","targetWaypointIndex","0")+"");
+            if (TextUtils.isEmpty(wayPoints)) {
+                wayPoints = SPUtils.get(ConnectionActivity.this, "waypoint", "wayPoints", "") + "";
+                targetWaypointIndex = Integer.parseInt(SPUtils.get(ConnectionActivity.this, "waypoint", "targetWaypointIndex", "0") + "");
             }
 
             if (!TextUtils.isEmpty(wayPoints)) {
@@ -5136,7 +5132,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             if (executionEvent.getCurrentState().toString().equals("EXECUTING")) {
                 targetWaypointIndex = executionEvent.getProgress().targetWaypointIndex;
 //                SPUtils.getInstance().put("targetWaypointIndex",targetWaypointIndex);
-                SPUtils.put(ConnectionActivity.this,"waypoint","targetWaypointIndex","0");
+                SPUtils.put(ConnectionActivity.this, "waypoint", "targetWaypointIndex", "0");
             }
 
             Log.d("WMUEWMUE-EU", "targetWaypointIndex:" + targetWaypointIndex);
@@ -5186,32 +5182,27 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         waypointV2MissionOperator = MissionControl.getInstance().getWaypointMissionV2Operator();
         setWayV2UpListener();
         Log.d("WV2MOperator", waypointV2MissionOperator.getCurrentState() + "");
+        communication_upload_mission = communication;
         //loadMission
         if (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.READY_TO_UPLOAD) || waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.READY_TO_EXECUTE)) {
             waypointV2MissionOperator.loadMission(createWaypointMission(communication), new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
+
                     if (djiWaypointV2Error == null) {
-                        canUploadMission = true;
                         Toast.makeText(ConnectionActivity.this, "Mission is loaded successfully", Toast.LENGTH_SHORT).show();
-                        //uploadMission
-                        if (canUploadMission) {
-                            communication_upload_mission = communication;
-                            waypointV2MissionOperator.uploadMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
-                                @Override
-                                public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
-                                    if (djiWaypointV2Error != null) {
-                                        Toast.makeText(ConnectionActivity.this, djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
-                                    }
+                        waypointV2MissionOperator.uploadMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
+                            @Override
+                            public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
+                                if (djiWaypointV2Error != null) {
+                                    Toast.makeText(ConnectionActivity.this, djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
+                                    communication_upload_mission.setResult(djiWaypointV2Error.getDescription());
+                                    communication_upload_mission.setCode(-1);
+                                    communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                    NettyClient.getInstance().sendMessage(communication_upload_mission, null);
                                 }
-                            });
-                        } else {
-                            Toast.makeText(ConnectionActivity.this, "Wait for mission to be loaded", Toast.LENGTH_SHORT).show();
-                            communication_upload_mission.setResult("Wait for mission to be loaded");
-                            communication_upload_mission.setCode(-1);
-                            communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                            NettyClient.getInstance().sendMessage(communication_upload_mission, null);
-                        }
+                            }
+                        });
                     } else {
                         Toast.makeText(ConnectionActivity.this, djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
                         communication_upload_mission.setResult(djiWaypointV2Error.getDescription());
@@ -5242,18 +5233,18 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             public void onUploadUpdate(WaypointV2MissionUploadEvent waypointV2MissionUploadEvent) {
                 if (waypointV2MissionUploadEvent.getError() != null) {
                     Toast.makeText(ConnectionActivity.this, waypointV2MissionUploadEvent.getError().getDescription(), Toast.LENGTH_SHORT).show();
+                    communication_upload_mission.setResult(waypointV2MissionUploadEvent.getError().getDescription());
+                    communication_upload_mission.setCode(-1);
+                    communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                    NettyClient.getInstance().sendMessage(communication_upload_mission, null);
                 }
-
+                Log.d("wayPointV2Upload","PreviousState="+waypointV2MissionUploadEvent.getPreviousState()
+                        +"\nCurrentState="+waypointV2MissionUploadEvent.getCurrentState());
                 if (waypointV2MissionUploadEvent.getPreviousState() == WaypointV2MissionState.UPLOADING
                         && waypointV2MissionUploadEvent.getCurrentState() == WaypointV2MissionState.READY_TO_EXECUTE) {
                     Toast.makeText(ConnectionActivity.this, "Mission is uploaded successfully", Toast.LENGTH_SHORT).show();
                     communication_upload_mission.setResult("Mission is uploaded successfully");
                     communication_upload_mission.setCode(200);
-                    communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    NettyClient.getInstance().sendMessage(communication_upload_mission, null);
-                } else {
-                    communication_upload_mission.setResult("Mission is uploaded failed");
-                    communication_upload_mission.setCode(-1);
                     communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                     NettyClient.getInstance().sendMessage(communication_upload_mission, null);
                 }
@@ -5300,7 +5291,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 if (actionUploadEvent.getPreviousState() == ActionState.UPLOADING
                         && actionUploadEvent.getCurrentState() == ActionState.READY_TO_EXECUTE) {
                     Toast.makeText(ConnectionActivity.this, "Actions are uploaded successfully", Toast.LENGTH_SHORT).show();
-                    canStartMission = true;
+
                 }
 
             }
@@ -5334,7 +5325,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             for (int i = 0; i < myWayPointActionList.size(); i++) {
                 WaypointTrigger waypointAction0Trigger = null;
                 WaypointActuator waypointAction0Actuator = null;
-                int curr=i+1;
+                int curr = i + 1;
                 waypointAction0Trigger = new WaypointTrigger.Builder()
                         .setTriggerType(ActionTypes.ActionTriggerType.REACH_POINT)
                         .setReachPointParam(new WaypointReachPointTriggerParam.Builder()
@@ -5343,8 +5334,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 .build())
                         .build();
 
-                for (int j = 0; j <myWayPointActionList.get(i).getWayPointAction().size(); j++) {
-                    switch (myWayPointActionList.get(i).getWayPointAction().get(j).getActionType()){
+                for (int j = 0; j < myWayPointActionList.get(i).getWayPointAction().size(); j++) {
+                    switch (myWayPointActionList.get(i).getWayPointAction().get(j).getActionType()) {
                         case "0"://悬停
                             waypointAction0Actuator = new WaypointActuator.Builder()
                                     .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
@@ -5402,7 +5393,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                             .setCameraOperationType(ActionTypes.CameraOperationType.ZOOM)
                                             .setZoomParam(new WaypointCameraZoomParam.Builder()
                                                     .setFocalLength(Integer.parseInt(myWayPointActionList.get(i).getWayPointAction().get(j).getFocalLength()))
-                                            .build())
+                                                    .build())
                                             .build())
                                     .build();
                             break;
@@ -5442,8 +5433,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     waypointV2ActionList.add(waypointAction0);
 
                     //如果是悬停 加上等待时间
-                    if(myWayPointActionList.get(i).getWayPointAction().get(j).getActionType().equals("0")){
-                        WaypointTrigger waypointAction1Trigger=new WaypointTrigger.Builder()
+                    if (myWayPointActionList.get(i).getWayPointAction().get(j).getActionType().equals("0")) {
+                        WaypointTrigger waypointAction1Trigger = new WaypointTrigger.Builder()
                                 .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
                                 .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
                                         .setAssociateActionID(actionId)
@@ -5946,19 +5937,21 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
         String mPathMode = communication.getPara().get(Constant.FLIGHT_PATH_MODE);
         String wayPoints = communication.getPara().get(Constant.WAY_POINTS);
-        Log.d("wayPointsV2",wayPoints);
+        Log.d("wayPointsV2", wayPoints);
 
 //        wayPointAction = communication.getPara().get("action");
 //        Log.d("wayPointAction",wayPointAction);
         if (!TextUtils.isEmpty(wayPoints)) {
-            List<WayPointsV2Bean.WayPointsBean> myWayPointList = gson.fromJson(wayPoints, new TypeToken<WayPointsV2Bean.WayPointsBean>() {
+            List<WayPointsV2Bean.WayPointsBean> myWayPointList = gson.fromJson(wayPoints, new TypeToken<List<WayPointsV2Bean.WayPointsBean>>() {
             }.getType());
+
             waypointV2List.clear();
             for (int i = 0; i < myWayPointList.size(); i++) {
+                double[] latLng = MapConvertUtils.getDJILatLng(Double.parseDouble(myWayPointList.get(i).getLatitude()), Double.parseDouble(myWayPointList.get(i).getLongitude()));
 
                 WaypointV2 waypoint0 = new WaypointV2.Builder()
                         //设置经纬度
-                        .setCoordinate(new LocationCoordinate2D(Double.parseDouble(myWayPointList.get(i).getLatitude()), Double.parseDouble(myWayPointList.get(i).getLongitude())))
+                        .setCoordinate(new LocationCoordinate2D(latLng[0],latLng[1]))
                         //高度[-200,500]
                         .setAltitude(Double.parseDouble(myWayPointList.get(i).getAltitude()))
                         //设置路径模式
@@ -5989,7 +5982,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
     private void startWaypointV2(Communication communication) {
-        if (canStartMission) {
+//        if (canStartMission) {
+
             waypointV2MissionOperator.startMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
@@ -5997,13 +5991,13 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         Toast.makeText(ConnectionActivity.this, djiWaypointV2Error == null ? "Mission is started successfully" : djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
                     }
                     if (djiWaypointV2Error != null) {
-                        Log.d("WMUEWMUE", "startWaypointMission报错");
+                        Log.d("WMUEWMUE", "startWaypointMissionV2报错");
                         communication.setResult("startMission报错:" + djiWaypointV2Error.getDescription());
                         communication.setCode(-1);
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                         NettyClient.getInstance().sendMessage(communication, null);
                     } else {
-                        Log.d("WMUEWMUE", "startWaypointMission成功");
+                        Log.d("WMUEWMUE", "startWaypointMissionV2成功");
                         communication.setResult("Success");
                         communication.setCode(200);
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
@@ -6011,9 +6005,15 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     }
                 }
             });
-        } else {
-            Toast.makeText(ConnectionActivity.this, "Wait for mission to be uploaded", Toast.LENGTH_SHORT).show();
-        }
+
+//            canStartMission=false;
+//        } else {
+//            Toast.makeText(ConnectionActivity.this, "Wait for mission to be uploaded", Toast.LENGTH_SHORT).show();
+//            communication.setResult("startMission报错: Wait for mission to be uploaded");
+//            communication.setCode(-1);
+//            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//            NettyClient.getInstance().sendMessage(communication, null);
+//        }
     }
 
     private void stopWaypointV2(Communication communication) {
@@ -6059,10 +6059,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
     private void resumeWaypointV2(Communication communication) {
-        String type=communication.getPara().get(Constant.TYPE);
+        String type = communication.getPara().get(Constant.TYPE);
 
         if (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.INTERRUPTED)) {
-            waypointV2MissionOperator.recoverMission(InterruptRecoverActionType.find(Integer.parseInt(type)),new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
+            waypointV2MissionOperator.recoverMission(InterruptRecoverActionType.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
                     Toast.makeText(ConnectionActivity.this, djiWaypointV2Error == null ? "The mission has been recovered" : djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
@@ -6121,14 +6121,15 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //        String angle = communication.getPara().get("angle");
 //        String zoom = communication.getPara().get("zoom");
 
-        if(webInitializationBean.getCurrentLens().equals("3")){//变焦
+        if (webInitializationBean.getCurrentLens().equals("3")) {//变焦
             camera_up_and_down_by_a(communication);
-        }else{//不是变焦要去变
+        } else {//不是变焦要去变
             change_lens(communication);
 
         }
 
     }
+
     private DJIKey getDataKey;
     private DJIKey sendDataKey;
     private DJIKey payloadNameKey;
@@ -6138,28 +6139,28 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         getDataKey = PayloadKey.create(PayloadKey.GET_DATA_FROM_PAYLOAD);
         sendDataKey = PayloadKey.create(PayloadKey.SEND_DATA_TO_PAYLOAD);//可能是通过此标识向设备发送指令
         payloadNameKey = PayloadKey.create(PayloadKey.PAYLOAD_PRODUCT_NAME);
-        if (!TextUtils.isEmpty(sendDataKey.toString())){
-            showToast("sendDataKey="+sendDataKey.toString());
-        }else{
+        if (!TextUtils.isEmpty(sendDataKey.toString())) {
+            showToast("sendDataKey=" + sendDataKey.toString());
+        } else {
             showToast("sendDataKey is null");
         }
-        if (!TextUtils.isEmpty(payloadNameKey.toString())){
+        if (!TextUtils.isEmpty(payloadNameKey.toString())) {
 //            showToast("payloadNameKey="+payloadNameKey.toString());
-        }else{
+        } else {
             showToast("payloadNameKey is null");
         }
 
         if (KeyManager.getInstance() != null) {
             KeyManager.getInstance().addListener(getDataKey, getDataListener);
             KeyManager.getInstance().addListener(payloadNameKey, getNameListener);
-        }else{
+        } else {
             showToast("KeyloadManager null");
         }
         Object name = KeyManager.getInstance().getValue(payloadNameKey);
         if (name != null) {
             payloadName = name.toString();
 //            showToast(payloadName);
-        }else{
+        } else {
 //            showToast("not found payload");
         }
     }
@@ -6168,20 +6169,21 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         KeyManager.getInstance().removeListener(getDataListener);
         KeyManager.getInstance().removeListener(getNameListener);
     }
+
     private KeyListener getDataListener = new KeyListener() {
         @Override
         public void onValueChange(@Nullable Object oldValue, @Nullable final Object newValue) {
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (newValue instanceof byte[]) {
-                            //String str = BytesUtil.byte2hex((byte[]) newValue);
-                            byte[] data = (byte[]) newValue;
-                            Log.e(TAG, "receiving data size:" + data.length);
-                        }
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (newValue instanceof byte[]) {
+                        //String str = BytesUtil.byte2hex((byte[]) newValue);
+                        byte[] data = (byte[]) newValue;
+                        Log.e(TAG, "receiving data size:" + data.length);
                     }
-                });
+                }
+            });
 
         }
     };
@@ -6201,23 +6203,26 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }
         }
     };
-    private byte[] data = {0x24,0x00,0x0A,0x54, (byte) 0xc2, (byte) 0xde, (byte) 0xc5, (byte) 0xcc,0x00,0x23};
+    private byte[] data = {0x24, 0x00, 0x0A, 0x54, (byte) 0xc2, (byte) 0xde, (byte) 0xc5, (byte) 0xcc, 0x00, 0x23};
+
     private void sendData() {
 
         KeyManager.getInstance().performAction(sendDataKey, new ActionCallback() {
             @Override
             public void onSuccess() {
-                showToast("send data success! " );
+                showToast("send data success! ");
             }
+
             @Override
             public void onFailure(@NonNull DJIError error) {
-                showToast("send data failed"+error.getDescription()+"code="+error.getErrorCode());
+                showToast("send data failed" + error.getDescription() + "code=" + error.getErrorCode());
             }
         }, data);
     }
 
 
     Payload payload;
+
     private Payload getPayloadInstance() {
         if (payload == null) {
             initPayload();
@@ -6235,18 +6240,19 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             }
         }
     }
-    private void sendTTS2Payload(byte[] data){
-        Payload payload= getPayloadInstance();
-        if(payload!=null){
+
+    private void sendTTS2Payload(byte[] data) {
+        Payload payload = getPayloadInstance();
+        if (payload != null) {
             payload.sendDataToPayload(data, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    if(djiError!=null){
-                        showToast("send data failed"+djiError.getDescription()+"code="+djiError.getErrorCode());
+                    if (djiError != null) {
+                        showToast("send data failed" + djiError.getDescription() + "code=" + djiError.getErrorCode());
                     }
                 }
             });
-        }else{
+        } else {
             showToast("payload为空");
         }
 

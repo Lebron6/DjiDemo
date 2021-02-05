@@ -53,7 +53,14 @@ public class HeartBeatClientHandler extends ChannelInboundHandlerAdapter {
 //    Gson gson =new Gson();
 //    String responseJson=gson.toJson(communication,Communication.class)+ Constant.LINE_SEPARATOR;
 
-    ctx.writeAndFlush(communication.coverProtoMessage());
+    ctx.writeAndFlush(communication.coverProtoMessage()).addListener(future->{
+      if(future.isSuccess()){
+        Log.d(TAG,"消息发送成功");
+      }else {
+        Log.d(TAG,"消息发送失败", future.cause());
+      }
+
+    });
 
     ctx.fireChannelActive();
 

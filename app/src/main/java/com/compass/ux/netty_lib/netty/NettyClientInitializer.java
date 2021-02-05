@@ -49,6 +49,16 @@ public class NettyClientInitializer extends ChannelInitializer<SocketChannel> {
 //        pipeline.addLast(sslCtx.newHandler(ch.alloc()));    // 开启SSL
 
         pipeline.addLast(new LoggingHandler(LogLevel.DEBUG));    // 开启日志，可以设置日志等级
+
+        //解码用
+        pipeline.addLast(new ProtobufVarint32FrameDecoder());
+        //构造函数传递要解码成的类型
+        pipeline.addLast(new ProtobufDecoder(ProtoMessage.Message.getDefaultInstance()));
+        //编码用
+        pipeline.addLast(new ProtobufVarint32LengthFieldPrepender());
+        pipeline.addLast(new ProtobufEncoder());
+
+
         pipeline.addLast(new IdleStateHandler(0, 4, 0, TimeUnit.SECONDS));
         pipeline.addLast(new ConnectorIdleStateTrigger());
         pipeline.addLast(new HeartBeatClientHandler(MApplication.EQUIPMENT_ID,listener));
@@ -64,13 +74,7 @@ public class NettyClientInitializer extends ChannelInitializer<SocketChannel> {
 //        pipeline.addLast(new StringDecoder());
 //        pipeline.addLast(new StringEncoder());
 
-        //解码用
-        pipeline.addLast(new ProtobufVarint32FrameDecoder());
-        //构造函数传递要解码成的类型
-        pipeline.addLast(new ProtobufDecoder(ProtoMessage.Message.getDefaultInstance()));
-        //编码用
-        pipeline.addLast(new ProtobufVarint32LengthFieldPrepender());
-        pipeline.addLast(new ProtobufEncoder());
+
 
 
 
