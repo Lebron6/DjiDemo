@@ -125,7 +125,11 @@ import android.util.Log;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.RadioGroup;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -150,7 +154,7 @@ import com.compass.ux.netty_lib.activity.NettyActivity;
 import com.compass.ux.netty_lib.netty.NettyClient;
 import com.compass.ux.netty_lib.zhang.Communication;
 import com.compass.ux.takephoto.FPVDemoApplication;
-import com.compass.ux.utils.ByteUtils;
+import com.compass.ux.utils.PagerUtils;
 import com.compass.ux.utils.DeleteUtil;
 import com.compass.ux.utils.LocationUtils;
 import com.compass.ux.utils.MapConvertUtils;
@@ -167,6 +171,10 @@ import java.util.List;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static dji.common.camera.CameraVideoStreamSource.DEFAULT;
 import static dji.common.camera.CameraVideoStreamSource.INFRARED_THERMAL;
@@ -199,6 +207,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private Button mBtnOpen, btn_download, btn_gaode, btn_simulator, btn_login;
     private EditText et_zoom;
     private EditText et_url;
+    private CheckBox repeat_send_checkbox;
+    private SeekBar seek_bar_volume;
 
     private FlightController mFlightController;
     private RemoteController mRemoteController;
@@ -345,7 +355,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private boolean canStartMission = false;
     private WaypointV2ActionListener waypointV2ActionListener = null;
     private List<WaypointV2Action> waypointV2ActionList = new ArrayList<>();
-
+    private ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
+    private ScheduledFuture<?> scheduledFuture;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -473,6 +484,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             mCodecManager.cleanSurface();
             mCodecManager = null;
         }
+        if (scheduledFuture != null && !scheduledFuture.isCancelled() && !scheduledFuture.isDone()) {
+            scheduledFuture.cancel(true);
+        }
+        executorService.shutdownNow();
         super.onDestroy();
 
     }
@@ -494,12 +509,34 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         btn_login = findViewById(R.id.btn_login);
         btn_login.setOnClickListener(this);
         et_zoom = findViewById(R.id.et_zoom);
-
+//        repeat_send_checkbox = findViewById(R.id.repeat_send_checkbox);
+//        repeat_send_checkbox.setOnCheckedChangeListener(onCheckedChangeListener);
+        seek_bar_volume=findViewById(R.id.seek_bar_volume);
+        seek_bar_volume.setOnSeekBarChangeListener(onSeekBarChangeListener);
         mVideoSurface = (TextureView) findViewById(R.id.video_previewer_surface);
         if (null != mVideoSurface) {
             mVideoSurface.setSurfaceTextureListener(this);
         }
     }
+    SeekBar.OnSeekBarChangeListener onSeekBarChangeListener=new SeekBar.OnSeekBarChangeListener() {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            PagerUtils instance = PagerUtils.getInstance();
+            byte[] content = instance.intToBytes(seekBar.getProgress());
+            byte[] ins = {0*56};
+            testSendTTS(instance.dataCopy(ins,content));
+        }
+    };
 
     @Override
     public void onClick(View v) {
@@ -524,6 +561,14 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
             case R.id.btn_gaode: {
 //                stopWaypointV2(null);
+//                if (repeat_send_checkbox.isChecked()) {
+//                    scheduledFuture = executorService.scheduleAtFixedRate(repeatRunnable, 100, 1000/3, TimeUnit.MILLISECONDS);
+//                    //ToastUtils.showToast("start send date frequently");
+//                } else {
+                    testSendTTS(ttsRepeat);
+                    testSendTTS(data);
+//                }
+
                 break;
             }
             case R.id.btn_simulator: {
@@ -540,12 +585,18 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                DJISDKManager.getInstance().getLiveStreamManager().stopStream();
 //                Toast.makeText(getApplicationContext(), "Stop Live Show", Toast.LENGTH_SHORT).show();
 //                pauseWaypointV2(null);
+                testSendTTS(ttsStop);
                 break;
             default:
                 break;
         }
     }
-
+    private Runnable repeatRunnable = new Runnable() {
+        @Override
+        public void run() {
+//            testSendTTS();
+        }
+    };
 
     private boolean isLiveStreamManagerOn() {
         if (DJISDKManager.getInstance().getLiveStreamManager() == null) {
@@ -2515,7 +2566,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 setCapture(communication);
                 //文本喊话
             case Constant.SEND_VOICE_COMMAND:
-                    sendTTS2Payload(communication);
+                sendTTS2Payload(communication);
                 break;
         }
     }
@@ -6079,43 +6130,63 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             change_lens(communication);
 
         }
-
     }
 
+    private byte[] data = {0x24, 0x00, 0x0A, 0x54, (byte) 0xc2, (byte) 0xde, (byte) 0xc5, (byte) 0xcc, 0x00, 0x23};//文本：罗盘
+    private byte[] ttsRepeat={0x24,0x00,0x07,0x73,0x65,0x00,0x23};//循环播放文本指令
+    private byte[] ttsStop={0x24,0x00,0x0a,0x79, (byte) 0xFD, 0x00, 0x01, 0x02,0x00,0x23};//文本停止
+    private void testSendTTS(byte [] test) {
 
-    private byte[] data = {0x24, 0x00, 0x0A, 0x54, (byte) 0xc2, (byte) 0xde, (byte) 0xc5, (byte) 0xcc, 0x00, 0x23};
-    private final byte[] HEADER = {0x24};//帧头
-    private final byte[] TAIL = {0x00, 0x23};//帧尾
-    private final byte[] INSCODE = {0x54};//指令
-
-    private void sendTTS2Payload(Communication communication) {
-        String tts=communication.getPara().get("word");
-        if (TextUtils.isEmpty(tts)){
-            showToast("未检测到语音文本");
-            return;
-        }
-        String contentChineseHex = ByteUtils.getInstance().toChineseHex(tts);
-        byte[] content = ByteUtils.getInstance().HexString2Bytes(contentChineseHex);
-        byte[] size = ByteUtils.getInstance().intToBytes(HEADER.length + 2 + INSCODE.length + content.length + TAIL.length);//数据位长度
-        byte[] bytes = ByteUtils.getInstance().dataCopy(HEADER, size, INSCODE, content, TAIL);
         if (FPVDemoApplication.getProductInstance() != null) {
             Payload payload = FPVDemoApplication.getProductInstance().getPayload();
-            if (payload != null) {
-                payload.sendDataToPayload(bytes, new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(DJIError djiError) {
-                       CommonDjiCallback(djiError,communication);
-                    }
-                });
-            } else {
-                showToast("wait a moment!");
-            }
+            payload.sendDataToPayload(test, new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+
+                }
+            });
+        }else{
+            showToast("未检测到payload设备");
+        }
+    }
+
+    /**
+     * 拼接文本指令
+     * @param communication
+     */
+    private void sendTTS2Payload(Communication communication) {
+        String tts = communication.getPara().get("word");
+        if (TextUtils.isEmpty(tts)) {
+            tts = "未检测到语音文本";
+        }
+        PagerUtils pagerUtils = PagerUtils.getInstance();
+        byte[] content = pagerUtils.HexString2Bytes(pagerUtils.toChineseHex(tts));
+        byte[] data = pagerUtils.dataCopy(pagerUtils.TTSINS, content);
+        send(data, communication);
+    }
+
+    /**
+     * 发送指令到Payload
+     *
+     * @param data
+     * @param communication
+     */
+    private void send(byte[] data, Communication communication) {
+        if (FPVDemoApplication.getProductInstance() != null) {
+            Payload payload = FPVDemoApplication.getProductInstance().getPayload();
+            payload.sendDataToPayload(data, new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    CommonDjiCallback(djiError, communication);
+                }
+            });
         } else {
             showToast("未检测到设备!");
-            communication.setResult("payload is null"+"检测不到扩音器");
+            communication.setResult("payload is null :" + "检测不到扩音器");
             communication.setCode(-1);
             communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
             NettyClient.getInstance().sendMessage(communication, null);
         }
     }
+
 }

@@ -50,7 +50,7 @@
     </LinearLayout>
     <Button
         android:id="@+id/btn_open"
-        android:layout_width="150dp"
+        android:layout_width="100dp"
         android:layout_height="55dp"
         android:layout_marginTop="350dp"
         android:background="@drawable/round_btn"
@@ -60,9 +60,22 @@
         android:textSize="20dp"
         />
 
+
+    <SeekBar
+        android:id="@+id/seek_bar_volume"
+        android:layout_width="150dp"
+        android:layout_height="30dp"
+        android:maxHeight="2dp"
+        android:max="100"
+        android:progress="30"
+        android:layout_marginTop="350dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="30dp"
+        android:thumb="@drawable/seek_bar"/>
     <Button
         android:id="@+id/btn_download"
-        android:layout_width="150dp"
+        android:visibility="gone"
+        android:layout_width="100dp"
         android:layout_height="55dp"
         android:layout_marginTop="350dp"
         android:background="@drawable/round_btn"
@@ -75,11 +88,11 @@
 
     <Button
         android:id="@+id/btn_gaode"
-        android:layout_width="150dp"
+        android:layout_width="100dp"
         android:layout_height="55dp"
         android:layout_marginTop="30dp"
         android:background="@drawable/round_btn"
-        android:text="gaode"
+        android:text="循环播放开启"
         android:layout_marginLeft="20dp"
         android:layout_below="@+id/btn_open"
         android:textColor="@color/colorWhite"
@@ -88,46 +101,34 @@
 
     <Button
         android:id="@+id/btn_login"
-        android:layout_width="150dp"
+        android:layout_width="100dp"
         android:layout_height="55dp"
         android:layout_marginTop="30dp"
         android:background="@drawable/round_btn"
-        android:text="推流结束"
+        android:text="停止播放"
         android:layout_marginLeft="20dp"
         android:layout_below="@+id/btn_gaode"
         android:textColor="@color/colorWhite"
         android:textSize="20dp"
         />
-    <Button
-        android:id="@+id/btn_payload_send"
-        android:layout_width="150dp"
-        android:layout_height="55dp"
-        android:layout_marginTop="30dp"
-        android:background="@drawable/round_btn"
-        android:text="PlSEND"
-        android:layout_marginLeft="20dp"
-        android:layout_below="@+id/btn_login"
-        android:textColor="@color/colorWhite"
-        android:textSize="20dp"
-        />
+
 
     <Button
         android:id="@+id/btn_simulator"
-        android:layout_below="@+id/btn_open"
-        android:layout_width="150dp"
+        android:layout_width="100dp"
         android:layout_height="55dp"
+        android:layout_below="@+id/btn_open"
+        android:layout_alignParentRight="true"
         android:layout_marginTop="30dp"
+        android:layout_marginRight="30dp"
         android:background="@drawable/round_btn"
         android:text="推流开始"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="30dp"
         android:textColor="@color/colorWhite"
-        android:textSize="20dp"
-        />
+        android:textSize="20dp" />
 
     <EditText
         android:id="@+id/et_zoom"
-        android:layout_width="150dp"
+        android:layout_width="100dp"
         android:layout_height="55dp"
         android:layout_marginTop="30dp"
         android:layout_marginRight="30dp"
@@ -149,23 +150,10 @@
         android:textSize="15dp"
         android:visibility="gone"
         android:id="@+id/textView2" />
-    <Button
-        android:id="@+id/btn_cancel"
-        android:layout_width="150dp"
-        android:layout_height="55dp"
-        android:layout_marginTop="30dp"
-        android:layout_marginRight="30dp"
-        android:background="@drawable/round_btn"
-        android:layout_marginLeft="20dp"
-        android:text="Cancel"
-        android:layout_below="@+id/et_zoom"
-        android:layout_alignParentRight="true"
-        android:textColor="@color/colorWhite"
-        android:textSize="20dp"
-        />
+
     <TextureView
         android:id="@+id/video_previewer_surface"
-        android:layout_below="@+id/btn_payload_send"
+        android:layout_below="@+id/btn_login"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
