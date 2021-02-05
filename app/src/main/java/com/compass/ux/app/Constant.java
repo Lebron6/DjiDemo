@@ -118,7 +118,7 @@ public class Constant {
     public static final String SET_FREQUENCY_BAND="setFrequencyBand";
     public static final String SET_GIMBAL_MODE="setGimbalMode";
     public static final String CAPTURE="capture";
-
+    public static final String SEND_VOICE_COMMAND = "sendVoiceCommand";
 
     public static String LINE_SEPARATOR=System.getProperty("line.separator");
 
@@ -144,6 +144,7 @@ public class Constant {
     public static String BATTERY_STATE_BEAN = "batteryStateBean";
     public static String flightController = "flightController";
     public static String RTKBean = "rtkBean";
+
 
 
     //无人机名字

@@ -1,18 +1,12 @@
 package com.compass.ux.ui;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import dji.common.airlink.FrequencyInterference;
+
 import dji.common.airlink.OcuSyncBandwidth;
 import dji.common.airlink.OcuSyncFrequencyBand;
 import dji.common.airlink.PhysicalSource;
 import dji.common.airlink.SignalQualityCallback;
 import dji.common.airlink.WifiChannelInterference;
-import dji.common.battery.AggregationState;
-import dji.common.battery.BatteryOverview;
-import dji.common.battery.BatteryState;
 import dji.common.camera.CameraVideoStreamSource;
 import dji.common.camera.LaserMeasureInformation;
 import dji.common.camera.PhotoTimeLapseSettings;
@@ -20,22 +14,17 @@ import dji.common.camera.SettingsDefinitions;
 import dji.common.camera.StorageState;
 import dji.common.camera.WatermarkSettings;
 import dji.common.error.DJIError;
-import dji.common.error.DJISDKError;
 import dji.common.error.DJIWaypointV2Error;
 import dji.common.flightcontroller.ConnectionFailSafeBehavior;
 import dji.common.flightcontroller.FlightControllerState;
 import dji.common.flightcontroller.GravityCenterState;
 import dji.common.flightcontroller.LEDsSettings;
 import dji.common.flightcontroller.ObstacleDetectionSector;
-import dji.common.flightcontroller.RTKState;
 import dji.common.flightcontroller.VisionDetectionState;
 import dji.common.flightcontroller.WindDirection;
-import dji.common.flightcontroller.flightassistant.ObstacleAvoidanceSensorState;
 import dji.common.flightcontroller.flightassistant.PerceptionInformation;
 import dji.common.flightcontroller.rtk.CoordinateSystem;
-import dji.common.flightcontroller.rtk.NetworkServicePlansState;
 import dji.common.flightcontroller.rtk.NetworkServiceSettings;
-import dji.common.flightcontroller.rtk.NetworkServiceState;
 import dji.common.flightcontroller.rtk.RTKBaseStationInformation;
 import dji.common.flightcontroller.rtk.ReferenceStationSource;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
@@ -70,12 +59,9 @@ import dji.common.mission.waypointv2.Action.WaypointAircraftControlParam;
 import dji.common.mission.waypointv2.Action.WaypointAircraftControlRotateYawParam;
 import dji.common.mission.waypointv2.Action.WaypointAircraftControlStartStopFlyParam;
 import dji.common.mission.waypointv2.Action.WaypointCameraActuatorParam;
-import dji.common.mission.waypointv2.Action.WaypointCameraCustomNameParam;
 import dji.common.mission.waypointv2.Action.WaypointCameraZoomParam;
 import dji.common.mission.waypointv2.Action.WaypointGimbalActuatorParam;
-import dji.common.mission.waypointv2.Action.WaypointIntervalTriggerParam;
 import dji.common.mission.waypointv2.Action.WaypointReachPointTriggerParam;
-import dji.common.mission.waypointv2.Action.WaypointTrajectoryTriggerParam;
 import dji.common.mission.waypointv2.Action.WaypointTrigger;
 import dji.common.mission.waypointv2.Action.WaypointV2Action;
 import dji.common.mission.waypointv2.Action.WaypointV2AssociateTriggerParam;
@@ -92,20 +78,15 @@ import dji.common.useraccount.UserAccountState;
 import dji.common.util.CommonCallbacks;
 import dji.keysdk.AirLinkKey;
 import dji.keysdk.BatteryKey;
-import dji.keysdk.DJIKey;
 import dji.keysdk.DiagnosticsKey;
 import dji.keysdk.FlightControllerKey;
 import dji.keysdk.GimbalKey;
 import dji.keysdk.KeyManager;
-import dji.keysdk.PayloadKey;
-import dji.keysdk.callback.ActionCallback;
 import dji.keysdk.callback.GetCallback;
 import dji.keysdk.callback.KeyListener;
 import dji.keysdk.callback.SetCallback;
-import dji.midware.data.manager.P3.DJIPayloadUsbDataManager;
 import dji.sdk.airlink.OcuSyncLink;
 import dji.sdk.airlink.WiFiLink;
-import dji.sdk.base.BaseComponent;
 import dji.sdk.base.BaseProduct;
 import dji.sdk.base.DJIDiagnostics;
 import dji.sdk.battery.Battery;
@@ -126,23 +107,16 @@ import dji.sdk.network.RTKNetworkServiceProvider;
 import dji.sdk.payload.Payload;
 import dji.sdk.products.Aircraft;
 import dji.sdk.remotecontroller.RemoteController;
-import dji.sdk.sdkmanager.DJISDKInitEvent;
 import dji.sdk.sdkmanager.DJISDKManager;
 import dji.sdk.useraccount.UserAccountManager;
-import dji.thirdparty.afinal.core.AsyncTask;
-import top.zibin.luban.Luban;
-import top.zibin.luban.OnCompressListener;
 
-import android.Manifest;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -152,7 +126,11 @@ import android.util.Log;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.RadioGroup;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -166,7 +144,6 @@ import com.compass.ux.bean.FlightControllerBean;
 import com.compass.ux.bean.LaserMeasureInformBean;
 import com.compass.ux.bean.RTKBean;
 import com.compass.ux.bean.SettingValueBean;
-import com.compass.ux.bean.ObstacleAvoidanceSensorStateBean;
 import com.compass.ux.bean.StorageStateBean;
 import com.compass.ux.bean.StringsBean;
 import com.compass.ux.bean.TransmissionSetBean;
@@ -177,10 +154,8 @@ import com.compass.ux.netty_lib.NettyService;
 import com.compass.ux.netty_lib.activity.NettyActivity;
 import com.compass.ux.netty_lib.netty.NettyClient;
 import com.compass.ux.netty_lib.zhang.Communication;
-import com.compass.ux.netty_lib.zhang.RsaUtil;
 import com.compass.ux.takephoto.FPVDemoApplication;
-import com.compass.ux.utils.ClientUploadUtils;
-import com.compass.ux.utils.DateTransformationUtils;
+import com.compass.ux.utils.PagerUtils;
 import com.compass.ux.utils.DeleteUtil;
 import com.compass.ux.utils.LocationUtils;
 import com.compass.ux.utils.MapConvertUtils;
@@ -192,13 +167,15 @@ import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static dji.common.camera.CameraVideoStreamSource.DEFAULT;
 import static dji.common.camera.CameraVideoStreamSource.INFRARED_THERMAL;
@@ -206,7 +183,6 @@ import static dji.common.camera.CameraVideoStreamSource.WIDE;
 import static dji.common.camera.CameraVideoStreamSource.ZOOM;
 import static dji.common.camera.SettingsDefinitions.ExposureMode.MANUAL;
 import static dji.common.camera.SettingsDefinitions.ExposureMode.PROGRAM;
-import static dji.common.camera.SettingsDefinitions.PhotoAspectRatio.RATIO_16_9;
 import static dji.common.camera.SettingsDefinitions.ThermalDigitalZoomFactor.UNKNOWN;
 import static dji.common.camera.SettingsDefinitions.ThermalDigitalZoomFactor.X_1;
 import static dji.common.camera.SettingsDefinitions.ThermalDigitalZoomFactor.X_2;
@@ -232,6 +208,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private Button mBtnOpen, btn_download, btn_gaode, btn_simulator, btn_login, btn_pl;
     private EditText et_zoom;
     private EditText et_url;
+    private CheckBox repeat_send_checkbox;
+    private SeekBar seek_bar_volume;
 
     private FlightController mFlightController;
     private RemoteController mRemoteController;
@@ -378,7 +356,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private boolean canStartMission = false;
     private WaypointV2ActionListener waypointV2ActionListener = null;
     private List<WaypointV2Action> waypointV2ActionList = new ArrayList<>();
-
+    private ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
+    private ScheduledFuture<?> scheduledFuture;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -502,12 +481,15 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
         //waypointV2destory
         tearDownListener();
-        unInitListener();
 
         if (mCodecManager != null) {
             mCodecManager.cleanSurface();
             mCodecManager = null;
         }
+        if (scheduledFuture != null && !scheduledFuture.isCancelled() && !scheduledFuture.isDone()) {
+            scheduledFuture.cancel(true);
+        }
+        executorService.shutdownNow();
         super.onDestroy();
 
     }
@@ -529,15 +511,35 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         btn_simulator.setOnClickListener(this);
         btn_login = findViewById(R.id.btn_login);
         btn_login.setOnClickListener(this);
-        btn_pl = findViewById(R.id.btn_pl);
-        btn_pl.setOnClickListener(this);
         et_zoom = findViewById(R.id.et_zoom);
-
+//        repeat_send_checkbox = findViewById(R.id.repeat_send_checkbox);
+//        repeat_send_checkbox.setOnCheckedChangeListener(onCheckedChangeListener);
+        seek_bar_volume=findViewById(R.id.seek_bar_volume);
+        seek_bar_volume.setOnSeekBarChangeListener(onSeekBarChangeListener);
         mVideoSurface = (TextureView) findViewById(R.id.video_previewer_surface);
         if (null != mVideoSurface) {
             mVideoSurface.setSurfaceTextureListener(this);
         }
     }
+    SeekBar.OnSeekBarChangeListener onSeekBarChangeListener=new SeekBar.OnSeekBarChangeListener() {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            PagerUtils instance = PagerUtils.getInstance();
+            byte[] content = instance.intToBytes(seekBar.getProgress());
+            byte[] ins = {0*56};
+            testSendTTS(instance.dataCopy(ins,content));
+        }
+    };
 
     @Override
     public void onClick(View v) {
@@ -562,6 +564,14 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
             case R.id.btn_gaode: {
 //                stopWaypointV2(null);
+//                if (repeat_send_checkbox.isChecked()) {
+//                    scheduledFuture = executorService.scheduleAtFixedRate(repeatRunnable, 100, 1000/3, TimeUnit.MILLISECONDS);
+//                    //ToastUtils.showToast("start send date frequently");
+//                } else {
+                    testSendTTS(ttsRepeat);
+                    testSendTTS(data);
+//                }
+
                 break;
             }
             case R.id.btn_simulator: {
@@ -578,21 +588,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                DJISDKManager.getInstance().getLiveStreamManager().stopStream();
 //                Toast.makeText(getApplicationContext(), "Stop Live Show", Toast.LENGTH_SHORT).show();
 //                pauseWaypointV2(null);
-
-                initListener();
-                sendData();
-                break;
-            case R.id.btn_pl:
-//                initListener();
-//                sendData();
-
-                sendTTS2Payload(data);
+                testSendTTS(ttsStop);
                 break;
             default:
                 break;
         }
     }
-
 
     private boolean isLiveStreamManagerOn() {
         if (DJISDKManager.getInstance().getLiveStreamManager() == null) {
@@ -682,7 +683,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
             refreshSDKRelativeUI();
             initFlightController();
-            initCamera();
+//            initCamera();
             initBattery();
 //            initGimbal();
             addWaypointMissionListener();//添加航点的监听
@@ -2545,7 +2546,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     LatLng latLngHome = MapConvertUtils.getGDLatLng(goHomeLat, goHomeLong, ConnectionActivity.this);
                     communication.setResult(latLngHome.longitude + "," + latLngHome.latitude);
                 }
-
                 communication.setCode(200);
                 communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                 NettyClient.getInstance().sendMessage(communication, null);
@@ -2554,6 +2554,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             case Constant.CAPTURE:
                 isCapture = true;
                 setCapture(communication);
+                //文本喊话
+            case Constant.SEND_VOICE_COMMAND:
+                sendTTS2Payload(communication);
                 break;
         }
     }
@@ -6083,7 +6086,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             });
         }
 
-
     }
 
     private void tearDownListener() {
@@ -6127,134 +6129,63 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             change_lens(communication);
 
         }
-
     }
 
-    private DJIKey getDataKey;
-    private DJIKey sendDataKey;
-    private DJIKey payloadNameKey;
-    private String payloadName = "";
+    private byte[] data = {0x24, 0x00, 0x0A, 0x54, (byte) 0xc2, (byte) 0xde, (byte) 0xc5, (byte) 0xcc, 0x00, 0x23};//文本：罗盘
+    private byte[] ttsRepeat={0x24,0x00,0x07,0x73,0x65,0x00,0x23};//循环播放文本指令
+    private byte[] ttsStop={0x24,0x00,0x0a,0x79, (byte) 0xFD, 0x00, 0x01, 0x02,0x00,0x23};//文本停止
+    private void testSendTTS(byte [] test) {
 
-    private void initListener() {
-        getDataKey = PayloadKey.create(PayloadKey.GET_DATA_FROM_PAYLOAD);
-        sendDataKey = PayloadKey.create(PayloadKey.SEND_DATA_TO_PAYLOAD);//可能是通过此标识向设备发送指令
-        payloadNameKey = PayloadKey.create(PayloadKey.PAYLOAD_PRODUCT_NAME);
-        if (!TextUtils.isEmpty(sendDataKey.toString())) {
-            showToast("sendDataKey=" + sendDataKey.toString());
-        } else {
-            showToast("sendDataKey is null");
-        }
-        if (!TextUtils.isEmpty(payloadNameKey.toString())) {
-//            showToast("payloadNameKey="+payloadNameKey.toString());
-        } else {
-            showToast("payloadNameKey is null");
-        }
-
-        if (KeyManager.getInstance() != null) {
-            KeyManager.getInstance().addListener(getDataKey, getDataListener);
-            KeyManager.getInstance().addListener(payloadNameKey, getNameListener);
-        } else {
-            showToast("KeyloadManager null");
-        }
-        Object name = KeyManager.getInstance().getValue(payloadNameKey);
-        if (name != null) {
-            payloadName = name.toString();
-//            showToast(payloadName);
-        } else {
-//            showToast("not found payload");
-        }
-    }
-
-    private void unInitListener() {
-        KeyManager.getInstance().removeListener(getDataListener);
-        KeyManager.getInstance().removeListener(getNameListener);
-    }
-
-    private KeyListener getDataListener = new KeyListener() {
-        @Override
-        public void onValueChange(@Nullable Object oldValue, @Nullable final Object newValue) {
-
-            runOnUiThread(new Runnable() {
+        if (FPVDemoApplication.getProductInstance() != null) {
+            Payload payload = FPVDemoApplication.getProductInstance().getPayload();
+            payload.sendDataToPayload(test, new CommonCallbacks.CompletionCallback() {
                 @Override
-                public void run() {
-                    if (newValue instanceof byte[]) {
-                        //String str = BytesUtil.byte2hex((byte[]) newValue);
-                        byte[] data = (byte[]) newValue;
-                        Log.e(TAG, "receiving data size:" + data.length);
-                    }
+                public void onResult(DJIError djiError) {
+
                 }
             });
-
-        }
-    };
-
-    private KeyListener getNameListener = new KeyListener() {
-        @Override
-        public void onValueChange(@Nullable Object oldValue, @Nullable final Object newValue) {
-            if (payloadName != null) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (newValue instanceof String) {
-                            payloadName = newValue.toString();
-                        }
-                    }
-                });
-            }
-        }
-    };
-    private byte[] data = {0x24, 0x00, 0x0A, 0x54, (byte) 0xc2, (byte) 0xde, (byte) 0xc5, (byte) 0xcc, 0x00, 0x23};
-
-    private void sendData() {
-
-        KeyManager.getInstance().performAction(sendDataKey, new ActionCallback() {
-            @Override
-            public void onSuccess() {
-                showToast("send data success! ");
-            }
-
-            @Override
-            public void onFailure(@NonNull DJIError error) {
-                showToast("send data failed" + error.getDescription() + "code=" + error.getErrorCode());
-            }
-        }, data);
-    }
-
-
-    Payload payload;
-
-    private Payload getPayloadInstance() {
-        if (payload == null) {
-            initPayload();
-        }
-        return payload;
-    }
-
-    private void initPayload() {
-        if (DJISDKManager.getInstance() != null) {
-            BaseProduct product = DJISDKManager.getInstance().getProduct();
-            if (product != null) {
-
-                payload = product.getPayload();
-
-            }
+        }else{
+            showToast("未检测到payload设备");
         }
     }
 
-    private void sendTTS2Payload(byte[] data) {
-        Payload payload = getPayloadInstance();
-        if (payload != null) {
+    /**
+     * 拼接文本指令
+     * @param communication
+     */
+    private void sendTTS2Payload(Communication communication) {
+        String tts = communication.getPara().get("word");
+        if (TextUtils.isEmpty(tts)) {
+            tts = "未检测到语音文本";
+        }
+        PagerUtils pagerUtils = PagerUtils.getInstance();
+        byte[] content = pagerUtils.HexString2Bytes(pagerUtils.toChineseHex(tts));
+        byte[] data = pagerUtils.dataCopy(pagerUtils.TTSINS, content);
+        send(data, communication);
+    }
+
+    /**
+     * 发送指令到Payload
+     *
+     * @param data
+     * @param communication
+     */
+    private void send(byte[] data, Communication communication) {
+        if (FPVDemoApplication.getProductInstance() != null) {
+            Payload payload = FPVDemoApplication.getProductInstance().getPayload();
             payload.sendDataToPayload(data, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    if (djiError != null) {
-                        showToast("send data failed" + djiError.getDescription() + "code=" + djiError.getErrorCode());
-                    }
+                    CommonDjiCallback(djiError, communication);
                 }
             });
         } else {
-            showToast("payload为空");
+            showToast("未检测到设备!");
+            communication.setResult("payload is null :" + "检测不到扩音器");
+            communication.setCode(-1);
+            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+            NettyClient.getInstance().sendMessage(communication, null);
         }
-
     }
+
 }
