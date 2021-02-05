@@ -50,15 +50,25 @@ public class HeartBeatClientHandler extends ChannelInboundHandlerAdapter {
     communication.setMethod(register);
 
     communication.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-    Gson gson =new Gson();
-    String responseJson=gson.toJson(communication,Communication.class)+ Constant.LINE_SEPARATOR;
+//    Gson gson =new Gson();
+//    String responseJson=gson.toJson(communication,Communication.class)+ Constant.LINE_SEPARATOR;
 
-    ctx.writeAndFlush(responseJson);
+    ctx.writeAndFlush(communication.coverProtoMessage());
 
     ctx.fireChannelActive();
 
 
   }
+
+//  public static void main(String[] args) {
+//
+//    Communication communication=new Communication();
+//    communication.setMethod("hello");
+//
+//    System.out.println(communication.coverProtoMessage());
+//
+//
+//  }
 
   @Override
   public void channelInactive(ChannelHandlerContext ctx) {

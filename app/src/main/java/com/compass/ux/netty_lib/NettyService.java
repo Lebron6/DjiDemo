@@ -16,6 +16,7 @@ import com.compass.ux.netty_lib.activity.ActivityManager;
 import com.compass.ux.netty_lib.activity.NettyActivity;
 import com.compass.ux.netty_lib.netty.NettyClient;
 import com.compass.ux.netty_lib.netty.NettyListener;
+import com.compass.ux.netty_lib.zhang.Communication;
 
 import java.util.Stack;
 
@@ -73,14 +74,20 @@ public class NettyService extends Service implements NettyListener {
         }
     }
 
+//    @Override
+//    public void onMessageResponse(String messageHolder) {
+//        notifyData(NettyActivity.MSG_FROM_SERVER, messageHolder);
+//        Log.d(TAG, "messageHolder："+messageHolder);
+//
+//    }
+
     @Override
-    public void onMessageResponse(String messageHolder) {
+    public void onMessageResponse(Communication messageHolder) {
         notifyData(NettyActivity.MSG_FROM_SERVER, messageHolder);
         Log.d(TAG, "messageHolder："+messageHolder);
-
     }
 
-    private void notifyData(int type, String messageHolder) {
+    private void notifyData(int type, Communication messageHolder) {
         final Stack<NettyActivity> activities = ActivityManager.getInstance().getActivities();
         for (NettyActivity activity : activities) {
             if (activity == null || activity.isFinishing()) {
@@ -93,6 +100,8 @@ public class NettyService extends Service implements NettyListener {
         }
     }
 
+
+
     @Override
     public void onServiceStatusConnectChanged(int statusCode) {
         if (statusCode == NettyListener.STATUS_CONNECT_SUCCESS) {
@@ -101,7 +110,7 @@ public class NettyService extends Service implements NettyListener {
 //            sendAuthor();
         } else {
             Log.d(TAG, "connect fail statusCode = " + statusCode);
-            notifyData(NettyActivity.MSG_NET_WORK_ERROR, String.valueOf("服务器连接失败"));
+//            notifyData(NettyActivity.MSG_NET_WORK_ERROR, String.valueOf("服务器连接失败"));
         }
 
     }

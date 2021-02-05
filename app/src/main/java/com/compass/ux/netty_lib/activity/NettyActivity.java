@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
+import com.compass.ux.netty_lib.zhang.Communication;
+
 import java.lang.ref.WeakReference;
 
 import androidx.annotation.Nullable;
@@ -59,7 +61,7 @@ public abstract class NettyActivity extends AppCompatActivity {
             final NettyActivity nettyActivity = activity.get();
             switch (msg.what) {
                 case NettyActivity.MSG_FROM_SERVER:
-                    nettyActivity.notifyData((String) msg.obj);
+                    nettyActivity.notifyData((Communication) msg.obj);
                     break;
             }
         }
@@ -70,5 +72,5 @@ public abstract class NettyActivity extends AppCompatActivity {
      *
      * @param message
      */
-    protected abstract void notifyData(String message);
+    protected abstract void notifyData(Communication message);
 }

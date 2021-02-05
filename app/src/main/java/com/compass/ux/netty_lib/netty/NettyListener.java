@@ -1,6 +1,8 @@
 package com.compass.ux.netty_lib.netty;
 
 
+import com.compass.ux.netty_lib.zhang.Communication;
+
 /**
  * Created by 张俨 on 2017/10/9.
  */
@@ -17,7 +19,7 @@ public interface NettyListener {
     /**
      * 对消息的处理
      */
-    void onMessageResponse(String messageHolder);
+    void onMessageResponse(Communication messageHolder);
 
     /**
      * 当服务状态发生变化时触发

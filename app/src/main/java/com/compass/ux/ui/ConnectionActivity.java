@@ -64,6 +64,7 @@ import dji.common.mission.waypointv2.Action.ActionExecutionEvent;
 import dji.common.mission.waypointv2.Action.ActionState;
 import dji.common.mission.waypointv2.Action.ActionTypes;
 import dji.common.mission.waypointv2.Action.ActionUploadEvent;
+import dji.common.mission.waypointv2.Action.InterruptRecoverActionType;
 import dji.common.mission.waypointv2.Action.WaypointActuator;
 import dji.common.mission.waypointv2.Action.WaypointAircraftControlParam;
 import dji.common.mission.waypointv2.Action.WaypointAircraftControlRotateYawParam;
@@ -458,6 +459,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             if (!product.getModel().equals(Model.UNKNOWN_AIRCRAFT)) {
 
                 VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(mReceivedVideoDataListener);
+//                VideoFeeder.getInstance().setTranscodingDataRate(10.0f);
                 String cvs = VideoFeeder.getInstance().getPrimaryVideoFeed().getVideoSource().value() + "";
                 if (cvs.equals("5")) {
                     currentVideoSource = "1";
@@ -467,13 +469,13 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 webInitializationBean.setCurrentVideoSource(currentVideoSource);
             }
         }
-
     }
 
     private void uninitPreviewer() {
         if (camera != null) {
             // Reset the callback
             VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(null);
+
         }
     }
 
@@ -509,6 +511,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         super.onDestroy();
 
     }
+
+
 
     private void initUI() {
         mTextConnectionStatus = (TextView) findViewById(R.id.text_connection_status);
@@ -2141,18 +2145,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
 
-    //长连接最终返回
     @Override
-    protected void notifyData(String json) {
-        Log.d(TAG, "张闯返回数据=" + json);
-        if (TextUtils.isEmpty(json)) {
-            return;
-        }
-        Communication communication = gson.fromJson(json, Communication.class);
-        String method = communication.getMethod();
-        communication.setMethod((method));
+    protected void notifyData(Communication message) {
+        Communication communication = message;
 
-        switch (method) {
+        switch (communication.getMethod()) {
             case Constant.LIVE_PATH://后台拿到的推流地址
                 liveShowUrl = communication.getPara().get("desRtmpUrl");
                 et_url.setText(liveShowUrl);
@@ -2564,6 +2561,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 break;
         }
     }
+
+
 
     //起飞
     private void startTakeoff(Communication communication) {
@@ -4448,6 +4447,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         Log.e(TAG, "onSurfaceTextureAvailable");
         if (mCodecManager == null) {
             mCodecManager = new DJICodecManager(this, surface, width, height);
+            //For M300RTK, you need to actively request an I frame.
+            mCodecManager.resetKeyFrame();
         }
 
     }
@@ -5293,7 +5294,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             public void onUploadUpdate(ActionUploadEvent actionUploadEvent) {
                 if (actionUploadEvent.getCurrentState().equals(ActionState.READY_TO_UPLOAD)) {
                     //TODO 添加执行操作
-//                    uploadWaypointAction();
+                    uploadWaypointAction();
                 }
                 //上传航线成功
                 if (actionUploadEvent.getPreviousState() == ActionState.UPLOADING
@@ -6058,8 +6059,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
     private void resumeWaypointV2(Communication communication) {
+        String type=communication.getPara().get(Constant.TYPE);
+
         if (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.INTERRUPTED)) {
-            waypointV2MissionOperator.recoverMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
+            waypointV2MissionOperator.recoverMission(InterruptRecoverActionType.find(Integer.parseInt(type)),new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
                     Toast.makeText(ConnectionActivity.this, djiWaypointV2Error == null ? "The mission has been recovered" : djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();

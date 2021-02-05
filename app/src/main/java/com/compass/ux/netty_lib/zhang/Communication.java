@@ -5,7 +5,7 @@ import java.util.Map;
 
 /**
  * @author zhangchuang
- * @Description
+ * @Description socket系统间交互协议
  * @date 2020/6/15 12:08 下午
  **/
 public class Communication implements Serializable {
@@ -31,6 +31,11 @@ public class Communication implements Serializable {
   private Map<String, String> para;
 
   /**
+   * 返回状态
+   */
+  private int code;
+
+  /**
    * 返回值
    */
   private String result;
@@ -45,19 +50,21 @@ public class Communication implements Serializable {
    */
   private String responseTime;
 
+  public ProtoMessage.Message coverProtoMessage() {
+    return ProtoMessage.Message
+        .newBuilder()
+        .setRequestId(requestId)
+        .setEquipmentId(equipmentId)
+        .setMethod(method)
+        .putAllPara(para)
+        .setCode(code)
+        .setResult(result)
+        .setRequestTime(requestTime)
+        .setResponseTime(responseTime)
+        .buildPartial();
 
-  /**
-   * 返回状态
-   */
-  private int code;
-
-  public int getCode() {
-    return code;
   }
 
-  public void setCode(int code) {
-    this.code = code;
-  }
   public String getRequestId() {
     return requestId;
   }
@@ -90,6 +97,14 @@ public class Communication implements Serializable {
     this.para = para;
   }
 
+  public int getCode() {
+    return code;
+  }
+
+  public void setCode(int code) {
+    this.code = code;
+  }
+
   public String getResult() {
     return result;
   }
@@ -112,32 +127,5 @@ public class Communication implements Serializable {
 
   public void setResponseTime(String responseTime) {
     this.responseTime = responseTime;
-  }
-
-  public Communication(String requestId, String apronId, String method, Map<String, String> para, String result, String requestTime, String responseTime) {
-    this.requestId = requestId;
-    this.equipmentId = equipmentId;
-    this.method = method;
-    this.para = para;
-    this.result = result;
-    this.requestTime = requestTime;
-    this.responseTime = responseTime;
-  }
-
-  public Communication(){}
-
-
-
-  @Override
-  public String toString() {
-    return "Communication{" +
-            "requestId='" + requestId + '\'' +
-            ", equipmentId='" + equipmentId + '\'' +
-            ", method='" + method + '\'' +
-            ", para=" + para +
-            ", result='" + result + '\'' +
-            ", requestTime='" + requestTime + '\'' +
-            ", responseTime='" + responseTime + '\'' +
-            '}';
   }
 }

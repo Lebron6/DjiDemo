@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 
+
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.2"
@@ -30,29 +31,6 @@ android {
     }
 
     packagingOptions {
-        //4.13
-//        doNotStrip "*/*/libdjivideo.so"
-//        doNotStrip "*/*/libSDKRelativeJNI.so"
-//        doNotStrip "*/*/libFlyForbid.so"
-//        doNotStrip "*/*/libduml_vision_bokeh.so"
-//        doNotStrip "*/*/libyuv2.so"
-//        doNotStrip "*/*/libGroudStation.so"
-//        doNotStrip "*/*/libFRCorkscrew.so"
-//        doNotStrip "*/*/libUpgradeVerify.so"
-//        doNotStrip "*/*/libFR.so"
-//        doNotStrip "*/*/libDJIFlySafeCore.so"
-//        doNotStrip "*/*/libdjifs_jni.so"
-//        doNotStrip "*/*/libsfjni.so"
-//        exclude 'META-INF/rxjava.properties'
-//
-//        doNotStrip "*/*/libDJICommonJNI.so"
-//        doNotStrip "*/*/libDJICSDKCommon.so"
-//        doNotStrip "*/*/libDJIUpgradeCore.so"
-//        doNotStrip "*/*/libDJIUpgradeJNI.so"
-//        doNotStrip "*/*/libDJIWaypointV2Core.so"
-//        doNotStrip "*/*/libAMapSDK_MAP_v6_9_2.so"
-//        doNotStrip "*/*/libDJIMOP.so"
-//        exclude 'META-INF/rxjava.properties'
 
         //4.14
         doNotStrip "*/*/libdjivideo.so"
@@ -94,7 +72,12 @@ android {
             abortOnError false
         }
     }
+
 }
+
+
+
+
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
@@ -137,4 +120,8 @@ dependencies {
 
     //permission权限
     implementation 'com.yanzhenjie:permission:2.0.3'
+    //序列化工具
+    implementation 'com.google.protobuf:protobuf-java:3.8.0'
+    implementation 'com.google.protobuf:protobuf-java-util:3.8.0'
+
 }

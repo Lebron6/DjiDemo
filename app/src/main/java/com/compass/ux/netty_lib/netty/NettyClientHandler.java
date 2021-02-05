@@ -4,6 +4,7 @@ import android.util.Log;
 
 
 import com.compass.ux.netty_lib.zhang.Communication;
+import com.compass.ux.netty_lib.zhang.ProtoMessage;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -12,7 +13,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
  * Created by 张俨 on 2018/1/10.
  */
 
-public class NettyClientHandler extends SimpleChannelInboundHandler<Communication> {
+public class NettyClientHandler extends SimpleChannelInboundHandler<ProtoMessage.Message> {
     private static final String TAG = NettyClientHandler.class.getName();
     private NettyListener listener;
 
@@ -41,11 +42,11 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<Communicatio
 //
 //    }
 
+
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Communication msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, ProtoMessage.Message msg) throws Exception {
         Log.d(TAG, "thread == " + Thread.currentThread().getName());
         Log.d(TAG, "来自服务器的消息 ====》" + msg.toString());
-
-        listener.onMessageResponse(msg.toString());
+        listener.onMessageResponse(msg.CoverCommunication());
     }
 }

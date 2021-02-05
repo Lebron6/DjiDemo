@@ -109,14 +109,13 @@ public class NettyClient {
             Log.e(TAG, "------尚未连接");
             return;
         }
-        String responseJson=gson.toJson(vo,Communication.class);
 //        responseJson+= Constant.LINE_SEPARATOR;
         if (futureListener == null) {
-            channel.writeAndFlush(responseJson).addListener(new FutureListener() {
+            channel.writeAndFlush(vo.coverProtoMessage()).addListener(new FutureListener() {
 
                 @Override
                 public void success() {
-                    Log.d(TAG, "发送成功--->"+vo.getMethod() );
+//                    Log.d(TAG, "发送成功--->"+vo.getMethod() );
                 }
 
                 @Override
@@ -125,7 +124,7 @@ public class NettyClient {
                 }
             });
         } else {
-            channel.writeAndFlush(responseJson).addListener(futureListener);
+            channel.writeAndFlush(vo.coverProtoMessage()).addListener(futureListener);
         }
     }
 
