@@ -1,6 +1,12 @@
 package com.compass.ux.utils;
 
 
+import android.content.Context;
+import android.content.res.AssetManager;
+import android.util.Log;
+
+import java.io.InputStream;
+import java.util.Arrays;
 
 public class PagerUtils {
 
@@ -9,6 +15,7 @@ public class PagerUtils {
     public final byte[] TAIL = {0x23};
 
     public final byte[] TTSINS = {0x54};
+    public final byte[] VOICEINS = {0x76};
 
     public static PagerUtils pagerUtils;
     public static PagerUtils getInstance() {
@@ -49,7 +56,7 @@ public class PagerUtils {
      * @return
      */
     public byte[] dataCopy(byte[] ins, byte[] content) {
-        byte[] size =intToBytes(6+ content.length);//包长
+        byte[] size =intToBytes(6+ content.length);//包长转byte数组格式[0x00,0x0A]
         byte[] data = new byte[HEADER.length + size.length + ins.length + content.length+VERI.length + TAIL.length];
         System.arraycopy(HEADER, 0, data, 0, HEADER.length);//数据头
         System.arraycopy(size, 0, data, HEADER.length, size.length);//数据位长度
@@ -58,6 +65,29 @@ public class PagerUtils {
         System.arraycopy(VERI, 0, data, HEADER.length + size.length + ins.length+content.length, VERI.length);//校验
         System.arraycopy(TAIL, 0, data, HEADER.length + size.length + ins.length + content.length+VERI.length, TAIL.length);//帧尾
         return data;
+    }
+
+    /**
+     * 拆分byte数组
+     * @param bytes
+     * 要拆分的数组
+     * @param size
+     * 要按几个组成一份
+     * @return
+     */
+    public byte[][] splitBytes(byte[] bytes, int size) {
+        double splitLength = Double.parseDouble(size + "");
+        int arrayLength = (int) Math.ceil(bytes.length / splitLength);
+        byte[][] result = new byte[arrayLength][];
+        int from, to;
+        for (int i = 0; i < arrayLength; i++) {
+            from = (int) (i * splitLength);
+            to = (int) (from + splitLength);
+            if (to > bytes.length)
+                to = bytes.length;
+            result[i] = Arrays.copyOfRange(bytes, from, to);
+        }
+        return result;
     }
 
     /**
@@ -99,9 +129,19 @@ public class PagerUtils {
         return ret;
     }
 
+    public  byte[][] deleteAt(byte[][] bs, int index)
+    {
+        int length = bs.length - 1;
+        byte[][] ret = new byte[length][];
+
+        System.arraycopy(bs, 0, ret, 0, index);
+        System.arraycopy(bs, index + 1, ret, index, length - index);
+
+        return ret;
+    }
+
     /**
      * byte数组转字符串
-     *
      * @param bytes
      * @return
      */
@@ -120,4 +160,27 @@ public class PagerUtils {
         }
         return sb.toString();
     }
+
+    public byte[] readFileFromAssets(Context context, String groupPath, String filename){
+        byte[] buffer = null;
+        AssetManager am = context.getAssets();
+        try {
+            InputStream inputStream = null;
+            if (groupPath != null) {
+                inputStream = am.open(groupPath + "/" + filename);
+            } else {
+                inputStream = am.open(filename);
+            }
+
+            int length = inputStream.available();
+            Log.e("testLength", "readFileFromAssets length:" + length);
+            buffer = new byte[length];
+            inputStream.read(buffer);
+        }catch (Exception exception){
+            exception.printStackTrace();
+        }
+        return buffer;
+    }
+
+
 }

@@ -119,6 +119,7 @@ public class Constant {
     public static final String SET_GIMBAL_MODE="setGimbalMode";
     public static final String CAPTURE="capture";
     public static final String SEND_VOICE_COMMAND = "sendVoiceCommand";
+    public static final String SEND_VOICE_MP3 = "sendVoiceMP3";
 
     public static String LINE_SEPARATOR=System.getProperty("line.separator");
 

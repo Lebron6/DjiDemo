@@ -73,6 +73,19 @@
         android:layout_marginRight="30dp"
         android:thumb="@drawable/seek_bar"/>
     <Button
+        android:id="@+id/btn_voice_end"
+        android:layout_below="@+id/seek_bar_volume"
+        android:layout_width="100dp"
+        android:layout_height="55dp"
+        android:layout_marginTop="10dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="30dp"
+        android:background="@drawable/round_btn"
+        android:text="录音停止"
+        android:textColor="@color/colorWhite"
+        android:textSize="20dp"
+        />
+    <Button
         android:id="@+id/btn_download"
         android:visibility="gone"
         android:layout_width="100dp"
@@ -105,7 +118,7 @@
         android:layout_height="55dp"
         android:layout_marginTop="30dp"
         android:background="@drawable/round_btn"
-        android:text="停止播放"
+        android:text="停止循环播放"
         android:layout_marginLeft="20dp"
         android:layout_below="@+id/btn_gaode"
         android:textColor="@color/colorWhite"
@@ -122,7 +135,7 @@
         android:layout_marginTop="30dp"
         android:layout_marginRight="30dp"
         android:background="@drawable/round_btn"
-        android:text="推流开始"
+        android:text="测试语音"
         android:textColor="@color/colorWhite"
         android:textSize="20dp" />
 
