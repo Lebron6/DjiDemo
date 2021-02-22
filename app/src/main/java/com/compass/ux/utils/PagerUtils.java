@@ -10,12 +10,19 @@ import java.util.Arrays;
 
 public class PagerUtils {
 
-    public final byte[] HEADER = {0x24};
-    public final byte[] VERI = {0x00};
-    public final byte[] TAIL = {0x23};
+    public final byte[] HEADER = {0x24};//帧头
+    public final byte[] VERI = {0x00};//校验
+    public final byte[] TAIL = {0x23};//帧尾
 
-    public final byte[] TTSINS = {0x54};
-    public final byte[] VOICEINS = {0x76};
+    public final byte[] TTSINS = {0x54};//文本指令
+    public final byte[] VOLUMECTRINS = {0x56};//音量调节
+    public final byte[] MP3STARTSINS = {0x24,0x00,0x07,0x75,0x03,0x00,0x23};//开始上传音频
+    public final byte[] MP3STOPSINS = {0x24,0x00,0x07,0x75,0x04,0x00,0x23};//停止上传音频
+    public final byte[] MP3OPENINS = {0x24,0x00,0x07,0x7B,0x04,0x00,0x23};//播放音频
+    public final byte[] TTSREPEATINS = {0x24, 0x00, 0x07, 0x73, 0x65, 0x00, 0x23};//循环播放文本指令
+    public final byte[] TTSONEINS = {0x24, 0x00, 0x07, 0x73, 0x66, 0x00, 0x23};//单次播放文本指令
+    public final byte[] TTSSTOPINS = {0x24, 0x00, 0x0a, 0x79, (byte) 0xFD, 0x00, 0x01, 0x02, 0x00, 0x23};//文本停止
+
 
     public static PagerUtils pagerUtils;
     public static PagerUtils getInstance() {
@@ -129,6 +136,7 @@ public class PagerUtils {
         return ret;
     }
 
+    //移除数组第一位
     public  byte[][] deleteAt(byte[][] bs, int index)
     {
         int length = bs.length - 1;
