@@ -399,7 +399,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         et_url = findViewById(R.id.et_url);
         et_url.setText(liveShowUrl);
 
-
     }
 
     private void initAllKeys() {
@@ -425,7 +424,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         uninitPreviewer();
         super.onPause();
     }
-
 
     //    在mVideoSurfaceTextureView 上显示和重置实时视频流
     private void initPreviewer() {
@@ -656,37 +654,26 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                DJISDKManager.getInstance().getLiveStreamManager().setAudioStreamingEnabled(false);
 //                DJISDKManager.getInstance().getLiveStreamManager().setAudioMuted(false);
 //                DJISDKManager.getInstance().getLiveStreamManager().setVideoEncodingEnabled(true);
-                Handler handler = new Handler();
-                Runnable runnable = new Runnable() {
+
+                int result = DJISDKManager.getInstance().getLiveStreamManager().startStream();
+                //wang
+                runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-//                        // TODO Auto-generated method stub
-                        if (DJISDKManager.getInstance().getLiveStreamManager().isStreaming()){
-                            DJISDKManager.getInstance().getLiveStreamManager().stopStream();
+                        String sss = "startLive:" + result +
+                                "\n isVideoStreamSpeedConfigurable:" + DJISDKManager.getInstance().getLiveStreamManager().isVideoStreamSpeedConfigurable() +
+                                "\n isLiveAudioEnabled:" + DJISDKManager.getInstance().getLiveStreamManager().isLiveAudioEnabled() +
+                                "\n isStreaming:" + DJISDKManager.getInstance().getLiveStreamManager().isStreaming() +
+                                "\n VideoEncodingEnabled:" + DJISDKManager.getInstance().getLiveStreamManager().isVideoEncodingEnabled();
+                        Toast.makeText(getApplicationContext(), sss, Toast.LENGTH_SHORT).show();
+                        if (communication != null) {
+                            communication.setResult(result + "");
+                            communication.setCode(200);
+                            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                            NettyClient.getInstance().sendMessage(communication, null);
                         }
-                        int result = DJISDKManager.getInstance().getLiveStreamManager().startStream();
-                handler.postDelayed(this, 60000);
                     }
-                };
-                handler.postDelayed(runnable, 1000);
-                        //wang
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                String sss = "startLive:" + DJISDKManager.getInstance().getLiveStreamManager().startStream() +
-                                        "\n isVideoStreamSpeedConfigurable:" + DJISDKManager.getInstance().getLiveStreamManager().isVideoStreamSpeedConfigurable() +
-                                        "\n isLiveAudioEnabled:" + DJISDKManager.getInstance().getLiveStreamManager().isLiveAudioEnabled() +
-                                        "\n isStreaming:" + DJISDKManager.getInstance().getLiveStreamManager().isStreaming() +
-                                        "\n VideoEncodingEnabled:" + DJISDKManager.getInstance().getLiveStreamManager().isVideoEncodingEnabled();
-                                Toast.makeText(getApplicationContext(), sss, Toast.LENGTH_SHORT).show();
-                                if (communication != null) {
-                                    communication.setResult(DJISDKManager.getInstance().getLiveStreamManager().startStream() + "");
-                                    communication.setCode(200);
-                                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                                    NettyClient.getInstance().sendMessage(communication, null);
-                                }
-                            }
-                        });
+                });
 //
                 DJISDKManager.getInstance().getLiveStreamManager().setStartTime();
 
@@ -6167,15 +6154,15 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             tts = "未检测到语音文本";
         } else {
             fre = communication.getPara().get("model");
-           String  volume = communication.getPara().get("volume");//音量
+            String volume = communication.getPara().get("volume");//音量
             String tone = communication.getPara().get("tone");//性别 52男 53女
-            String  speed = communication.getPara().get("speed");//语速
-            String sex="53";
-                if (tone.equals("0")){
-                    sex="53";
-                }else{
-                    sex="52";
-                }
+            String speed = communication.getPara().get("speed");//语速
+            String sex = "53";
+            if (tone.equals("0")) {
+                sex = "53";
+            } else {
+                sex = "52";
+            }
 
             sign = "[" + "v" + volume + "]" + "[" + "s" + speed + "]" + "[" + "m" + sex + "]";//科大讯飞标记使用
 
