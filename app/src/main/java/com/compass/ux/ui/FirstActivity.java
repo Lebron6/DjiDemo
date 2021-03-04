@@ -106,43 +106,16 @@ public class FirstActivity extends AppCompatActivity {
 
      void getvalues(){
         if (TextUtils.isEmpty(MApplication.EQUIPMENT_ID) ) {
-            String text_message = FileUtils.readString(file.getAbsolutePath(), "utf-8");
-
-            if (!TextUtils.isEmpty(text_message)) {
-                TextMessageBean textMessageBean = gson.fromJson(text_message, TextMessageBean.class);
-                String mobile_Id = textMessageBean.getEquip_id();
-                MApplication.EQUIPMENT_ID = mobile_Id;
-                Log.d("FileUtils", "FileUtils=" + mobile_Id);
-
-                Intent intent=new Intent(FirstActivity.this,ConnectionActivity.class);
-                startActivity(intent);
-                finish();
-            } else {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Thread.sleep(10000);
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Toast.makeText(getApplicationContext(), "配置文件为空,请去添加", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                            finish();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }).start();
-            }
+            MApplication.EQUIPMENT_ID = "Mobile_02";
+            Intent intent=new Intent(FirstActivity.this,ConnectionActivity.class);
+            startActivity(intent);
+            finish();
         }else{
             Intent intent=new Intent(FirstActivity.this,ConnectionActivity.class);
             startActivity(intent);
             finish();
         }
     }
-
 
 
     /**

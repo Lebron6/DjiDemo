@@ -20,11 +20,15 @@ import dji.common.flightcontroller.FlightControllerState;
 import dji.common.flightcontroller.GravityCenterState;
 import dji.common.flightcontroller.LEDsSettings;
 import dji.common.flightcontroller.ObstacleDetectionSector;
+import dji.common.flightcontroller.RTKState;
 import dji.common.flightcontroller.VisionDetectionState;
 import dji.common.flightcontroller.WindDirection;
 import dji.common.flightcontroller.flightassistant.PerceptionInformation;
 import dji.common.flightcontroller.rtk.CoordinateSystem;
+import dji.common.flightcontroller.rtk.NetworkServiceChannelState;
+import dji.common.flightcontroller.rtk.NetworkServicePlanType;
 import dji.common.flightcontroller.rtk.NetworkServiceSettings;
+import dji.common.flightcontroller.rtk.NetworkServiceState;
 import dji.common.flightcontroller.rtk.RTKBaseStationInformation;
 import dji.common.flightcontroller.rtk.ReferenceStationSource;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
@@ -109,6 +113,7 @@ import dji.sdk.payload.Payload;
 import dji.sdk.products.Aircraft;
 import dji.sdk.remotecontroller.RemoteController;
 import dji.sdk.sdkmanager.DJISDKManager;
+import dji.sdk.sdkmanager.LiveStreamManager;
 import dji.sdk.useraccount.UserAccountManager;
 
 import android.app.AlarmManager;
@@ -151,6 +156,7 @@ import com.compass.ux.bean.TransmissionSetBean;
 import com.compass.ux.bean.WayPointsBean;
 import com.compass.ux.bean.WayPointsV2Bean;
 import com.compass.ux.bean.WebInitializationBean;
+import com.compass.ux.live.live.ModuleVerificationUtil;
 import com.compass.ux.netty_lib.NettyService;
 import com.compass.ux.netty_lib.activity.NettyActivity;
 import com.compass.ux.netty_lib.netty.NettyClient;
@@ -205,6 +211,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private static final String TAG = ConnectionActivity.class.getName();
     private TextView mTextConnectionStatus;
     private TextView mTextProduct;
+    private TextView text_net_rtk_state,text_net_rtk_account_state;
     private TextView mVersionTv;
     private Button mBtnOpen, btn_download, btn_gaode, btn_simulator, btn_login, btn_pl, btn_voice_end;
     private EditText et_zoom;
@@ -437,7 +444,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             if (!product.getModel().equals(Model.UNKNOWN_AIRCRAFT)) {
 
                 VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(mReceivedVideoDataListener);
-//                VideoFeeder.getInstance().setTranscodingDataRate(20.0f);
+//                VideoFeeder.getInstance().setTranscodingDataRate(20f);
                 String cvs = VideoFeeder.getInstance().getPrimaryVideoFeed().getVideoSource().value() + "";
                 showToast(cvs);
                 if (cvs.equals("5")) {
@@ -490,6 +497,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             scheduledFuture.cancel(true);
         }
         executorService.shutdownNow();
+
+        if (scheduledFutureLiveShow != null && !scheduledFutureLiveShow.isCancelled() && !scheduledFutureLiveShow.isDone()) {
+            scheduledFutureLiveShow.cancel(true);
+        }
+        executorServiceLiveShow.shutdownNow();
         super.onDestroy();
 
     }
@@ -498,6 +510,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private void initUI() {
         mTextConnectionStatus = (TextView) findViewById(R.id.text_connection_status);
         mTextProduct = (TextView) findViewById(R.id.text_product_info);
+        text_net_rtk_state = (TextView) findViewById(R.id.text_net_rtk_state);
+        text_net_rtk_account_state = (TextView) findViewById(R.id.text_net_rtk_account_state);
         mVersionTv = (TextView) findViewById(R.id.textView2);
         mVersionTv.setText(getResources().getString(R.string.sdk_version, DJISDKManager.getInstance().getSDKVersion()));
         mBtnOpen = (Button) findViewById(R.id.btn_open);
@@ -556,6 +570,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                Intent intent = new Intent(this, TakePhotoActivity.class);
 //                startActivity(intent);
 //                waypoint_plan_V2(null);
+
                 break;
             }
             case R.id.btn_download: {
@@ -573,7 +588,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                send(PagerUtils.getInstance().TTSREPEATINS);
 //                send(data);
 //                }
-                testTTSYY();
+                setRTKNetwork(null);
+//                showToast("当前设备:" + FPVDemoApplication.getProductInstance().getCameras().size());
+//                showToast(FPVDemoApplication.getProductInstance().getCameras().get(0).getDisplayName());
+//                showToast(FPVDemoApplication.getProductInstance().getCameras().get(1).getDisplayName());
+
                 break;
             }
             case R.id.btn_simulator: {
@@ -594,14 +613,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         upLoadMP3(voiceByteData[0]);
                     }
                 }.start();
-
                 break;
             }
             case R.id.btn_voice_end: {
                 send(PagerUtils.getInstance().MP3STOPSINS);
             }
             break;
-
             case R.id.btn_login:
 //                DJISDKManager.getInstance().getLiveStreamManager().stopStream();
 //                Toast.makeText(getApplicationContext(), "Stop Live Show", Toast.LENGTH_SHORT).show();
@@ -624,6 +641,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         return true;
     }
 
+    private ScheduledExecutorService executorServiceLiveShow = new ScheduledThreadPoolExecutor(1);
+    private ScheduledFuture<?> scheduledFutureLiveShow;
+
     void startLiveShow(Communication communication) {
         //wang
         Toast.makeText(getApplicationContext(), "Start Live Show", Toast.LENGTH_SHORT).show();
@@ -631,6 +651,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         if (!isLiveStreamManagerOn()) {
             return;
         }
+
         if (DJISDKManager.getInstance().getLiveStreamManager().isStreaming()) {
             //wang
             Toast.makeText(getApplicationContext(), "already started!", Toast.LENGTH_SHORT).show();
@@ -641,21 +662,23 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                 NettyClient.getInstance().sendMessage(communication, null);
             }
-
             return;
         }
         new Thread() {
             @Override
             public void run() {
                 DJISDKManager.getInstance().getLiveStreamManager().setLiveUrl(et_url.getText().toString().trim());
+//                DJISDKManager.getInstance().getLiveStreamManager().setLiveUrl("rtmp://sendtc3.douyu.com/live/3336822rCFKKvUAr?wsSecret=cf07461ef8d0d7183e4ad8bef4deb796&wsTime=6037646e&wsSeek=off&wm=0&tw=0&roirecognition=0&record=flv&origin=tct");
+//                DJISDKManager.getInstance().getLiveStreamManager().setLiveUrl("rtmp://36.154.125.50:10085/hls/Am74rFYMg?sign=Ai7V9KYMgz");
                 Log.d("et_url", et_url.getText().toString().trim());
 
                 //关闭音频
 //                DJISDKManager.getInstance().getLiveStreamManager().setAudioStreamingEnabled(false);
 //                DJISDKManager.getInstance().getLiveStreamManager().setAudioMuted(false);
 //                DJISDKManager.getInstance().getLiveStreamManager().setVideoEncodingEnabled(true);
-
                 int result = DJISDKManager.getInstance().getLiveStreamManager().startStream();
+                DJISDKManager.getInstance().getLiveStreamManager().setStartTime();
+//                scheduledFutureLiveShow = executorServiceLiveShow.scheduleAtFixedRate(new liveRunnable(communication), 100, 20000, TimeUnit.MILLISECONDS);
                 //wang
                 runOnUiThread(new Runnable() {
                     @Override
@@ -674,12 +697,45 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         }
                     }
                 });
-//
-                DJISDKManager.getInstance().getLiveStreamManager().setStartTime();
-
-
             }
         }.start();
+    }
+
+    class liveRunnable implements Runnable {
+        Communication communication;
+
+        public liveRunnable(Communication communication) {
+
+            this.communication = communication;
+        }
+
+        @Override
+        public void run() {
+//            if (DJISDKManager.getInstance().getLiveStreamManager().isStreaming()) {
+//                DJISDKManager.getInstance().getLiveStreamManager().stopStream();
+//            }
+            DJISDKManager.getInstance().getLiveStreamManager().setVideoEncodingEnabled(true);
+            int result = DJISDKManager.getInstance().getLiveStreamManager().startStream();
+            DJISDKManager.getInstance().getLiveStreamManager().setStartTime();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    String sss = "startLive:" + result +
+                            "\n isVideoStreamSpeedConfigurable:" + DJISDKManager.getInstance().getLiveStreamManager().isVideoStreamSpeedConfigurable() +
+                            "\n isLiveAudioEnabled:" + DJISDKManager.getInstance().getLiveStreamManager().isLiveAudioEnabled() +
+                            "\n isStreaming:" + DJISDKManager.getInstance().getLiveStreamManager().isStreaming() +
+                            "\n VideoEncodingEnabled:" + DJISDKManager.getInstance().getLiveStreamManager().isVideoEncodingEnabled();
+//                    Toast.makeText(getApplicationContext(), sss, Toast.LENGTH_SHORT).show();
+                    if (communication != null) {
+                        communication.setResult(result + "");
+                        communication.setCode(200);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
+                    }
+//                    showToast("重新推流");
+                }
+            });
+        }
     }
 
     private void showToast(final String toastMsg) {
@@ -709,8 +765,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             initOcuSyncLink();
             initPreviewer();
             startLiveShow(null);//开始推流
-
-
         }
     };
 
@@ -788,7 +842,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             interferencePower = wifiChannelInterferences[0].getPower() + "";
                             Log.d("WifiChannelInterference", "interferencePower" + interferencePower);
                         }
-
                     }
                 });
             }
@@ -1421,6 +1474,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
                         }
                     });
+
                 }
 
 
@@ -1478,7 +1532,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 mRemoteController = aircraft.getRemoteController();
                 //rtk
                 mRTK = mFlightController.getRTK();
-
 
                 mFlightAssistant = mFlightController.getFlightAssistant();
                 mFlightAssistant.setVisionDetectionStateUpdatedCallback(new VisionDetectionState.Callback() {
@@ -1645,7 +1698,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     private void initCamera() {
         //接入扩音器时camera数量为2，多一个是payloadCamera,这里我们暂取第一位
-        camera = FPVDemoApplication.getProductInstance().getCameras().get(0);
+        List<Camera> cameras = FPVDemoApplication.getProductInstance().getCameras();
+        camera = cameras.get(0);
+
+        showToast(cameras.get(0).getDisplayName());
         if (camera != null) {
             //设置比例为16：9
 //            camera.getLens(camera.getIndex()).setPhotoAspectRatio(RATIO_16_9, new CommonCallbacks.CompletionCallback() {
@@ -1720,134 +1776,134 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     }
                 });
                 Log.e("相机位置", camera.getIndex() + "");
+            }
+//            showToast("当前相机镜头数"+camera.getLenses().size());
 
 //                //返回曝光模式
-                camera.getLens(0).getExposureMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ExposureMode>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.ExposureMode exposureMode) {
-                        webInitializationBean.setExposureMode(exposureMode.value());
-                    }
+            camera.getLens(0).getExposureMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ExposureMode>() {
+                @Override
+                public void onSuccess(SettingsDefinitions.ExposureMode exposureMode) {
+                    webInitializationBean.setExposureMode(exposureMode.value());
+                }
 
-                    @Override
-                    public void onFailure(DJIError djiError) {
-                    }
-                });
-                //返回iso数据
-                camera.getLens(camera.getIndex()).getISO(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ISO>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.ISO iso) {
-                        webInitializationBean.setISO(iso.value());
-                    }
+                @Override
+                public void onFailure(DJIError djiError) {
+                }
+            });
+            //返回iso数据
+            camera.getLens(camera.getIndex()).getISO(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ISO>() {
+                @Override
+                public void onSuccess(SettingsDefinitions.ISO iso) {
+                    webInitializationBean.setISO(iso.value());
+                }
 
-                    @Override
-                    public void onFailure(DJIError djiError) {
+                @Override
+                public void onFailure(DJIError djiError) {
 
-                    }
-                });
-                //返回shutter数据
-                camera.getLens(0).getShutterSpeed(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ShutterSpeed>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.ShutterSpeed shutterSpeed) {
-                        webInitializationBean.setShutter(shutterSpeed.value());
-                    }
+                }
+            });
+            //返回shutter数据
+            camera.getLens(0).getShutterSpeed(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ShutterSpeed>() {
+                @Override
+                public void onSuccess(SettingsDefinitions.ShutterSpeed shutterSpeed) {
+                    webInitializationBean.setShutter(shutterSpeed.value());
+                }
 
-                    @Override
-                    public void onFailure(DJIError djiError) {
-                    }
-                });
-                //返回曝光补偿
-                camera.getLens(camera.getIndex()).getExposureCompensation(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ExposureCompensation>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.ExposureCompensation exposureCompensation) {
-                        webInitializationBean.setExposureCompensation(exposureCompensation.value());
-                    }
+                @Override
+                public void onFailure(DJIError djiError) {
+                }
+            });
+            //返回曝光补偿
+            camera.getLens(camera.getIndex()).getExposureCompensation(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ExposureCompensation>() {
+                @Override
+                public void onSuccess(SettingsDefinitions.ExposureCompensation exposureCompensation) {
+                    webInitializationBean.setExposureCompensation(exposureCompensation.value());
+                }
 
-                    @Override
-                    public void onFailure(DJIError djiError) {
+                @Override
+                public void onFailure(DJIError djiError) {
 
-                    }
-                });
+                }
+            });
 
-                camera.getLens(0).getFocusMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.FocusMode>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.FocusMode focusMode) {
-                        webInitializationBean.setFocusMode(focusMode.value() + "");
-                    }
+            camera.getLens(0).getFocusMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.FocusMode>() {
+                @Override
+                public void onSuccess(SettingsDefinitions.FocusMode focusMode) {
+                    webInitializationBean.setFocusMode(focusMode.value() + "");
+                }
 
-                    @Override
-                    public void onFailure(DJIError djiError) {
+                @Override
+                public void onFailure(DJIError djiError) {
 
-                    }
-                });
+                }
+            });
 
-                camera.getLens(0).getAELock(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
-                    @Override
-                    public void onSuccess(Boolean aBoolean) {
-                        webInitializationBean.setLockExposure(aBoolean ? "0" : "1");
-                    }
+            camera.getLens(0).getAELock(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                @Override
+                public void onSuccess(Boolean aBoolean) {
+                    webInitializationBean.setLockExposure(aBoolean ? "0" : "1");
+                }
 
-                    @Override
-                    public void onFailure(DJIError djiError) {
+                @Override
+                public void onFailure(DJIError djiError) {
 
-                    }
-                });
+                }
+            });
 
-                camera.getLens(2).getThermalDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ThermalDigitalZoomFactor>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.ThermalDigitalZoomFactor thermalDigitalZoomFactor) {
-                        webInitializationBean.setThermalDigitalZoom(thermalDigitalZoomFactor.value() + "");
-                    }
+            camera.getLens(2).getThermalDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ThermalDigitalZoomFactor>() {
+                @Override
+                public void onSuccess(SettingsDefinitions.ThermalDigitalZoomFactor thermalDigitalZoomFactor) {
+                    webInitializationBean.setThermalDigitalZoom(thermalDigitalZoomFactor.value() + "");
+                }
 
-                    @Override
-                    public void onFailure(DJIError djiError) {
+                @Override
+                public void onFailure(DJIError djiError) {
 
-                    }
-                });
+                }
+            });
 
-                camera.getLens(2).getDisplayMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.DisplayMode>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.DisplayMode displayMode) {
-                        webInitializationBean.setHyDisplayMode(displayMode.value() + "");
-                    }
+            camera.getLens(2).getDisplayMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.DisplayMode>() {
+                @Override
+                public void onSuccess(SettingsDefinitions.DisplayMode displayMode) {
+                    webInitializationBean.setHyDisplayMode(displayMode.value() + "");
+                }
 
-                    @Override
-                    public void onFailure(DJIError djiError) {
+                @Override
+                public void onFailure(DJIError djiError) {
 
-                    }
-                });
+                }
+            });
 
 
 //                获取变焦距离
-                camera.getLens(camera.getIndex()).getHybridZoomSpec(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.HybridZoomSpec>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.HybridZoomSpec hybridZoomSpec) {
+            camera.getLens(camera.getIndex()).getHybridZoomSpec(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.HybridZoomSpec>() {
+                @Override
+                public void onSuccess(SettingsDefinitions.HybridZoomSpec hybridZoomSpec) {
 
-                        Log.d("HHHHHFocalLength", hybridZoomSpec.getFocalLengthStep() + "");//11
-                        Log.d("HHHHHMaxH", hybridZoomSpec.getMaxHybridFocalLength() + "");//55620
-                        Log.d("HHHHHMinH", hybridZoomSpec.getMinHybridFocalLength() + "");//317
-                        Log.d("HHHHHMaxO", hybridZoomSpec.getMaxOpticalFocalLength() + "");//5562
-                    }
+                    Log.d("HHHHHFocalLength", hybridZoomSpec.getFocalLengthStep() + "");//11
+                    Log.d("HHHHHMaxH", hybridZoomSpec.getMaxHybridFocalLength() + "");//55620
+                    Log.d("HHHHHMinH", hybridZoomSpec.getMinHybridFocalLength() + "");//317
+                    Log.d("HHHHHMaxO", hybridZoomSpec.getMaxOpticalFocalLength() + "");//5562
+                }
 
-                    @Override
-                    public void onFailure(DJIError djiError) {
+                @Override
+                public void onFailure(DJIError djiError) {
 
-                    }
-                });
+                }
+            });
 //                获取当前变焦焦距
-                camera.getLens(0).getHybridZoomFocalLength(new CommonCallbacks.CompletionCallbackWith<Integer>() {
-                    @Override
-                    public void onSuccess(Integer integer) {
+            camera.getLens(0).getHybridZoomFocalLength(new CommonCallbacks.CompletionCallbackWith<Integer>() {
+                @Override
+                public void onSuccess(Integer integer) {
 //                    Log.d("HHHHHcurr", integer + "");
-                        webInitializationBean.setHybridZoom(integer);
-                    }
+                    webInitializationBean.setHybridZoom(integer);
+                }
 
-                    @Override
-                    public void onFailure(DJIError djiError) {
+                @Override
+                public void onFailure(DJIError djiError) {
 //                    Log.d("HHHHHcurr", djiError.toString());
-                    }
-                });
-            }
-
+                }
+            });
 
         }
     }
@@ -2097,7 +2153,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 @Override
                 public void onSuccess(Integer integer) {
                     pitch_CSF = integer.toString();
-
                 }
 
                 @Override
@@ -2117,11 +2172,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
                 }
             });
-
-
         }
-
-
     }
 
     private void submitBatteryPersentAndV() {
@@ -2489,7 +2540,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             case Constant.SET_CONTROLLER_SMOOTHING:
                 setControllerSmoothingFactor(communication);
                 break;
-
             //rtk开关
             case Constant.SET_RTK:
                 setRTK(communication);
@@ -2514,7 +2564,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             case Constant.SET_RTK_NETWORK:
                 setRTKNetwork(communication);
                 break;
-
             //设置云台限位扩展
             case Constant.PITCH_RANGE_EXTENSION:
                 setPitchRangeExtension(communication);
@@ -2560,11 +2609,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 //文本喊话
                 break;
             case Constant.SEND_VOICE_COMMAND:
-//                showToast(communication.getPara().get("word")+"-"
-//                        +communication.getPara().get("tone")+"-"+communication.getPara().get("speed")+"-"
-//                        +communication.getPara().get("volume")+"-"+communication.getPara().get("model"));
                 sendTTS2Payload(communication);
-                showToast(new Gson().toJson(communication));
                 break;
             case Constant.SEND_VOICE_MP3:
                 sendMP32Payload(communication);
@@ -2573,7 +2618,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 send(PagerUtils.getInstance().TTSSTOPINS, communication);
                 break;
             case Constant.VOLUME_CONTROL://暂不可用
-                send(PagerUtils.getInstance().TTSSTOPINS, communication);
+//                send(PagerUtils.getInstance().TTSSTOPINS, communication);
                 break;
         }
     }
@@ -4207,19 +4252,52 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     //设置rtk
     private void setRTK(Communication communication) {
+        showToast("设置RTK");
+        showToast(new Gson().toJson(communication));
         String type = communication.getPara().get(Constant.TYPE);
-        if (mRTK != null) {
-            mRTK.setRtkEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
-                    CommonDjiCallback(djiError, communication);
-                }
-            });
+        if (ModuleVerificationUtil.isRtkAvailable()) {
+            RTK mRtk = ((Aircraft) FPVDemoApplication.getProductInstance()).getFlightController().getRTK();
+            if (mRtk != null) {
+                mRtk.setRtkEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        if (djiError != null) {
+                            showToast("设置RTK失败:" + djiError.getDescription());
+                        }
+                    }
+                });
+
+                mRtk.getRtkEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+
+                    @Override
+                    public void onSuccess(Boolean aBoolean) {
+                        //这个东西用来判断是否成功开启RTK
+                        String description2 = "AZ=启用RTK模块: " + aBoolean;
+                        //  NettyClient.getInstance().sendMsgToServer(description2);
+                        communication.setResult(description2);
+                        communication.setCode(200);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+                        communication.setResult("RTK连接失败");
+                        communication.setCode(-1);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
+                    }
+                });
+
+            } else {
+                communication.setResult("RTK为空");
+                communication.setCode(-1);
+                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                NettyClient.getInstance().sendMessage(communication, null);
+
+            }
         } else {
-            communication.setResult("RTK为空");
-            communication.setCode(-1);
-            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-            NettyClient.getInstance().sendMessage(communication, null);
+            showToast("RTK不可用");
         }
 
     }
@@ -4318,34 +4396,113 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     //设置网络rtk
 //    https://bbs.dji.com/thread-247389-1-1.html
     private void setRTKNetwork(Communication communication) {
-        String username = communication.getPara().get("username");
-        String password = communication.getPara().get("password");
-        String ip = communication.getPara().get("ip");
-        String mountPoint = communication.getPara().get("mountPoint");
-        int port = Integer.parseInt(communication.getPara().get("port"));
-        RTKNetworkServiceProvider provider = DJISDKManager.getInstance().getRTKNetworkServiceProvider().getInstance();
-        if (mRTK != null) {
-            mRTK.setReferenceStationSource(ReferenceStationSource.NETWORK_RTK, new CommonCallbacks.CompletionCallback() {
+//        String username = communication.getPara().get("username");
+//        String password = communication.getPara().get("password");
+//        String ip = communication.getPara().get("ip");
+//        String mountPoint = communication.getPara().get("mountPoint");
+
+        RTKNetworkServiceProvider provider = DJISDKManager.getInstance().getRTKNetworkServiceProvider();
+        if (ModuleVerificationUtil.isRtkAvailable()) {
+            RTK mRtk = ((Aircraft) FPVDemoApplication.getProductInstance()).getFlightController().getRTK();
+            if (mRtk != null) {
+                //检测RKT连接状态
+                if (mRtk != null) {
+                    mRtk.setStateCallback(new RTKState.Callback() {
+                        @Override
+                        public void onUpdate(RTKState rtkState) {
+                            text_net_rtk_state.setText(rtkState.isRTKBeingUsed()+"");
+                        }
+                    });
+                }
+
+                //启用RTK模块
+                mRtk.setRtkEnabled(true, new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        if (djiError != null) {
+                            showToast("启用RTK模块失败:" + djiError.getDescription());
+                        }else{
+                            showToast("启用RTK模块");
+                        }
+                    }
+                });
+                //配置RTK信号源
+                mRtk.setReferenceStationSource(ReferenceStationSource.CUSTOM_NETWORK_SERVICE, new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        if (djiError != null) {
+                          showToast("配置RTK信号源失败"+djiError.getDescription());
+                        } else {
+                            showToast("配置RTK信号源成功");
+                        }
+                    }
+                });
+            }
+
+
+        }
+
+        if (ModuleVerificationUtil.isNetRtkAvailable()){
+            //设置网络RTK账号
+            String username = "zhxda001090";
+            String password = "luopan6";
+            String ip = "rtk.ntrip.qxwz.com";
+            String mountPoint = "AUTO";
+            int port = 8002;
+            NetworkServiceSettings.Builder builder = new NetworkServiceSettings.Builder()
+                    .userName(username).password(password).ip(ip).mountPoint(mountPoint).port(port);
+            provider.setCustomNetworkSettings(builder.build());
+
+            //设置坐标系统
+            provider.setNetworkServiceCoordinateSystem(CoordinateSystem.CGCS2000, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
+                    if (djiError != null) {
+                        showToast("设置RTK坐标系统失败"+djiError.getDescription());
+                    } else {
+                        showToast("设置RTK坐标系统成功");
+                    }
                 }
             });
-        }
-        //设置网络坐标系
-//        provider.setNetworkServiceCoordinateSystem();
 
-        NetworkServiceSettings.Builder builder = new NetworkServiceSettings.Builder()
-                .userName(username).password(password).ip(ip).mountPoint(mountPoint).port(port);
-        provider.setCustomNetworkSettings(builder.build());
-        provider.startNetworkService(new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                CommonDjiCallback(djiError, communication);
-            }
-        });
+            //激活网络RTK
+            provider.activateNetworkService(NetworkServicePlanType.A, new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if (djiError != null) {
+                        showToast("激活网络RTK失败"+djiError.getDescription());
+                    } else {
+                        showToast("激活网络RTK成功");
+                    }
+                }
+            });
+
+
+            //启动网络RTK
+            provider.startNetworkService(new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if (djiError != null) {
+                        showToast("启动网络RTK失败"+djiError.getDescription());
+                    } else {
+                        showToast("启动网络RTK成功");
+                    }
+                }
+            });
+            //账号连接状态
+            provider.addNetworkServiceStateCallback(new NetworkServiceState.Callback() {
+                @Override
+                public void onNetworkServiceStateUpdate(NetworkServiceState networkServiceState) {
+                    String description5 = String.valueOf(networkServiceState.getChannelState());
+                    //  NettyClient.getInstance().sendMsgToServer(description5);
+                    text_net_rtk_account_state.setText(description5);
+                }
+            });
+
+
+        }
 
     }
-
 
     //设置云台俯仰限位扩展
     private void setPitchRangeExtension(Communication communication) {
@@ -5968,6 +6125,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 double[] latLng = MapConvertUtils.getDJILatLng(Double.parseDouble(myWayPointList.get(i).getLatitude()), Double.parseDouble(myWayPointList.get(i).getLongitude()));
 
                 WaypointV2 waypoint0 = new WaypointV2.Builder()
+                        .setDampingDistance(1f)
                         //设置经纬度
                         .setCoordinate(new LocationCoordinate2D(latLng[0], latLng[1]))
                         //高度[-200,500]
@@ -6163,9 +6321,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             } else {
                 sex = "52";
             }
-
             sign = "[" + "v" + volume + "]" + "[" + "s" + speed + "]" + "[" + "m" + sex + "]";//科大讯飞标记使用
-
         }
 
         PagerUtils pagerUtils = PagerUtils.getInstance();
@@ -6274,7 +6430,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     } else {
                         PagerUtils pagerUtils = PagerUtils.getInstance();
                         voiceByteData = pagerUtils.deleteAt(voiceByteData, 0);
-
                         if (voiceByteData.length > 0) {
                             upLoadMP3(voiceByteData[0], communication);
                         } else {
@@ -6308,7 +6463,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 } else {
                     send(pagerUtils.MP3STOPSINS);//结束上传
                     send(pagerUtils.MP3OPENINS);//开始播放
-
                 }
             }
         }

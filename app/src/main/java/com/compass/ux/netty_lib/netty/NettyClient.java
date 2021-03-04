@@ -164,7 +164,6 @@ public class NettyClient {
 
     /**
      * 设置重连时间间隔
-     *
      * @param reconnectIntervalTime 时间间隔
      */
     public void setReconnectIntervalTime(long reconnectIntervalTime) {
