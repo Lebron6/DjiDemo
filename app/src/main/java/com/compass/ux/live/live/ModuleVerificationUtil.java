@@ -27,7 +27,7 @@ import dji.sdk.sdkmanager.DJISDKManager;
  * Created by dji on 16/1/6.
  */
 public class ModuleVerificationUtil {
-    //网络rtk
+    //网络rtkTEST
     public static boolean isNetRtkAvailable() {
         return isFlightControllerAvailable() && isAircraft() && (null != DJISDKManager.getInstance().getRTKNetworkServiceProvider());
     }

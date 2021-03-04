@@ -1918,6 +1918,17 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     boolean is_battery_one_change = false, is_battery_two_change = false;
 
     private void initBattery() {
+        FPVDemoApplication.getProductInstance().getBattery().getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
+            @Override
+            public void onSuccess(Integer[] integers) {
+
+            }
+
+            @Override
+            public void onFailure(DJIError djiError) {
+
+            }
+        });
 //        if (FPVDemoApplication.getProductInstance().getBattery() != null) {
 //            battery = FPVDemoApplication.getProductInstance().getBattery();
 //            battery.setStateCallback(new BatteryState.Callback() {
