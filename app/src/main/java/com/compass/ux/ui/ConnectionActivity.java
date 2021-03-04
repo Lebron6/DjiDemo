@@ -211,7 +211,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private static final String TAG = ConnectionActivity.class.getName();
     private TextView mTextConnectionStatus;
     private TextView mTextProduct;
-    private TextView text_net_rtk_state,text_net_rtk_account_state;
+    private TextView text_net_rtk_state, text_net_rtk_account_state;
     private TextView mVersionTv;
     private Button mBtnOpen, btn_download, btn_gaode, btn_simulator, btn_login, btn_pl, btn_voice_end;
     private EditText et_zoom;
@@ -298,6 +298,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     boolean isZuoYouGet = false;
     boolean isShangXiaGet = false;
     boolean isHangXianPause = false;//判断航线是否暂停
+    boolean isSendRTKStatusToSocket = false;//是否已发送RTK坐标
     double HangXianPauselongitude = 0, HangXianPauselatitude = 0;//当航线暂停时记录点
     int targetWaypointIndex = 0;
     boolean sgpre;
@@ -4396,11 +4397,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     //设置网络rtk
 //    https://bbs.dji.com/thread-247389-1-1.html
     private void setRTKNetwork(Communication communication) {
-//        String username = communication.getPara().get("username");
-//        String password = communication.getPara().get("password");
-//        String ip = communication.getPara().get("ip");
-//        String mountPoint = communication.getPara().get("mountPoint");
-
+        isSendRTKStatusToSocket = false;//设置坐标为未发送状态
+        rtkBean = new RTKBean();
         RTKNetworkServiceProvider provider = DJISDKManager.getInstance().getRTKNetworkServiceProvider();
         if (ModuleVerificationUtil.isRtkAvailable()) {
             RTK mRtk = ((Aircraft) FPVDemoApplication.getProductInstance()).getFlightController().getRTK();
@@ -4410,7 +4408,32 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     mRtk.setStateCallback(new RTKState.Callback() {
                         @Override
                         public void onUpdate(RTKState rtkState) {
-                            text_net_rtk_state.setText(rtkState.isRTKBeingUsed()+"");
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    text_net_rtk_state.setText("RTK：" + rtkState.isRTKBeingUsed() + "");
+                                }
+                            });
+                            if (rtkState.isRTKBeingUsed() == true) {
+                                if (communication != null) {
+                                    if (isSendRTKStatusToSocket == false) {
+                                        isSendRTKStatusToSocket = true;
+                                        rtkBean.setBaseStationAltitude(String.valueOf(rtkState.getBaseStationAltitude()));
+                                        rtkBean.setBaseStationLatitude(String.valueOf(rtkState.getBaseStationLocation().getLatitude()));
+                                        rtkBean.setBaseStationLongitude(String.valueOf(rtkState.getBaseStationLocation().getLongitude()));
+                                        rtkBean.setFusionMobileStationAltitude(String.valueOf(rtkState.getFusionMobileStationAltitude()));
+                                        rtkBean.setFusionMobileStationLatitude(String.valueOf(rtkState.getFusionMobileStationLocation().getLatitude()));
+                                        rtkBean.setFusionMobileStationLongitude(String.valueOf(rtkState.getFusionMobileStationLocation().getLongitude()));
+                                        rtkBean.setRTKBeingUsed(rtkState.isRTKBeingUsed());
+                                        communication.setResult(gson.toJson(rtkBean, RTKBean.class));
+                                        communication.setCode(200);
+                                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                        NettyClient.getInstance().sendMessage(communication, null);
+                                    }
+
+                                }
+
+                            }
                         }
                     });
                 }
@@ -4421,7 +4444,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     public void onResult(DJIError djiError) {
                         if (djiError != null) {
                             showToast("启用RTK模块失败:" + djiError.getDescription());
-                        }else{
+                        } else {
                             showToast("启用RTK模块");
                         }
                     }
@@ -4431,7 +4454,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     @Override
                     public void onResult(DJIError djiError) {
                         if (djiError != null) {
-                          showToast("配置RTK信号源失败"+djiError.getDescription());
+                            showToast("配置RTK信号源失败" + djiError.getDescription());
                         } else {
                             showToast("配置RTK信号源成功");
                         }
@@ -4442,13 +4465,21 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
         }
 
-        if (ModuleVerificationUtil.isNetRtkAvailable()){
+        if (ModuleVerificationUtil.isNetRtkAvailable()) {
             //设置网络RTK账号
             String username = "zhxda001090";
             String password = "luopan6";
             String ip = "rtk.ntrip.qxwz.com";
             String mountPoint = "AUTO";
             int port = 8002;
+            if (communication != null) {
+                username = communication.getPara().get("username");
+                password = communication.getPara().get("password");
+                ip = communication.getPara().get("ip");
+                mountPoint = communication.getPara().get("mountPoint");
+                port = Integer.parseInt(communication.getPara().get("port"));
+            }
+
             NetworkServiceSettings.Builder builder = new NetworkServiceSettings.Builder()
                     .userName(username).password(password).ip(ip).mountPoint(mountPoint).port(port);
             provider.setCustomNetworkSettings(builder.build());
@@ -4458,21 +4489,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError != null) {
-                        showToast("设置RTK坐标系统失败"+djiError.getDescription());
+                        showToast("设置RTK坐标系统失败" + djiError.getDescription());
                     } else {
                         showToast("设置RTK坐标系统成功");
-                    }
-                }
-            });
-
-            //激活网络RTK
-            provider.activateNetworkService(NetworkServicePlanType.A, new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
-                    if (djiError != null) {
-                        showToast("激活网络RTK失败"+djiError.getDescription());
-                    } else {
-                        showToast("激活网络RTK成功");
                     }
                 }
             });
@@ -4483,7 +4502,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError != null) {
-                        showToast("启动网络RTK失败"+djiError.getDescription());
+                        showToast("启动网络RTK失败" + djiError.getDescription());
                     } else {
                         showToast("启动网络RTK成功");
                     }
@@ -4495,7 +4514,13 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 public void onNetworkServiceStateUpdate(NetworkServiceState networkServiceState) {
                     String description5 = String.valueOf(networkServiceState.getChannelState());
                     //  NettyClient.getInstance().sendMsgToServer(description5);
-                    text_net_rtk_account_state.setText(description5);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            text_net_rtk_account_state.setText("RTK账号状态:" + description5);
+                        }
+                    });
+
                 }
             });
 
