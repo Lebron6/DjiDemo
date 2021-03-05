@@ -7,7 +7,6 @@ package com.compass.ux.live.live;
  */
 
 
-
 import com.compass.ux.takephoto.FPVDemoApplication;
 
 import androidx.annotation.Nullable;
@@ -21,31 +20,11 @@ import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.flightcontroller.Simulator;
 import dji.sdk.products.Aircraft;
 import dji.sdk.products.HandHeld;
-import dji.sdk.sdkmanager.DJISDKManager;
 
 /**
  * Created by dji on 16/1/6.
  */
 public class ModuleVerificationUtil {
-    //网络rtkTEST1
-    public static boolean isNetRtkAvailable() {
-        return isFlightControllerAvailable() && isAircraft() && (null != DJISDKManager.getInstance().getRTKNetworkServiceProvider());
-    }
-    //rtk判断
-    public static boolean isRtkAvailable() {
-        return isFlightControllerAvailable() && isAircraft() && (null != FPVDemoApplication.getAircraftInstance()
-                .getFlightController()
-                .getRTK());
-    }
-
-
-    public static boolean isFlightControllerAvailable() {
-        return isProductModuleAvailable() && isAircraft() && (null != FPVDemoApplication.getAircraftInstance()
-                .getFlightController());
-    }
-
-
-
     public static boolean isProductModuleAvailable() {
         return (null != FPVDemoApplication.getProductInstance());
     }
@@ -75,6 +54,18 @@ public class ModuleVerificationUtil {
                 .getMediaManager());
     }
 
+    //rtk判断
+    public static boolean isRtkAvailable() {
+        return isFlightControllerAvailable() && isAircraft() && (null != FPVDemoApplication.getAircraftInstance()
+                .getFlightController()
+                .getRTK());
+    }
+
+
+    public static boolean isFlightControllerAvailable() {
+        return isProductModuleAvailable() && isAircraft() && (null != FPVDemoApplication.getAircraftInstance()
+                .getFlightController());
+    }
 //    public static boolean isRemoteControllerAvailable() {
 //        return isProductModuleAvailable() && isAircraft() && (null != FPVDemoApplication.getAircraftInstance()
 //                .getRemoteController());

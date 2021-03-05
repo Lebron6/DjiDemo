@@ -100,6 +100,10 @@ public class FirstActivity extends AppCompatActivity {
     }
 
 
+
+
+
+
      void getvalues(){
         if (TextUtils.isEmpty(MApplication.EQUIPMENT_ID) ) {
             MApplication.EQUIPMENT_ID = "Mobile_01";

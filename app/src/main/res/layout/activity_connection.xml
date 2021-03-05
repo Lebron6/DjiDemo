@@ -4,199 +4,180 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
-<!--test1-->
-    <TextView
-        android:id="@+id/text_connection_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Status: No Product Connected"
-        android:textColor="@android:color/black"
-        android:textSize="20dp"
-        android:textStyle="bold"
-        android:layout_alignBottom="@+id/text_product_info"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="50dp" />
 
-    <TextView
-        android:id="@+id/text_product_info"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="60dp"
-        android:text="@string/product_information"
-        android:textColor="@android:color/black"
-        android:textSize="20dp"
-        android:gravity="center"
-        android:textStyle="bold"
-        />
-
-    <TextView
-        android:id="@+id/text_net_rtk_state"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="100dp"
-        android:text="---"
-        android:textColor="@android:color/black"
-        android:textSize="20dp"
-        android:gravity="center"
-        android:textStyle="bold"
-        />
-    <TextView
-        android:id="@+id/text_net_rtk_account_state"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="130dp"
-        android:text="---"
-        android:textColor="@android:color/black"
-        android:textSize="20dp"
-        android:gravity="center"
-        android:textStyle="bold"
-        />
-    <EditText
-        android:id="@+id/et_url"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="55dp"
-        android:layout_marginTop="230dp"
-        android:layout_marginLeft="20dp"
-        android:textColor="@color/colorWhite"
-        android:padding="5dp"
-        android:background="@drawable/round_btn"
-        android:hint="这里写推流地址"
-        android:textSize="20dp"
-        />
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/bt_login_account"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:text="登录"/>
 
-    </LinearLayout>
-    <Button
-        android:id="@+id/btn_open"
-        android:layout_width="100dp"
-        android:layout_height="55dp"
-        android:layout_marginTop="350dp"
-        android:background="@drawable/round_btn"
-        android:text="takephoto"
-        android:layout_marginLeft="20dp"
-        android:textColor="@color/colorWhite"
-        android:textSize="20dp"
-        />
+        <Button
+            android:id="@+id/btn_open"
+            android:layout_width="100dp"
+            android:layout_height="55dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="350dp"
+            android:background="@drawable/round_btn"
+            android:text="takephoto"
+            android:textColor="@color/colorWhite"
+            android:textSize="20dp" />
 
+        <Button
+            android:id="@+id/btn_voice_end"
+            android:layout_width="100dp"
+            android:layout_height="55dp"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/seek_bar_volume"
+            android:layout_marginRight="30dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/round_btn"
+            android:text="录音停止"
+            android:textColor="@color/colorWhite"
+            android:textSize="20dp" />
 
-    <SeekBar
-        android:id="@+id/seek_bar_volume"
-        android:layout_width="150dp"
-        android:layout_height="30dp"
-        android:maxHeight="2dp"
-        android:max="100"
-        android:progress="30"
-        android:layout_marginTop="350dp"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="30dp"
-        android:thumb="@drawable/seek_bar"/>
-    <Button
-        android:id="@+id/btn_voice_end"
-        android:layout_below="@+id/seek_bar_volume"
-        android:layout_width="100dp"
-        android:layout_height="55dp"
-        android:layout_marginTop="10dp"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="30dp"
-        android:background="@drawable/round_btn"
-        android:text="录音停止"
-        android:textColor="@color/colorWhite"
-        android:textSize="20dp"
-        />
-    <Button
-        android:id="@+id/btn_download"
-        android:visibility="gone"
-        android:layout_width="100dp"
-        android:layout_height="55dp"
-        android:layout_marginTop="350dp"
-        android:background="@drawable/round_btn"
-        android:text="上传测试"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="30dp"
-        android:textColor="@color/colorWhite"
-        android:textSize="20dp"
-        />
+        <Button
+            android:id="@+id/btn_download"
+            android:layout_width="100dp"
+            android:layout_height="55dp"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="30dp"
+            android:layout_marginTop="350dp"
+            android:background="@drawable/round_btn"
+            android:text="上传测试"
+            android:textColor="@color/colorWhite"
+            android:textSize="20dp" />
 
-    <Button
-        android:id="@+id/btn_gaode"
-        android:layout_width="100dp"
-        android:layout_height="55dp"
-        android:layout_marginTop="30dp"
-        android:background="@drawable/round_btn"
-        android:text="循环播放开启"
-        android:layout_marginLeft="20dp"
-        android:layout_below="@+id/btn_open"
-        android:textColor="@color/colorWhite"
-        android:textSize="20dp"
-        />
+        <Button
+            android:id="@+id/btn_gaode"
+            android:layout_width="100dp"
+            android:layout_height="55dp"
+            android:layout_below="@+id/btn_open"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="30dp"
+            android:background="@drawable/round_btn"
+            android:text="循环播放开启"
+            android:textColor="@color/colorWhite"
+            android:textSize="20dp" />
 
-    <Button
-        android:id="@+id/btn_login"
-        android:layout_width="100dp"
-        android:layout_height="55dp"
-        android:layout_marginTop="30dp"
-        android:background="@drawable/round_btn"
-        android:text="停止循环播放"
-        android:layout_marginLeft="20dp"
-        android:layout_below="@+id/btn_gaode"
-        android:textColor="@color/colorWhite"
-        android:textSize="20dp"
-        />
+        <Button
+            android:id="@+id/btn_login"
+            android:layout_width="100dp"
+            android:layout_height="55dp"
+            android:layout_below="@+id/btn_gaode"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="30dp"
+            android:background="@drawable/round_btn"
+            android:text="停止循环播放"
+            android:textColor="@color/colorWhite"
+            android:textSize="20dp" />
 
 
-    <Button
-        android:id="@+id/btn_simulator"
-        android:layout_width="100dp"
-        android:layout_height="55dp"
-        android:layout_below="@+id/btn_open"
-        android:layout_alignParentRight="true"
-        android:layout_marginTop="30dp"
-        android:layout_marginRight="30dp"
-        android:background="@drawable/round_btn"
-        android:text="测试语音"
-        android:textColor="@color/colorWhite"
-        android:textSize="20dp" />
+        <Button
+            android:id="@+id/btn_simulator"
+            android:layout_width="100dp"
+            android:layout_height="55dp"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/btn_open"
+            android:layout_marginRight="30dp"
+            android:layout_marginTop="30dp"
+            android:background="@drawable/round_btn"
+            android:text="测试语音"
+            android:textColor="@color/colorWhite"
+            android:textSize="20dp" />
 
-    <EditText
-        android:id="@+id/et_zoom"
-        android:layout_width="100dp"
-        android:layout_height="55dp"
-        android:layout_marginTop="30dp"
-        android:layout_marginRight="30dp"
-        android:background="@drawable/round_btn"
-        android:layout_marginLeft="20dp"
-        android:layout_below="@+id/btn_simulator"
-        android:layout_alignParentRight="true"
-        android:textColor="@color/colorWhite"
-        android:textSize="20dp"
-        />
+        <EditText
+            android:id="@+id/et_url"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="230dp"
+            android:background="@drawable/round_btn"
+            android:hint="这里写推流地址"
+            android:padding="5dp"
+            android:textColor="@color/colorWhite"
+            android:textSize="20dp" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="30dp"
-        android:text="@string/sdk_version"
-        android:textSize="15dp"
-        android:visibility="gone"
-        android:id="@+id/textView2" />
+        <EditText
+            android:id="@+id/et_zoom"
+            android:layout_width="100dp"
+            android:layout_height="55dp"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/btn_simulator"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="30dp"
+            android:layout_marginTop="30dp"
+            android:background="@drawable/round_btn"
+            android:textColor="@color/colorWhite"
+            android:textSize="20dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+        </LinearLayout>
+
+        <SeekBar
+            android:id="@+id/seek_bar_volume"
+            android:layout_width="150dp"
+            android:layout_height="30dp"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="30dp"
+            android:layout_marginTop="350dp"
+            android:max="100"
+            android:maxHeight="2dp"
+            android:progress="30"
+            android:thumb="@drawable/seek_bar" />
+
+
+        <TextView
+            android:id="@+id/text_connection_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/text_product_info"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="50dp"
+            android:gravity="center"
+            android:text="Status: No Product Connected"
+            android:textColor="@android:color/black"
+            android:textSize="20dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/text_product_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="150dp"
+            android:gravity="center"
+            android:text="@string/product_information"
+            android:textColor="@android:color/black"
+            android:textSize="20dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="30dp"
+            android:text="@string/sdk_version"
+            android:textSize="15dp"
+            android:visibility="gone" />
+    </RelativeLayout>
 
     <TextureView
         android:id="@+id/video_previewer_surface"
-        android:layout_below="@+id/btn_login"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
+        android:layout_height="200dp"
+        android:layout_above="@+id/linearLayout"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_above="@+id/linearLayout" />
-
+        android:layout_gravity="center" />
 
 </RelativeLayout>

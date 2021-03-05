@@ -128,4 +128,18 @@ public class Communication implements Serializable {
   public void setResponseTime(String responseTime) {
     this.responseTime = responseTime;
   }
+
+  @Override
+  public String toString() {
+    return "Communication{" +
+            "requestId='" + requestId + '\'' +
+            ", equipmentId='" + equipmentId + '\'' +
+            ", method='" + method + '\'' +
+            ", para=" + para +
+            ", code=" + code +
+            ", result='" + result + '\'' +
+            ", requestTime='" + requestTime + '\'' +
+            ", responseTime='" + responseTime + '\'' +
+            '}';
+  }
 }

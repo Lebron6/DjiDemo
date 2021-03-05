@@ -221,6 +221,20 @@ public class WayPointsV2Bean {
             this.wayPointAction = wayPointAction;
         }
 
+        @Override
+        public String toString() {
+            return "WayPointsBean{" +
+                    "speed='" + speed + '\'' +
+                    ", altitude='" + altitude + '\'' +
+                    ", latitude='" + latitude + '\'' +
+                    ", turnMode='" + turnMode + '\'' +
+                    ", longitude='" + longitude + '\'' +
+                    ", flightPathMode='" + flightPathMode + '\'' +
+                    ", headingMode='" + headingMode + '\'' +
+                    ", wayPointAction=" + wayPointAction +
+                    '}';
+        }
+
         public static class WayPointActionBean {
             /**
              * actionType :
@@ -294,6 +308,19 @@ public class WayPointsV2Bean {
 
             public void setWaitingTime(String waitingTime) {
                 this.waitingTime = waitingTime;
+            }
+
+            @Override
+            public String toString() {
+                return "WayPointActionBean{" +
+                        "actionType='" + actionType + '\'' +
+                        ", yawAngle='" + yawAngle + '\'' +
+                        ", direction='" + direction + '\'' +
+                        ", pitch='" + pitch + '\'' +
+                        ", yaw='" + yaw + '\'' +
+                        ", focalLength='" + focalLength + '\'' +
+                        ", waitingTime='" + waitingTime + '\'' +
+                        '}';
             }
         }
     }
