@@ -20,12 +20,14 @@ import dji.common.flightcontroller.FlightControllerState;
 import dji.common.flightcontroller.GravityCenterState;
 import dji.common.flightcontroller.LEDsSettings;
 import dji.common.flightcontroller.ObstacleDetectionSector;
+import dji.common.flightcontroller.RTKState;
 import dji.common.flightcontroller.VisionDetectionState;
 import dji.common.flightcontroller.WindDirection;
 import dji.common.flightcontroller.accesslocker.AccessLockerState;
 import dji.common.flightcontroller.flightassistant.PerceptionInformation;
 import dji.common.flightcontroller.rtk.CoordinateSystem;
 import dji.common.flightcontroller.rtk.NetworkServiceSettings;
+import dji.common.flightcontroller.rtk.NetworkServiceState;
 import dji.common.flightcontroller.rtk.RTKBaseStationInformation;
 import dji.common.flightcontroller.rtk.ReferenceStationSource;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
@@ -220,6 +222,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private TextView mTextConnectionStatus;
     private TextView mTextProduct;
     private TextView mVersionTv;
+    private TextView text_net_rtk_state, text_net_rtk_account_state;
     private Button mBtnOpen, btn_download, btn_gaode, btn_simulator, btn_login, btn_pl, btn_voice_end;
     private EditText et_zoom;
     private EditText et_url;
@@ -305,6 +308,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     boolean isZuoYouGet = false;
     boolean isShangXiaGet = false;
     boolean isHangXianPause = false;//判断航线是否暂停
+    boolean isSendRTKStatusToSocket = false;//是否已发送RTK坐标
     double HangXianPauselongitude = 0, HangXianPauselatitude = 0;//当航线暂停时记录点
     int targetWaypointIndex = 0;
     boolean sgpre;
@@ -514,6 +518,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         mTextConnectionStatus = (TextView) findViewById(R.id.text_connection_status);
         mTextProduct = (TextView) findViewById(R.id.text_product_info);
         mVersionTv = (TextView) findViewById(R.id.textView2);
+        text_net_rtk_state = (TextView) findViewById(R.id.text_net_rtk_state);
+        text_net_rtk_account_state = (TextView) findViewById(R.id.text_net_rtk_account_state);
         mVersionTv.setText(getResources().getString(R.string.sdk_version, DJISDKManager.getInstance().getSDKVersion()));
         mBtnOpen = (Button) findViewById(R.id.btn_open);
         mBtnOpen.setOnClickListener(this);
@@ -4383,32 +4389,157 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     //设置网络rtk
 //    https://bbs.dji.com/thread-247389-1-1.html
     private void setRTKNetwork(Communication communication) {
-        String username = communication.getPara().get("username");
-        String password = communication.getPara().get("password");
-        String ip = communication.getPara().get("ip");
-        String mountPoint = communication.getPara().get("mountPoint");
-        int port = Integer.parseInt(communication.getPara().get("port"));
-        RTKNetworkServiceProvider provider = DJISDKManager.getInstance().getRTKNetworkServiceProvider().getInstance();
-        if (mRTK != null) {
-            mRTK.setReferenceStationSource(ReferenceStationSource.NETWORK_RTK, new CommonCallbacks.CompletionCallback() {
+        isSendRTKStatusToSocket = false;//设置坐标为未发送状态
+        rtkBean = new RTKBean();
+        RTKNetworkServiceProvider provider = DJISDKManager.getInstance().getRTKNetworkServiceProvider();
+        if (ModuleVerificationUtil.isRtkAvailable()) {
+            RTK mRtk = ((Aircraft) FPVDemoApplication.getProductInstance()).getFlightController().getRTK();
+            if (mRtk != null) {
+                //检测RKT连接状态
+                if (mRtk != null) {
+                    mRtk.setStateCallback(new RTKState.Callback() {
+                        @Override
+                        public void onUpdate(RTKState rtkState) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    text_net_rtk_state.setText("RTK：" + rtkState.isRTKBeingUsed() + "");
+                                }
+                            });
+                            if (rtkState.isRTKBeingUsed() == true) {
+                                if (communication != null) {
+                                    if (isSendRTKStatusToSocket == false) {
+                                        isSendRTKStatusToSocket = true;
+                                        rtkBean.setBaseStationAltitude(String.valueOf(rtkState.getBaseStationAltitude()));
+                                        rtkBean.setBaseStationLatitude(String.valueOf(rtkState.getBaseStationLocation().getLatitude()));
+                                        rtkBean.setBaseStationLongitude(String.valueOf(rtkState.getBaseStationLocation().getLongitude()));
+                                        rtkBean.setFusionMobileStationAltitude(String.valueOf(rtkState.getFusionMobileStationAltitude()));
+                                        rtkBean.setFusionMobileStationLatitude(String.valueOf(rtkState.getFusionMobileStationLocation().getLatitude()));
+                                        rtkBean.setFusionMobileStationLongitude(String.valueOf(rtkState.getFusionMobileStationLocation().getLongitude()));
+                                        rtkBean.setRTKBeingUsed(rtkState.isRTKBeingUsed());
+                                        communication.setResult(gson.toJson(rtkBean, RTKBean.class));
+                                        communication.setCode(200);
+                                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                        NettyClient.getInstance().sendMessage(communication, null);
+                                    }
+
+                                }
+
+                            }
+                        }
+                    });
+                }
+                //手动测试自定义网络RTK
+                if (communication == null) {
+                    //启用RTK模块
+                    mRtk.setRtkEnabled(true, new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            if (djiError != null) {
+                                showToast("启用RTK模块失败:" + djiError.getDescription());
+                            } else {
+//                            showToast("启用RTK模块");
+                            }
+                        }
+                    });
+                    //配置RTK信号源
+                    mRtk.setReferenceStationSource(ReferenceStationSource.CUSTOM_NETWORK_SERVICE, new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            if (djiError != null) {
+//                            showToast("配置RTK信号源失败" + djiError.getDescription());
+                            } else {
+//                            showToast("配置RTK信号源成功");
+                            }
+                        }
+                    });
+
+                }
+
+
+                //设置坐标系统
+                provider.setNetworkServiceCoordinateSystem(CoordinateSystem.CGCS2000, new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+
+                        if (communication != null) {
+                            if (djiError != null) {
+                                communication.setResult("设置坐标系统失败:" + djiError.getDescription());
+                                communication.setCode(-1);
+                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                NettyClient.getInstance().sendMessage(communication, null);
+                            } else {
+                                communication.setResult("设置坐标系统成功:" + djiError.getDescription());
+                                communication.setCode(200);
+                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                NettyClient.getInstance().sendMessage(communication, null);
+                            }
+                        } else {
+                            if (djiError != null) {
+                                showToast("设置RTK坐标系统失败" + djiError.getDescription());
+                            } else {
+                                showToast("设置RTK坐标系统成功");
+                            }
+
+
+                        }
+                    }
+                });
+
+            }
+
+
+        }
+
+        if (ModuleVerificationUtil.isNetRtkAvailable()) {
+            //设置网络RTK账号
+            String username = "zhxda001090";
+            String password = "luopan6";
+            String ip = "rtk.ntrip.qxwz.com";
+            String mountPoint = "AUTO";
+            int port = 8002;
+            if (communication != null) {
+                username = communication.getPara().get("username");
+                password = communication.getPara().get("password");
+                ip = communication.getPara().get("ip");
+                mountPoint = communication.getPara().get("mountPoint");
+                port = Integer.parseInt(communication.getPara().get("port"));
+            }
+
+            NetworkServiceSettings.Builder builder = new NetworkServiceSettings.Builder()
+                    .userName(username).password(password).ip(ip).mountPoint(mountPoint).port(port);
+            provider.setCustomNetworkSettings(builder.build());
+
+
+            //启动网络RTK
+            provider.startNetworkService(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    CommonDjiCallback(djiError, communication);
+                    if (djiError != null) {
+                        showToast("启动网络RTK失败" + djiError.getDescription());
+                    } else {
+                        showToast("启动网络RTK成功");
+                    }
                 }
             });
-        }
-        //设置网络坐标系
-//        provider.setNetworkServiceCoordinateSystem();
+            //账号连接状态
+            provider.addNetworkServiceStateCallback(new NetworkServiceState.Callback() {
+                @Override
+                public void onNetworkServiceStateUpdate(NetworkServiceState networkServiceState) {
+                    String description5 = String.valueOf(networkServiceState.getChannelState());
+                    //  NettyClient.getInstance().sendMsgToServer(description5);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            text_net_rtk_account_state.setText("RTK账号状态:" + description5);
+                        }
+                    });
 
-        NetworkServiceSettings.Builder builder = new NetworkServiceSettings.Builder()
-                .userName(username).password(password).ip(ip).mountPoint(mountPoint).port(port);
-        provider.setCustomNetworkSettings(builder.build());
-        provider.startNetworkService(new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                CommonDjiCallback(djiError, communication);
-            }
-        });
+                }
+            });
+
+
+        }
 
     }
 

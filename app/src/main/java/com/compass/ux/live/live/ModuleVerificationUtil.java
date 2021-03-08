@@ -20,6 +20,7 @@ import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.flightcontroller.Simulator;
 import dji.sdk.products.Aircraft;
 import dji.sdk.products.HandHeld;
+import dji.sdk.sdkmanager.DJISDKManager;
 
 /**
  * Created by dji on 16/1/6.
@@ -29,6 +30,10 @@ public class ModuleVerificationUtil {
         return (null != FPVDemoApplication.getProductInstance());
     }
 
+    //网络rtk
+    public static boolean isNetRtkAvailable() {
+        return isFlightControllerAvailable() && isAircraft() && (null != DJISDKManager.getInstance().getRTKNetworkServiceProvider());
+    }
     public static boolean isAircraft() {
         return FPVDemoApplication.getProductInstance() instanceof Aircraft;
     }
