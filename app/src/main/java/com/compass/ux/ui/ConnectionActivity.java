@@ -2261,7 +2261,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                Log.d("测试获取的数据", new Gson().toJson(communication));
                 try {
                     waypoint_plan_V2(communication);
-                }catch (Exception e) {
+                } catch (Exception e) {
                     StringWriter sw = new StringWriter();
                     PrintWriter pw = new PrintWriter(sw);
                     e.printStackTrace(pw);
@@ -4408,6 +4408,29 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 }
                             });
                             if (rtkState.isRTKBeingUsed() == true) {
+                                //设置坐标系统
+                                provider.setNetworkServiceCoordinateSystem(CoordinateSystem.WGS84, new CommonCallbacks.CompletionCallback() {
+                                    @Override
+                                    public void onResult(DJIError djiError) {
+
+                                        if (djiError != null) {
+                                            showToast("设置网络RTK失败:" + djiError.getDescription());
+//                                                communication.setResult("设置坐标系统失败:" + djiError.getDescription());
+//                                                communication.setCode(-1);
+//                                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                                                NettyClient.getInstance().sendMessage(communication, null);
+                                        } else {
+                                            showToast("设置网络RTK成功");
+//                                                communication.setResult("设置坐标系统成功:" + djiError.getDescription());
+//                                                communication.setCode(200);
+//                                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                                                NettyClient.getInstance().sendMessage(communication, null);
+                                        }
+                                    }
+
+                                });
+//
+
                                 if (communication != null) {
                                     if (isSendRTKStatusToSocket == false) {
                                         isSendRTKStatusToSocket = true;
@@ -4430,65 +4453,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         }
                     });
                 }
-                //手动测试自定义网络RTK
-                if (communication == null) {
-                    //启用RTK模块
-                    mRtk.setRtkEnabled(true, new CommonCallbacks.CompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            if (djiError != null) {
-                                showToast("启用RTK模块失败:" + djiError.getDescription());
-                            } else {
-//                            showToast("启用RTK模块");
-                            }
-                        }
-                    });
-                    //配置RTK信号源
-                    mRtk.setReferenceStationSource(ReferenceStationSource.CUSTOM_NETWORK_SERVICE, new CommonCallbacks.CompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            if (djiError != null) {
-//                            showToast("配置RTK信号源失败" + djiError.getDescription());
-                            } else {
-//                            showToast("配置RTK信号源成功");
-                            }
-                        }
-                    });
-
-                }
-
-
-                //设置坐标系统
-                provider.setNetworkServiceCoordinateSystem(CoordinateSystem.CGCS2000, new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(DJIError djiError) {
-
-                        if (communication != null) {
-                            if (djiError != null) {
-                                communication.setResult("设置坐标系统失败:" + djiError.getDescription());
-                                communication.setCode(-1);
-                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                                NettyClient.getInstance().sendMessage(communication, null);
-                            } else {
-                                communication.setResult("设置坐标系统成功:" + djiError.getDescription());
-                                communication.setCode(200);
-                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                                NettyClient.getInstance().sendMessage(communication, null);
-                            }
-                        } else {
-                            if (djiError != null) {
-                                showToast("设置RTK坐标系统失败" + djiError.getDescription());
-                            } else {
-                                showToast("设置RTK坐标系统成功");
-                            }
-
-
-                        }
-                    }
-                });
 
             }
-
 
         }
 
@@ -4758,6 +4724,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 );
             }
         }
+
     }
 
 
@@ -5338,6 +5305,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 }
             }
         }
+
         @Override
         public void onExecutionUpdate(WaypointMissionExecutionEvent executionEvent) {
             if (executionEvent.getCurrentState().toString().equals("EXECUTING")) {
@@ -5541,7 +5509,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 return;
             }
             int actionId = 0;
-            waypointV2ActionList.clear();
+            if (waypointV2ActionList != null) {
+                waypointV2ActionList.clear();
+            }
             try {
                 for (int i = 0; i < myWayPointActionList.size(); i++) {
                     WaypointTrigger waypointAction0Trigger = null;
@@ -5690,33 +5660,33 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             waypointV2ActionList.add(waypointAction0);
                         }
 
-                    if (myWayPointActionList.get(i).getWayPointAction().get(j).getActionType().equals("0")) {
-                        WaypointTrigger waypointAction1Trigger = new WaypointTrigger.Builder()
-                                .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
-                                .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
-                                        .setAssociateActionID(actionId)
-                                        .setAssociateType(ActionTypes.AssociatedTimingType.SIMULTANEOUSLY)
-                                        .setWaitingTime(Integer.parseInt(myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()))
-                                        .build())
-                                .build();
+                        if (myWayPointActionList.get(i).getWayPointAction().get(j).getActionType().equals("0")) {
+                            WaypointTrigger waypointAction1Trigger = new WaypointTrigger.Builder()
+                                    .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
+                                    .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
+                                            .setAssociateActionID(actionId)
+                                            .setAssociateType(ActionTypes.AssociatedTimingType.SIMULTANEOUSLY)
+                                            .setWaitingTime(Integer.parseInt(myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()))
+                                            .build())
+                                    .build();
 
-                        WaypointActuator waypointAction1Actuator = new WaypointActuator.Builder()
-                                .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
-                                .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
-                                        .setAircraftControlType(ActionTypes.AircraftControlType.START_STOP_FLY)
-                                        .setFlyControlParam(new WaypointAircraftControlStartStopFlyParam.Builder()
-                                                .setStartFly(true)
-                                                .build())
-                                        .build())
-                                .build();
+                            WaypointActuator waypointAction1Actuator = new WaypointActuator.Builder()
+                                    .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
+                                    .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
+                                            .setAircraftControlType(ActionTypes.AircraftControlType.START_STOP_FLY)
+                                            .setFlyControlParam(new WaypointAircraftControlStartStopFlyParam.Builder()
+                                                    .setStartFly(true)
+                                                    .build())
+                                            .build())
+                                    .build();
 
-                        WaypointV2Action waypointAction1 = new WaypointV2Action.Builder()
-                                .setActionID(actionId)//0会报错sdkbug
-                                .setTrigger(waypointAction1Trigger)
-                                .setActuator(waypointAction1Actuator)
-                                .build();
-                        waypointV2ActionList.add(waypointAction1);
-                    }
+                            WaypointV2Action waypointAction1 = new WaypointV2Action.Builder()
+                                    .setActionID(actionId)//0会报错sdkbug
+                                    .setTrigger(waypointAction1Trigger)
+                                    .setActuator(waypointAction1Actuator)
+                                    .build();
+                            waypointV2ActionList.add(waypointAction1);
+                        }
 
                     }
                 }
