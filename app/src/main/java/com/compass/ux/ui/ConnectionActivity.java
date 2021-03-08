@@ -88,6 +88,7 @@ import dji.keysdk.KeyManager;
 import dji.keysdk.callback.GetCallback;
 import dji.keysdk.callback.KeyListener;
 import dji.keysdk.callback.SetCallback;
+import dji.midware.data.model.P3.Ca;
 import dji.sdk.airlink.OcuSyncLink;
 import dji.sdk.airlink.WiFiLink;
 import dji.sdk.base.BaseProduct;
@@ -493,7 +494,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             mSendVirtualStickDataTimer.purge();
             mSendVirtualStickDataTimer = null;
         }
-        removeWaypointMissionListener();
+//        removeWaypointMissionListener();
         uninitPreviewer();
         if (DJISDKManager.getInstance().getProduct() != null) {
             DJISDKManager.getInstance().getProduct().setDiagnosticsInformationCallback(null);//关闭错误日志
@@ -732,7 +733,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             initCamera();
             initBattery();
 //            initGimbal();
-            addWaypointMissionListener();//添加航点的监听
+//            addWaypointMissionListener();//添加航点的监听
             initErrorLog();//初始化错误日志
             initOcuSyncLink();
             initPreviewer();
@@ -5336,10 +5337,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     NettyClient.getInstance().sendMessage(communication_upload_mission, null);
                 }
             }
-
-
         }
-
         @Override
         public void onExecutionUpdate(WaypointMissionExecutionEvent executionEvent) {
             if (executionEvent.getCurrentState().toString().equals("EXECUTING")) {
@@ -5358,13 +5356,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 }
                 communication_onExecutionFinish.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                 communication_onExecutionFinish.setEquipmentId(MApplication.EQUIPMENT_ID);
-                communication_onExecutionFinish.setMethod((Constant.ON_EXECUTION_FINISH));
                 communication_onExecutionFinish.setResult("1");
                 NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
                 Log.d("WMUEWMUE", "推送已发送");
             }
-
-
         }
 
         @Override
@@ -5536,10 +5531,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 /*AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setMessage(mWayPointActionV2);
                 builder.show();*/
-                Toast.makeText(this, "保存成功", Toast.LENGTH_SHORT).show();
                 myWayPointActionList = gson.fromJson(mWayPointActionV2, new TypeToken<List<WayPointsV2Bean.WayPointsBean>>() {
                 }.getType());
-                Toast.makeText(ConnectionActivity.this, "航点动作有几个", Toast.LENGTH_LONG).show();
             } catch (Exception e) {
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
@@ -5740,11 +5733,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
                 e.printStackTrace(pw);
-                Toast.makeText(ConnectionActivity.this, sw.toString(), Toast.LENGTH_LONG).show();
-                communication.setResult("错误信息" + sw.toString());
-                communication.setCode(-1);
-                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                NettyClient.getInstance().sendMessage(communication, null);
+                Toast.makeText(ConnectionActivity.this, "添加航点动作捕获异常" + sw.toString(), Toast.LENGTH_LONG).show();
                 return;
             }
         }
@@ -5860,6 +5849,25 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     private void pauseWaypointV2(Communication communication) {
         if (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.EXECUTING)) {
+            /*waypointV2MissionOperator.stopMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
+                @Override
+                public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
+                    Toast.makeText(ConnectionActivity.this, djiWaypointV2Error == null ? "The mission has been stoped" : djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
+
+                    if (djiWaypointV2Error != null) {
+                        communication.setResult(djiWaypointV2Error.getDescription());
+                        communication.setCode(-1);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
+                    } else {
+                        communication.setResult("Success");
+                        communication.setCode(200);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
+                        isHangXianPause = true;
+                    }
+                }
+            });*/
             waypointV2MissionOperator.interruptMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
@@ -5884,9 +5892,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     private void resumeWaypointV2(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
-
-        if (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.INTERRUPTED)) {
-            waypointV2MissionOperator.recoverMission(InterruptRecoverActionType.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
+        showToast(waypointV2MissionOperator.getCurrentState() + "当前状态");
+        if (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.INTERRUPTED) || waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.READY_TO_UPLOAD)) {
+            /*waypointV2MissionOperator.startMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
                     Toast.makeText(ConnectionActivity.this, djiWaypointV2Error == null ? "The mission has been recovered" : djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
@@ -5904,7 +5912,46 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         isHangXianPause = true;
                     }
                 }
+            });*/
+            waypointV2MissionOperator.recoverMission(InterruptRecoverActionType.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
+                @Override
+                public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
+                    Toast.makeText(ConnectionActivity.this, djiWaypointV2Error == null ? "The mission has been recovered" : djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
+
+                    if (djiWaypointV2Error != null) {
+                        communication.setResult(djiWaypointV2Error.getDescription());
+                        communication.setCode(-1);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
+                    } else {
+                        communication.setResult("Success");
+                        communication.setCode(200);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
+                        isHangXianPause = false;
+                    }
+                }
             });
+
+            /*waypointV2MissionOperator.recoverMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
+                @Override
+                public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
+                    Toast.makeText(ConnectionActivity.this, djiWaypointV2Error == null ? "The mission has been recovered" : djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
+
+                    if (djiWaypointV2Error != null) {
+                        communication.setResult(djiWaypointV2Error.getDescription());
+                        communication.setCode(-1);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
+                    } else {
+                        communication.setResult("Success");
+                        communication.setCode(200);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
+                        isHangXianPause = true;
+                    }
+                }
+            });*/
         }
 
     }
