@@ -5533,6 +5533,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                     .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
                                             .setAssociateActionID(i)
                                             .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
+                                            .setWaitingTime(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()==null ? "0":myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()))
                                             .build())
                                     .build();
                         }
