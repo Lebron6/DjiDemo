@@ -2555,7 +2555,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 break;
             //设置坐标系
             case Constant.SET_RTK_NETWORK:
-                setRTKNetwork(communication);
+                //测试
+setRTKNetwork(communication);
                 break;
 
             //设置云台限位扩展
