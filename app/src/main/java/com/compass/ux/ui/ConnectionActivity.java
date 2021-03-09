@@ -276,7 +276,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     FlightControllerKey wind_speed_key;
 
     FlightControllerBean flightControllerBean = null;
-    RTKBean rtkBean = null;
     Camera camera = null;
     Communication communication_flightController = null;
     Communication communication_rtk = null;
@@ -298,6 +297,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     Communication communication_onExecutionFinish = null;
     Communication communication_BS_info;
     Communication communication_upload_mission;
+    SettingValueBean.NetRTKBean setRtkBean = new SettingValueBean.NetRTKBean();//监听
     private int currentProgress = -1;
     private boolean lastFlying = false;//判断是否起飞
     private boolean lastDistance = false;//判断距离
@@ -364,6 +364,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private String maxFlightHeight = "";
     private String maxFlightRadius = "";
     private boolean maxFlightRadiusLimitationEnabled;
+
     private String wrj_heading = "";
     private boolean isCapture = false;//抓拍组合动作
 
@@ -3834,7 +3835,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         settingValueBean.setMaxFlightHeight(maxFlightHeight);
         settingValueBean.setMaxFlightRadius(maxFlightRadius);
         settingValueBean.setMaxFlightRadiusLimitationEnabled(maxFlightRadiusLimitationEnabled);
-
+        settingValueBean.setRtkBean(setRtkBean);
 
         if (communication == null) {
             communication = new Communication();
@@ -4391,7 +4392,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //    https://bbs.dji.com/thread-247389-1-1.html
     private void setRTKNetwork(Communication communication) {
         isSendRTKStatusToSocket = false;//设置坐标为未发送状态
-        rtkBean = new RTKBean();
         RTKNetworkServiceProvider provider = DJISDKManager.getInstance().getRTKNetworkServiceProvider();
         if (ModuleVerificationUtil.isRtkAvailable()) {
             RTK mRtk = ((Aircraft) FPVDemoApplication.getProductInstance()).getFlightController().getRTK();
@@ -4401,6 +4401,17 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     mRtk.setStateCallback(new RTKState.Callback() {
                         @Override
                         public void onUpdate(RTKState rtkState) {
+                            setRtkBean.setBaseStationAltitude(String.valueOf(rtkState.getBaseStationAltitude()));
+                            setRtkBean.setBaseStationLatitude(String.valueOf(rtkState.getBaseStationLocation().getLatitude()));
+                            setRtkBean.setBaseStationLongitude(String.valueOf(rtkState.getBaseStationLocation().getLongitude()));
+                            setRtkBean.setRTKBeingUsed(rtkState.isRTKBeingUsed());
+                            if (isSendRTKStatusToSocket == false) {
+                                isSendRTKStatusToSocket = true;
+                                communication.setResult(gson.toJson(setRtkBean, RTKBean.class));
+                                communication.setCode(200);
+                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                NettyClient.getInstance().sendMessage(communication, null);
+                            }
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -4412,42 +4423,14 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 provider.setNetworkServiceCoordinateSystem(CoordinateSystem.WGS84, new CommonCallbacks.CompletionCallback() {
                                     @Override
                                     public void onResult(DJIError djiError) {
-
                                         if (djiError != null) {
                                             showToast("设置网络RTK失败:" + djiError.getDescription());
-//                                                communication.setResult("设置坐标系统失败:" + djiError.getDescription());
-//                                                communication.setCode(-1);
-//                                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                                                NettyClient.getInstance().sendMessage(communication, null);
                                         } else {
                                             showToast("设置网络RTK成功");
-//                                                communication.setResult("设置坐标系统成功:" + djiError.getDescription());
-//                                                communication.setCode(200);
-//                                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                                                NettyClient.getInstance().sendMessage(communication, null);
                                         }
                                     }
 
                                 });
-//
-
-                                if (communication != null) {
-                                    if (isSendRTKStatusToSocket == false) {
-                                        isSendRTKStatusToSocket = true;
-                                        rtkBean.setBaseStationAltitude(String.valueOf(rtkState.getBaseStationAltitude()));
-                                        rtkBean.setBaseStationLatitude(String.valueOf(rtkState.getBaseStationLocation().getLatitude()));
-                                        rtkBean.setBaseStationLongitude(String.valueOf(rtkState.getBaseStationLocation().getLongitude()));
-                                        rtkBean.setFusionMobileStationAltitude(String.valueOf(rtkState.getFusionMobileStationAltitude()));
-                                        rtkBean.setFusionMobileStationLatitude(String.valueOf(rtkState.getFusionMobileStationLocation().getLatitude()));
-                                        rtkBean.setFusionMobileStationLongitude(String.valueOf(rtkState.getFusionMobileStationLocation().getLongitude()));
-                                        rtkBean.setRTKBeingUsed(rtkState.isRTKBeingUsed());
-                                        communication.setResult(gson.toJson(rtkBean, RTKBean.class));
-                                        communication.setCode(200);
-                                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                                        NettyClient.getInstance().sendMessage(communication, null);
-                                    }
-
-                                }
 
                             }
                         }
@@ -4460,21 +4443,17 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
         if (ModuleVerificationUtil.isNetRtkAvailable()) {
             //设置网络RTK账号
-            String username = "zhxda001090";
-            String password = "luopan6";
-            String ip = "rtk.ntrip.qxwz.com";
-            String mountPoint = "AUTO";
-            int port = 8002;
             if (communication != null) {
-                username = communication.getPara().get("username");
-                password = communication.getPara().get("password");
-                ip = communication.getPara().get("ip");
-                mountPoint = communication.getPara().get("mountPoint");
-                port = Integer.parseInt(communication.getPara().get("port"));
+                setRtkBean.setUsername(communication.getPara().get("username"));
+                setRtkBean.setPassword(communication.getPara().get("password"));
+                setRtkBean.setMountPoint(communication.getPara().get("mountPoint"));
+                setRtkBean.setIp(communication.getPara().get("ip"));
+                setRtkBean.setPort(Integer.parseInt(communication.getPara().get("port")));
             }
 
             NetworkServiceSettings.Builder builder = new NetworkServiceSettings.Builder()
-                    .userName(username).password(password).ip(ip).mountPoint(mountPoint).port(port);
+                    .userName(setRtkBean.getUsername()).password(setRtkBean.getPassword()).ip(setRtkBean.getIp())
+                    .mountPoint(setRtkBean.getMountPoint()).port(setRtkBean.getPort());
             provider.setCustomNetworkSettings(builder.build());
 
 
