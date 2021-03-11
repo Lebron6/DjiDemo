@@ -218,7 +218,7 @@ import static dji.sdk.codec.DJICodecManager.VideoSource.CAMERA;
 import static dji.sdk.codec.DJICodecManager.VideoSource.FPV;
 
 public class ConnectionActivity extends NettyActivity implements View.OnClickListener, TextureView.SurfaceTextureListener, DJIDiagnostics.DiagnosticsInformationCallback, RTK.RTKBaseStationListCallback {
-    private String liveShowUrl = "";
+    private String liveShowUrl = "";  
     private static final String TAG = ConnectionActivity.class.getName();
     private TextView mTextConnectionStatus;
     private TextView mTextProduct;
@@ -1735,7 +1735,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     NettyClient.getInstance().sendMessage(communication_StorageState, null);
                 }
             });
-            if (isM300Product()) {
+            if (isM300Product() && camera.getLenses() != null && camera.getLenses().size() > 0) {
                 //返回激光测距数据
                 camera.getLaserEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
                     @Override
@@ -1877,6 +1877,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                    Log.d("HHHHHcurr", djiError.toString());
                     }
                 });
+            } else {
+                showToast("请检查摄像头或者其他挂载类型！！！");
             }
 
 
@@ -2075,8 +2077,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     String gimbal_pitch_speed = "", gimbal_yaw_speed = "";
 
     private void initGimbal() {
-        gimbal = ((Aircraft) FPVDemoApplication.getProductInstance()).getGimbals().get(0);
-        if (gimbal != null) {
+        if (gimbal != null && ((Aircraft) FPVDemoApplication.getProductInstance()).getGimbals() != null && ((Aircraft) FPVDemoApplication.getProductInstance()).getGimbals().size() > 0) {
+            gimbal = ((Aircraft) FPVDemoApplication.getProductInstance()).getGimbals().get(0);
             gimbal.getControllerSpeedCoefficient(PITCH, new CommonCallbacks.CompletionCallbackWith<Integer>() {
                 @Override
                 public void onSuccess(Integer integer) {
@@ -2150,6 +2152,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             });
 
 
+        } else {
+            showToast("云台初始化失败！！请检查摄像头类型");
         }
 
 
@@ -2556,7 +2560,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             //设置坐标系
             case Constant.SET_RTK_NETWORK:
                 //测试
-setRTKNetwork(communication);
+                setRTKNetwork(communication);
                 break;
 
             //设置云台限位扩展
@@ -5479,6 +5483,7 @@ setRTKNetwork(communication);
                 /*AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setMessage(mWayPointActionV2);
                 builder.show();*/
+                Log.d("测试悬停mWayPointActionV2",mWayPointActionV2 + "");
                 myWayPointActionList = gson.fromJson(mWayPointActionV2, new TypeToken<List<WayPointsV2Bean.WayPointsBean>>() {
                 }.getType());
             } catch (Exception e) {
@@ -5492,6 +5497,7 @@ setRTKNetwork(communication);
             if (waypointV2ActionList != null) {
                 waypointV2ActionList.clear();
             }
+            Log.d("测试悬停myWayPointActionList",myWayPointActionList.size() + myWayPointActionList.toString() + "\n" +new Gson().toJson(myWayPointActionList));
             try {
                 for (int i = 0; i < myWayPointActionList.size(); i++) {
                     WaypointTrigger waypointAction0Trigger = null;
@@ -5511,11 +5517,12 @@ setRTKNetwork(communication);
                             waypointAction0Trigger = new WaypointTrigger.Builder()
                                     .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
                                     .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
-                                            .setAssociateActionID(i)
+                                            .setAssociateActionID(actionId - 1)
                                             .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
-                                            .setWaitingTime(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()==null ? "0":myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()))
+                                            .setWaitingTime(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime() == null ? "0" : myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()))
                                             .build())
                                     .build();
+                            Log.d("测试悬停setAssociateActionID",actionId -1 + "");
                         }
                         switch (myWayPointActionList.get(i).getWayPointAction().get(j).getActionType()) {
                             case "0"://悬停
@@ -5611,6 +5618,7 @@ setRTKNetwork(communication);
                                 .setActuator(waypointAction0Actuator)
                                 .build();
                         waypointV2ActionList.add(waypointAction0);
+                        Log.d("测试悬停actionId","actionType" +myWayPointActionList.get(i).getWayPointAction().get(j).getActionType() + actionId+"");
 
                         //如果是悬停
                         if ("0".equals(myWayPointActionList.get(i).getWayPointAction().get(j).getActionType())) {
@@ -5618,11 +5626,12 @@ setRTKNetwork(communication);
                             waypointAction0Trigger = new WaypointTrigger.Builder()
                                     .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
                                     .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
-                                            .setAssociateActionID(i)
+                                            .setAssociateActionID(actionId -1)
                                             .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
                                             .setWaitingTime(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()))
                                             .build())
                                     .build();
+                            Log.d("测试悬停setAssociateActionID","悬停起飞" + (actionId -1) + "时间"+ Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()));
                             waypointAction0Actuator = new WaypointActuator.Builder()
                                     .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
                                     .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
@@ -5639,9 +5648,10 @@ setRTKNetwork(communication);
                                     .setActuator(waypointAction0Actuator)
                                     .build();
                             waypointV2ActionList.add(waypointAction0);
+                            Log.d("测试悬停actionId", "悬停起飞" + actionId + "");
                         }
 
-                        if (myWayPointActionList.get(i).getWayPointAction().get(j).getActionType().equals("0")) {
+                        /*if (myWayPointActionList.get(i).getWayPointAction().get(j).getActionType().equals("0")) {
                             WaypointTrigger waypointAction1Trigger = new WaypointTrigger.Builder()
                                     .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
                                     .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
@@ -5667,7 +5677,7 @@ setRTKNetwork(communication);
                                     .setActuator(waypointAction1Actuator)
                                     .build();
                             waypointV2ActionList.add(waypointAction1);
-                        }
+                        }*/
 
                     }
                 }
@@ -6116,7 +6126,6 @@ setRTKNetwork(communication);
                 } else {
                     send(pagerUtils.MP3STOPSINS);//结束上传
                     send(pagerUtils.MP3OPENINS);//开始播放
-
                 }
             }
         }

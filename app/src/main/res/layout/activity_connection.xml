@@ -5,9 +5,9 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
     <Button
-        android:visibility="gone"
         android:id="@+id/bt_login_account"
         android:layout_width="wrap_content"
+        android:visibility="gone"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
