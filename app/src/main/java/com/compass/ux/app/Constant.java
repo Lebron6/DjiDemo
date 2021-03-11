@@ -64,6 +64,7 @@ public class Constant {
     public static final String OASS="obstacleAvoidanceSensorState";
     public static final String STORAGE_STATE="storageState";
     public static final String IS_FLYING="isFlying";
+    public static final String GET_IS_FLYING="getIsFlying";
     public static final String GO_HOME_LENGTH="goHomeLength";
     public static final String IS_DOWNLOAD="isDownload";
     public static final String ON_EXECUTION_FINISH="onExecutionFinish";

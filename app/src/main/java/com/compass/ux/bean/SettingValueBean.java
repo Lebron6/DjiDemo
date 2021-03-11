@@ -1,5 +1,7 @@
 package com.compass.ux.bean;
 
+import dji.common.flightcontroller.PositioningSolution;
+
 /**
  * Created by xhf
  * on 2020-08-26 11:29
@@ -62,17 +64,6 @@ public class SettingValueBean {
     private String maxFlightRadius = "";
     //限远开关
     private boolean maxFlightRadiusLimitationEnabled;
-
-    //网络RTK是否启用
-    private boolean isRTKBeingUsed;
-
-    public boolean isRTKBeingUsed() {
-        return isRTKBeingUsed;
-    }
-
-    public void setRTKBeingUsed(boolean RTKBeingUsed) {
-        isRTKBeingUsed = RTKBeingUsed;
-    }
 
     public String getGoHomeHeightInMeters() {
         return goHomeHeightInMeters;
@@ -310,91 +301,132 @@ public class SettingValueBean {
     }
 
     public static class NetRTKBean{
-        private String username;
-        private String password;
-        private String ip;
-        private String mountPoint;
-        private int port;
-        private boolean isRTKBeingUsed;
-        //移动基站lat
-        private String baseStationLatitude;
-        //移动基站long
-        private String baseStationLongitude;
 
-        public String getBaseStationLatitude() {
-            return baseStationLatitude;
+        private int rtkSwitch;//SETRTK状态
+        private int serviceType;//RTK类型
+        private Info info;
+
+        public Info getInfo() {
+            return info;
         }
 
-        public void setBaseStationLatitude(String baseStationLatitude) {
-            this.baseStationLatitude = baseStationLatitude;
+        public void setInfo(Info info) {
+            this.info = info;
         }
 
-        public String getBaseStationLongitude() {
-            return baseStationLongitude;
+        public int getRtkSwitch() {
+            return rtkSwitch;
         }
 
-        public void setBaseStationLongitude(String baseStationLongitude) {
-            this.baseStationLongitude = baseStationLongitude;
+        public void setRtkSwitch(int rtkSwitch) {
+            this.rtkSwitch = rtkSwitch;
         }
 
-        public String getBaseStationAltitude() {
-            return baseStationAltitude;
+        public int getServiceType() {
+            return serviceType;
         }
 
-        public void setBaseStationAltitude(String baseStationAltitude) {
-            this.baseStationAltitude = baseStationAltitude;
+        public void setServiceType(int serviceType) {
+            this.serviceType = serviceType;
         }
 
-        //移动基站高度
-        private String baseStationAltitude;
+        public static class Info{
 
-        public String getUsername() {
-            return username;
+            private boolean isRTKBeingUsed;
+            private String username;
+            private String password;
+            private String ip;
+            private String mountPoint;
+            private int port;
+            private String baseStationLatitude;
+            private String baseStationLongitude;
+            private PositioningSolution positioningSolution;
+
+            public PositioningSolution getPositioningSolution() {
+                return positioningSolution;
+            }
+
+            public void setPositioningSolution(PositioningSolution positioningSolution) {
+                this.positioningSolution = positioningSolution;
+            }
+
+            public boolean isRTKBeingUsed() {
+                return isRTKBeingUsed;
+            }
+
+            public void setRTKBeingUsed(boolean RTKBeingUsed) {
+                isRTKBeingUsed = RTKBeingUsed;
+            }
+
+            public String getUsername() {
+                return username;
+            }
+
+            public void setUsername(String username) {
+                this.username = username;
+            }
+
+            public String getPassword() {
+                return password;
+            }
+
+            public void setPassword(String password) {
+                this.password = password;
+            }
+
+            public String getIp() {
+                return ip;
+            }
+
+            public void setIp(String ip) {
+                this.ip = ip;
+            }
+
+            public String getMountPoint() {
+                return mountPoint;
+            }
+
+            public void setMountPoint(String mountPoint) {
+                this.mountPoint = mountPoint;
+            }
+
+            public int getPort() {
+                return port;
+            }
+
+            public void setPort(int port) {
+                this.port = port;
+            }
+
+            public String getBaseStationLatitude() {
+                return baseStationLatitude;
+            }
+
+            public void setBaseStationLatitude(String baseStationLatitude) {
+                this.baseStationLatitude = baseStationLatitude;
+            }
+
+            public String getBaseStationLongitude() {
+                return baseStationLongitude;
+            }
+
+            public void setBaseStationLongitude(String baseStationLongitude) {
+                this.baseStationLongitude = baseStationLongitude;
+            }
         }
 
-        public void setUsername(String username) {
-            this.username = username;
-        }
 
-        public String getPassword() {
-            return password;
-        }
 
-        public void setPassword(String password) {
-            this.password = password;
-        }
 
-        public String getIp() {
-            return ip;
-        }
 
-        public void setIp(String ip) {
-            this.ip = ip;
-        }
 
-        public String getMountPoint() {
-            return mountPoint;
-        }
 
-        public void setMountPoint(String mountPoint) {
-            this.mountPoint = mountPoint;
-        }
 
-        public int getPort() {
-            return port;
-        }
 
-        public void setPort(int port) {
-            this.port = port;
-        }
 
-        public boolean isRTKBeingUsed() {
-            return isRTKBeingUsed;
-        }
 
-        public void setRTKBeingUsed(boolean RTKBeingUsed) {
-            isRTKBeingUsed = RTKBeingUsed;
-        }
+
+
     }
 
 }

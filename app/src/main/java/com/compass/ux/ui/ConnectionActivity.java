@@ -7,6 +7,7 @@ import dji.common.airlink.OcuSyncFrequencyBand;
 import dji.common.airlink.PhysicalSource;
 import dji.common.airlink.SignalQualityCallback;
 import dji.common.airlink.WifiChannelInterference;
+import dji.common.battery.BatteryState;
 import dji.common.camera.CameraVideoStreamSource;
 import dji.common.camera.LaserMeasureInformation;
 import dji.common.camera.PhotoTimeLapseSettings;
@@ -218,7 +219,7 @@ import static dji.sdk.codec.DJICodecManager.VideoSource.CAMERA;
 import static dji.sdk.codec.DJICodecManager.VideoSource.FPV;
 
 public class ConnectionActivity extends NettyActivity implements View.OnClickListener, TextureView.SurfaceTextureListener, DJIDiagnostics.DiagnosticsInformationCallback, RTK.RTKBaseStationListCallback {
-    private String liveShowUrl = "";  
+    private String liveShowUrl = "";
     private static final String TAG = ConnectionActivity.class.getName();
     private TextView mTextConnectionStatus;
     private TextView mTextProduct;
@@ -298,6 +299,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     Communication communication_BS_info;
     Communication communication_upload_mission;
     SettingValueBean.NetRTKBean setRtkBean = new SettingValueBean.NetRTKBean();//监听
+    SettingValueBean.NetRTKBean.Info infoBean = new SettingValueBean.NetRTKBean.Info();
     private int currentProgress = -1;
     private boolean lastFlying = false;//判断是否起飞
     private boolean lastDistance = false;//判断距离
@@ -603,7 +605,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                send(PagerUtils.getInstance().TTSREPEATINS);
 //                send(data);
 //                }
-                testTTSYY();
+//                testTTSYY();
+                initBattery();
                 break;
             }
             case R.id.btn_simulator: {
@@ -739,8 +742,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             initOcuSyncLink();
             initPreviewer();
             startLiveShow(null);//开始推流
-
-
         }
     };
 
@@ -1893,185 +1894,194 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     String battery_discharges_one = "", battery_discharges_two = "";
     boolean is_battery_one_change = false, is_battery_two_change = false;
 
+
     private void initBattery() {
-//        if (FPVDemoApplication.getProductInstance().getBattery() != null) {
-//            battery = FPVDemoApplication.getProductInstance().getBattery();
-//            battery.setStateCallback(new BatteryState.Callback() {
-//                @Override
-//                public void onUpdate(BatteryState batteryState) {
-//                    batteryState.getChargeRemainingInPercent();
-//                }
-//            });
-//        }
-
-//        FPVDemoApplication.getProductInstance().getBatteries().get(0).setStateCallback(new BatteryState.Callback() {
-//            @Override
-//            public void onUpdate(BatteryState batteryState) {
-//                Log.d("Batteries1",""+batteryState.getChargeRemainingInPercent());
-//            }
-//        });
-//        FPVDemoApplication.getProductInstance().getBatteries().get(1).setStateCallback(new BatteryState.Callback() {
-//            @Override
-//            public void onUpdate(BatteryState batteryState) {
-//                Log.d("Batteries2",""+batteryState.getChargeRemainingInPercent());
-//            }
-//        });
-
-//        Battery.setAggregationStateCallback(new AggregationState.Callback() {
-//            @Override
-//            public void onUpdate(AggregationState aggregationState) {
-//                BatteryOverview[] batteryOverviews= aggregationState.getBatteryOverviews();
-//                for (int i = 0; i <batteryOverviews.length ; i++) {
-//                    Log.d("batteryOverviews","当前"+i+"电量"+batteryOverviews[i].getChargeRemainingInPercent());
-//                }
-//
-//            }
-//        });
-
-
-//
-
-
-        BatteryKey battery_per_one = BatteryKey.create(BatteryKey.CHARGE_REMAINING_IN_PERCENT);
-        BatteryKey battery_per_two = BatteryKey.create(BatteryKey.CHARGE_REMAINING_IN_PERCENT, 1);
-
-
-        BatteryKey battery_voltage_one = BatteryKey.create(BatteryKey.CELL_VOLTAGES);
-        BatteryKey battery_voltage_two = BatteryKey.create(BatteryKey.CELL_VOLTAGES, 1);
-        BatteryKey temperature_one = BatteryKey.create(BatteryKey.TEMPERATURE);
-        BatteryKey temperature_two = BatteryKey.create(BatteryKey.TEMPERATURE, 1);
-        BatteryKey discharges_one = BatteryKey.create(BatteryKey.NUMBER_OF_DISCHARGES);
-        BatteryKey discharges_two = BatteryKey.create(BatteryKey.NUMBER_OF_DISCHARGES, 1);
-        KeyManager.getInstance().addListener(battery_per_one, new KeyListener() {
-            @Override
-            public void onValueChange(Object o, Object o1) {
-                if (fastClick.batteryClick()) {
-                    is_battery_one_change = true;
-                    battery_one = o1.toString();
-                    if (!is_battery_two_change) {
-                        battery_two = o1.toString();
-                    }
-                    Log.d("battery_one", battery_one);
-                    if (o1 != null && o1 instanceof Integer[]) {
-                        for (int i = 0; i < ((Integer[]) o1).length; i++) {
-                            int aaa = ((Integer[]) o1)[i];
-                            battery_list_per_one.add(aaa + "");
-                        }
-                    }
-                    Log.d("battery_one", battery_list_per_one.toString());
-                    submitBatteryPersentAndV();
-                }
-            }
-        });
-        KeyManager.getInstance().addListener(battery_per_two, new KeyListener() {
-            @Override
-            public void onValueChange(Object o, Object o1) {
-                if (fastClick.batteryClick()) {
-                    battery_two = o1.toString();
-                    is_battery_two_change = true;
-                    if (!is_battery_one_change) {
-                        battery_one = o1.toString();
-                    }
-
-                    Log.d("battery_two", battery_two);
-                    if (o1 != null && o1 instanceof Integer[]) {
-                        for (int i = 0; i < ((Integer[]) o1).length; i++) {
-                            int aaa = ((Integer[]) o1)[i];
-                            battery_list_per_two.add(aaa + "");
-                        }
-                    }
-                    Log.d("battery_two", battery_list_per_two.toString());
-                    submitBatteryPersentAndV();
-                }
-            }
-        });
-        //十几个电池先驻掉有用
-        KeyManager.getInstance().addListener(battery_voltage_one, new KeyListener() {
-            @Override
-            public void onValueChange(Object o, Object o1) {
-                if (fastClick.batteryClick()) {
-                    battery_voltages_one = getMinVoltage(o1) + "";
-                    if (o1 != null && o1 instanceof Integer[]) {
-                        for (int i = 0; i < ((Integer[]) o1).length; i++) {
-                            int aaa = ((Integer[]) o1)[i];
-                            battery_list_one.add((float) (aaa * 1.0F / 1000.0F));
-                        }
-                    }
-                    submitBatteryPersentAndV();
-                }
-
-            }
-        });
-        KeyManager.getInstance().addListener(battery_voltage_two, new KeyListener() {
-            @Override
-            public void onValueChange(Object o, Object o1) {
-                if (fastClick.batteryClick()) {
-                    battery_voltages_two = getMinVoltage(o1) + "";
-                    if (o1 != null && o1 instanceof Integer[]) {
-                        for (int i = 0; i < ((Integer[]) o1).length; i++) {
-                            int aaa = ((Integer[]) o1)[i];
-                            battery_list_two.add((float) (aaa * 1.0F / 1000.0F));
-                        }
-
-                    }
-                    submitBatteryPersentAndV();
-                }
-            }
-        });
-        KeyManager.getInstance().addListener(temperature_one, new KeyListener() {
-            @Override
-            public void onValueChange(Object o, Object o1) {
-                battery_temperature_one = o1 + "";
-                submitBatteryPersentAndV();
-            }
-        });
-        KeyManager.getInstance().addListener(temperature_two, new KeyListener() {
-            @Override
-            public void onValueChange(Object o, Object o1) {
-                battery_temperature_two = o1 + "";
-                submitBatteryPersentAndV();
-            }
-        });
-        KeyManager.getInstance().addListener(discharges_one, new KeyListener() {
-            @Override
-            public void onValueChange(Object o, Object o1) {
-                battery_discharges_one = o1 + "";
-                submitBatteryPersentAndV();
-            }
-        });
-        KeyManager.getInstance().addListener(discharges_two, new KeyListener() {
-            @Override
-            public void onValueChange(Object o, Object o1) {
-                battery_discharges_two = o1 + "";
-                submitBatteryPersentAndV();
-            }
-        });
-        //第一次获取电量
-        KeyManager.getInstance().getValue(battery_per_one, new GetCallback() {
-            @Override
-            public void onSuccess(Object o) {
-                int b_one = (Integer) o;
-                battery_one = b_one + "";
-                KeyManager.getInstance().getValue(battery_per_two, new GetCallback() {
+        Log.e("initBattery", "是否执行");
+        showToast("初始化电池");
+        BaseProduct product = DJISDKManager.getInstance().getProduct();
+        if (product != null) {
+            List<Battery> batteries = product.getBatteries();
+            if (batteries != null) {
+                Log.e("initBattery", "电池数目"+batteries.size() );
+                batteries.get(0).setStateCallback(new BatteryState.Callback() {
                     @Override
-                    public void onSuccess(Object o) {
-                        int b_two = (Integer) o;
-                        battery_two = b_two + "";
-                        submitBatteryPersentAndV();
+                    public void onUpdate(BatteryState batteryState) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                text_net_rtk_state.setText("电池电量1："+batteryState.getChargeRemainingInPercent());
+                            }
+                        });
+                        Log.e("initBattery", "电池1电量"+batteryState.getChargeRemainingInPercent() );
                     }
-
+                });
+                if (batteries.size() == 1) {
+                    Log.e("initBattery", "电池数1");
+                    return;
+                }
+                batteries.get(1).setStateCallback(new BatteryState.Callback() {
                     @Override
-                    public void onFailure(DJIError djiError) {
+                    public void onUpdate(BatteryState batteryState) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                text_net_rtk_account_state.setText("电池电量2："+batteryState.getChargeRemainingInPercent());
+                            }
+                        });
+                        Log.e("initBattery", "电池2电量"+batteryState.getChargeRemainingInPercent() );
 
                     }
                 });
-            }
 
-            @Override
-            public void onFailure(DJIError djiError) {
-
+            } else {
+                Log.e("initBattery", "batteries:null");
             }
-        });
+        } else {
+            Log.e("initBattery", "product:null");
+        }
+//        DJISDKManager.getInstance().getProduct();
+//
+//
+//        BatteryKey battery_per_one = BatteryKey.create(BatteryKey.CHARGE_REMAINING_IN_PERCENT);
+//        BatteryKey battery_per_two = BatteryKey.create(BatteryKey.CHARGE_REMAINING_IN_PERCENT, 1);
+//
+//
+//        BatteryKey battery_voltage_one = BatteryKey.create(BatteryKey.CELL_VOLTAGES);
+//        BatteryKey battery_voltage_two = BatteryKey.create(BatteryKey.CELL_VOLTAGES, 1);
+//        BatteryKey temperature_one = BatteryKey.create(BatteryKey.TEMPERATURE);
+//        BatteryKey temperature_two = BatteryKey.create(BatteryKey.TEMPERATURE, 1);
+//        BatteryKey discharges_one = BatteryKey.create(BatteryKey.NUMBER_OF_DISCHARGES);
+//        BatteryKey discharges_two = BatteryKey.create(BatteryKey.NUMBER_OF_DISCHARGES, 1);
+//        KeyManager.getInstance().addListener(battery_per_one, new KeyListener() {
+//            @Override
+//            public void onValueChange(Object o, Object o1) {
+//                if (fastClick.batteryClick()) {
+//                    is_battery_one_change = true;
+//                    battery_one = o1.toString();
+//                    if (!is_battery_two_change) {
+//                        battery_two = o1.toString();
+//                    }
+//                    Log.d("battery_one", battery_one);
+//                    if (o1 != null && o1 instanceof Integer[]) {
+//                        for (int i = 0; i < ((Integer[]) o1).length; i++) {
+//                            int aaa = ((Integer[]) o1)[i];
+//                            battery_list_per_one.add(aaa + "");
+//                        }
+//                    }
+//                    Log.d("battery_one", battery_list_per_one.toString());
+//                    submitBatteryPersentAndV();
+//                }
+//            }
+//        });
+//        KeyManager.getInstance().addListener(battery_per_two, new KeyListener() {
+//            @Override
+//            public void onValueChange(Object o, Object o1) {
+//                if (fastClick.batteryClick()) {
+//                    battery_two = o1.toString();
+//                    is_battery_two_change = true;
+//                    if (!is_battery_one_change) {
+//                        battery_one = o1.toString();
+//                    }
+//
+//                    Log.d("battery_two", battery_two);
+//                    if (o1 != null && o1 instanceof Integer[]) {
+//                        for (int i = 0; i < ((Integer[]) o1).length; i++) {
+//                            int aaa = ((Integer[]) o1)[i];
+//                            battery_list_per_two.add(aaa + "");
+//                        }
+//                    }
+//                    Log.d("battery_two", battery_list_per_two.toString());
+//                    submitBatteryPersentAndV();
+//                }
+//            }
+//        });
+//        //十几个电池先驻掉有用
+//        KeyManager.getInstance().addListener(battery_voltage_one, new KeyListener() {
+//            @Override
+//            public void onValueChange(Object o, Object o1) {
+//                if (fastClick.batteryClick()) {
+//                    battery_voltages_one = getMinVoltage(o1) + "";
+//                    if (o1 != null && o1 instanceof Integer[]) {
+//                        for (int i = 0; i < ((Integer[]) o1).length; i++) {
+//                            int aaa = ((Integer[]) o1)[i];
+//                            battery_list_one.add((float) (aaa * 1.0F / 1000.0F));
+//                        }
+//                    }
+        submitBatteryPersentAndV();
+//                }
+//
+//            }
+//        });
+//        KeyManager.getInstance().addListener(battery_voltage_two, new KeyListener() {
+//            @Override
+//            public void onValueChange(Object o, Object o1) {
+//                if (fastClick.batteryClick()) {
+//                    battery_voltages_two = getMinVoltage(o1) + "";
+//                    if (o1 != null && o1 instanceof Integer[]) {
+//                        for (int i = 0; i < ((Integer[]) o1).length; i++) {
+//                            int aaa = ((Integer[]) o1)[i];
+//                            battery_list_two.add((float) (aaa * 1.0F / 1000.0F));
+//                        }
+//
+//                    }
+//                    submitBatteryPersentAndV();
+//                }
+//            }
+//        });
+//        KeyManager.getInstance().addListener(temperature_one, new KeyListener() {
+//            @Override
+//            public void onValueChange(Object o, Object o1) {
+//                battery_temperature_one = o1 + "";
+//                submitBatteryPersentAndV();
+//            }
+//        });
+//        KeyManager.getInstance().addListener(temperature_two, new KeyListener() {
+//            @Override
+//            public void onValueChange(Object o, Object o1) {
+//                battery_temperature_two = o1 + "";
+//                submitBatteryPersentAndV();
+//            }
+//        });
+//        KeyManager.getInstance().addListener(discharges_one, new KeyListener() {
+//            @Override
+//            public void onValueChange(Object o, Object o1) {
+//                battery_discharges_one = o1 + "";
+//                submitBatteryPersentAndV();
+//            }
+//        });
+//        KeyManager.getInstance().addListener(discharges_two, new KeyListener() {
+//            @Override
+//            public void onValueChange(Object o, Object o1) {
+//                battery_discharges_two = o1 + "";
+//                submitBatteryPersentAndV();
+//            }
+//        });
+//        //第一次获取电量
+//        KeyManager.getInstance().getValue(battery_per_one, new GetCallback() {
+//            @Override
+//            public void onSuccess(Object o) {
+//                int b_one = (Integer) o;
+//                battery_one = b_one + "";
+//                KeyManager.getInstance().getValue(battery_per_two, new GetCallback() {
+//                    @Override
+//                    public void onSuccess(Object o) {
+//                        int b_two = (Integer) o;
+//                        battery_two = b_two + "";
+//                        submitBatteryPersentAndV();
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+//
+//                    }
+//                });
+//            }
+//
+//            @Override
+//            public void onFailure(DJIError djiError) {
+//
+//            }
+//        });
     }
 
     String gimbal_pitch_speed = "", gimbal_yaw_speed = "";
@@ -2556,6 +2566,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             //设置参考站源
             case Constant.SET_RSS:
                 setRSS(communication);
+//                setNSCS();
                 break;
             //设置坐标系
             case Constant.SET_RTK_NETWORK:
@@ -2583,11 +2594,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 TestPrint(communication);
                 break;
             //判断是否在飞
-            case "getIsFlying":
-                communication.setResult(lastFlying ? "1" : "0");
-                communication.setCode(200);
-                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                NettyClient.getInstance().sendMessage(communication, null);
+            case Constant.GET_IS_FLYING:
+                getIsFlying(communication);
                 break;
             //获取返航点经纬度
             case "getSLngLat":
@@ -2623,6 +2631,38 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             case Constant.VOLUME_CONTROL://暂不可用
                 send(PagerUtils.getInstance().TTSSTOPINS, communication);
                 break;
+        }
+    }
+
+    //获取飞行状态
+    private void getIsFlying(Communication communication) {
+        Aircraft aircraft = FPVDemoApplication.getAircraftInstance();
+        if (aircraft == null || !aircraft.isConnected()) {
+            showToast("Disconnected");
+            communication.setResult("Disconnected");
+            communication.setCode(-1);
+            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+            NettyClient.getInstance().sendMessage(communication, null);
+            return;
+        } else {
+
+            FlightController mFlightController = aircraft.getFlightController();
+            if (mFlightController != null) {
+                communication.setResult(mFlightController.getState().isFlying() ? "1" : "0");
+                communication.setCode(200);
+                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                NettyClient.getInstance().sendMessage(communication, null);
+                //获取飞行状态d
+//                mFlightController.setStateCallback(new FlightControllerState.Callback() {
+//                    @Override
+//                    public void onUpdate(FlightControllerState flightControllerState) {
+//                        communication.setResult(flightControllerState.isFlying() ? "1" : "0");
+//                        communication.setCode(200);
+//                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                        NettyClient.getInstance().sendMessage(communication, null);
+//                    }
+//                });
+            }
         }
     }
 
@@ -3840,6 +3880,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         settingValueBean.setMaxFlightHeight(maxFlightHeight);
         settingValueBean.setMaxFlightRadius(maxFlightRadius);
         settingValueBean.setMaxFlightRadiusLimitationEnabled(maxFlightRadiusLimitationEnabled);
+        setRtkBean.setInfo(infoBean);
         settingValueBean.setRtkBean(setRtkBean);
 
         if (communication == null) {
@@ -4254,7 +4295,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     //设置rtk
     private void setRTK(Communication communication) {
-        showToast("setRTK");
         String type = communication.getPara().get(Constant.TYPE);
         if (ModuleVerificationUtil.isRtkAvailable()) {
             RTK mRtk = ((Aircraft) FPVDemoApplication.getProductInstance()).getFlightController().getRTK();
@@ -4265,14 +4305,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
                     }
                 });
-
                 mRtk.getRtkEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
-
                     @Override
                     public void onSuccess(Boolean aBoolean) {
-                        //这个东西用来判断是否成功开启RTK
-                        String description2 = "AZ=启用RTK模块: " + aBoolean;
-                        //  NettyClient.getInstance().sendMsgToServer(description2);
+                        setRtkBean.setRtkSwitch(aBoolean ? 1 : 0);
+                        String description2 = "启用RTK模块: " + aBoolean;
                         communication.setResult(description2);
                         communication.setCode(200);
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
@@ -4305,6 +4342,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     //开始搜索基站
     private void startSearchBS(Communication communication) {
         if (mRTK != null) {
+            mRTK.setRtkBaseStationListCallback(this);//监听搜索到的基站
             mRTK.startSearchBaseStation(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
@@ -4344,9 +4382,13 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             mRTK.connectToBaseStation(type, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    CommonDjiCallback(djiError, communication);
+//                    CommonDjiCallback(djiError, communication);
+                    if (djiError != null) {
+                        showToast("连接基站失败:" + djiError.getDescription());
+                    }
                 }
             });
+            addRTKStatus(communication);//监听RTK状态
         } else {
             communication.setResult("RTK为空");
             communication.setCode(-1);
@@ -4355,9 +4397,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
     }
 
-    //设置参考站源
+    //设置参考站源 D-RTK=BASE_STATION
     private void setRSS(Communication communication) {
+        isSendRTKStatusToSocket = false;//设置坐标为未发送状态
         String type = communication.getPara().get(Constant.TYPE);
+        setRtkBean.setServiceType(Integer.parseInt(type));
         if (mRTK != null && !TextUtils.isEmpty(type)) {
             mRTK.setReferenceStationSource(ReferenceStationSource.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
                 @Override
@@ -4374,23 +4418,18 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
     //设置坐标系
-    private void setNSCS(Communication communication) {
-        String type = communication.getPara().get(Constant.TYPE);
-        if (!TextUtils.isEmpty(type)) {
-            RTKNetworkServiceProvider provider = DJISDKManager.getInstance().getRTKNetworkServiceProvider().getInstance();
-            provider.setNetworkServiceCoordinateSystem(CoordinateSystem.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
-                    CommonDjiCallback(djiError, communication);
+    private void setNSCS() {
+        RTKNetworkServiceProvider provider = DJISDKManager.getInstance().getRTKNetworkServiceProvider().getInstance();
+        provider.setNetworkServiceCoordinateSystem(CoordinateSystem.WGS84, new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                if (djiError != null) {
+                    showToast("设置坐标系失败");
                 }
-            });
+            }
+        });
 
-//            https://bbs.dji.com/thread-247389-1-1.html
-            //设置千寻网
-//            NetworkServiceSettings.Builder builder=new NetworkServiceSettings.Builder().userName("").password("")
-//            provider.setCustomNetworkSettings(builder.build());
 
-        }
     }
 
     //设置网络rtk
@@ -4398,69 +4437,20 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private void setRTKNetwork(Communication communication) {
         isSendRTKStatusToSocket = false;//设置坐标为未发送状态
         RTKNetworkServiceProvider provider = DJISDKManager.getInstance().getRTKNetworkServiceProvider();
-        if (ModuleVerificationUtil.isRtkAvailable()) {
-            RTK mRtk = ((Aircraft) FPVDemoApplication.getProductInstance()).getFlightController().getRTK();
-            if (mRtk != null) {
-                //检测RKT连接状态
-                if (mRtk != null) {
-                    mRtk.setStateCallback(new RTKState.Callback() {
-                        @Override
-                        public void onUpdate(RTKState rtkState) {
-                            setRtkBean.setBaseStationAltitude(String.valueOf(rtkState.getBaseStationAltitude()));
-                            setRtkBean.setBaseStationLatitude(String.valueOf(rtkState.getBaseStationLocation().getLatitude()));
-                            setRtkBean.setBaseStationLongitude(String.valueOf(rtkState.getBaseStationLocation().getLongitude()));
-                            setRtkBean.setRTKBeingUsed(rtkState.isRTKBeingUsed());
-                            if (isSendRTKStatusToSocket == false) {
-                                isSendRTKStatusToSocket = true;
-                                communication.setResult(gson.toJson(setRtkBean, RTKBean.class));
-                                communication.setCode(200);
-                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                                NettyClient.getInstance().sendMessage(communication, null);
-                            }
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    text_net_rtk_state.setText("RTK：" + rtkState.isRTKBeingUsed() + "");
-                                }
-                            });
-                            if (rtkState.isRTKBeingUsed() == true) {
-                                //设置坐标系统
-                                provider.setNetworkServiceCoordinateSystem(CoordinateSystem.WGS84, new CommonCallbacks.CompletionCallback() {
-                                    @Override
-                                    public void onResult(DJIError djiError) {
-                                        if (djiError != null) {
-                                            showToast("设置网络RTK失败:" + djiError.getDescription());
-                                        } else {
-                                            showToast("设置网络RTK成功");
-                                        }
-                                    }
-
-                                });
-
-                            }
-                        }
-                    });
-                }
-
-            }
-
-        }
-
         if (ModuleVerificationUtil.isNetRtkAvailable()) {
             //设置网络RTK账号
             if (communication != null) {
-                setRtkBean.setUsername(communication.getPara().get("username"));
-                setRtkBean.setPassword(communication.getPara().get("password"));
-                setRtkBean.setMountPoint(communication.getPara().get("mountPoint"));
-                setRtkBean.setIp(communication.getPara().get("ip"));
-                setRtkBean.setPort(Integer.parseInt(communication.getPara().get("port")));
+                infoBean.setUsername(communication.getPara().get("username"));
+                infoBean.setPassword(communication.getPara().get("password"));
+                infoBean.setMountPoint(communication.getPara().get("mountPoint"));
+                infoBean.setIp(communication.getPara().get("ip"));
+                infoBean.setPort(Integer.parseInt(communication.getPara().get("port")));
             }
 
             NetworkServiceSettings.Builder builder = new NetworkServiceSettings.Builder()
-                    .userName(setRtkBean.getUsername()).password(setRtkBean.getPassword()).ip(setRtkBean.getIp())
-                    .mountPoint(setRtkBean.getMountPoint()).port(setRtkBean.getPort());
+                    .userName(infoBean.getUsername()).password(infoBean.getPassword()).ip(infoBean.getIp())
+                    .mountPoint(infoBean.getMountPoint()).port(infoBean.getPort());
             provider.setCustomNetworkSettings(builder.build());
-
 
             //启动网络RTK
             provider.startNetworkService(new CommonCallbacks.CompletionCallback() {
@@ -4485,13 +4475,44 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             text_net_rtk_account_state.setText("RTK账号状态:" + description5);
                         }
                     });
-
                 }
             });
-
-
+            addRTKStatus(communication);//监听RTK状态
         }
+    }
 
+    private void addRTKStatus(Communication communication) {
+        if (ModuleVerificationUtil.isRtkAvailable()) {
+            RTK mRtk = ((Aircraft) FPVDemoApplication.getProductInstance()).getFlightController().getRTK();
+            if (mRtk != null) {
+                //检测RKT连接状态
+                if (mRtk != null) {
+                    mRtk.setStateCallback(new RTKState.Callback() {
+                        @Override
+                        public void onUpdate(RTKState rtkState) {
+                            infoBean.setBaseStationLatitude(String.valueOf(rtkState.getBaseStationLocation().getLatitude()));
+                            infoBean.setBaseStationLongitude(String.valueOf(rtkState.getBaseStationLocation().getLongitude()));
+                            infoBean.setRTKBeingUsed(rtkState.isRTKBeingUsed());
+                            infoBean.setPositioningSolution(rtkState.getPositioningSolution());
+                            if (isSendRTKStatusToSocket == false) {
+                                isSendRTKStatusToSocket = true;
+                                communication.setResult(gson.toJson(infoBean, RTKBean.class));
+                                communication.setCode(200);
+                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                NettyClient.getInstance().sendMessage(communication, null);
+                            }
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    text_net_rtk_state.setText("RTK：" + rtkState.isRTKBeingUsed() + "");
+                                }
+                            });
+                        }
+                    });
+                }
+
+            }
+        }
     }
 
 
@@ -5483,7 +5504,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 /*AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setMessage(mWayPointActionV2);
                 builder.show();*/
-                Log.d("测试悬停mWayPointActionV2",mWayPointActionV2 + "");
+                Log.d("测试悬停mWayPointActionV2", mWayPointActionV2 + "");
                 myWayPointActionList = gson.fromJson(mWayPointActionV2, new TypeToken<List<WayPointsV2Bean.WayPointsBean>>() {
                 }.getType());
             } catch (Exception e) {
@@ -5497,7 +5518,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             if (waypointV2ActionList != null) {
                 waypointV2ActionList.clear();
             }
-            Log.d("测试悬停myWayPointActionList",myWayPointActionList.size() + myWayPointActionList.toString() + "\n" +new Gson().toJson(myWayPointActionList));
+            Log.d("测试悬停myWayPointActionList", myWayPointActionList.size() + myWayPointActionList.toString() + "\n" + new Gson().toJson(myWayPointActionList));
             try {
                 for (int i = 0; i < myWayPointActionList.size(); i++) {
                     WaypointTrigger waypointAction0Trigger = null;
@@ -5522,7 +5543,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                             .setWaitingTime(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime() == null ? "0" : myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()))
                                             .build())
                                     .build();
-                            Log.d("测试悬停setAssociateActionID",actionId -1 + "");
+                            Log.d("测试悬停setAssociateActionID", actionId - 1 + "");
                         }
                         switch (myWayPointActionList.get(i).getWayPointAction().get(j).getActionType()) {
                             case "0"://悬停
@@ -5618,7 +5639,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 .setActuator(waypointAction0Actuator)
                                 .build();
                         waypointV2ActionList.add(waypointAction0);
-                        Log.d("测试悬停actionId","actionType" +myWayPointActionList.get(i).getWayPointAction().get(j).getActionType() + actionId+"");
+                        Log.d("测试悬停actionId", "actionType" + myWayPointActionList.get(i).getWayPointAction().get(j).getActionType() + actionId + "");
 
                         //如果是悬停
                         if ("0".equals(myWayPointActionList.get(i).getWayPointAction().get(j).getActionType())) {
@@ -5626,12 +5647,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             waypointAction0Trigger = new WaypointTrigger.Builder()
                                     .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
                                     .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
-                                            .setAssociateActionID(actionId -1)
+                                            .setAssociateActionID(actionId - 1)
                                             .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
                                             .setWaitingTime(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()))
                                             .build())
                                     .build();
-                            Log.d("测试悬停setAssociateActionID","悬停起飞" + (actionId -1) + "时间"+ Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()));
+                            Log.d("测试悬停setAssociateActionID", "悬停起飞" + (actionId - 1) + "时间" + Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()));
                             waypointAction0Actuator = new WaypointActuator.Builder()
                                     .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
                                     .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
