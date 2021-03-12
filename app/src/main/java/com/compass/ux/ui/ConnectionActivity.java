@@ -139,7 +139,6 @@ import com.compass.ux.app.Constant;
 import com.compass.ux.app.MApplication;
 import com.compass.ux.R;
 import com.compass.ux.bean.BatteryPersentAndVoltageBean;
-import com.compass.ux.bean.BatteryStateBean;
 import com.compass.ux.bean.FlightControllerBean;
 import com.compass.ux.bean.LaserMeasureInformBean;
 import com.compass.ux.bean.RTKBean;
