@@ -1736,131 +1736,131 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 });
                 Log.e("相机位置", camera.getIndex() + "");
 
-//                //返回曝光模式
-//                camera.getLens(0).getExposureMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ExposureMode>() {
-//                    @Override
-//                    public void onSuccess(SettingsDefinitions.ExposureMode exposureMode) {
-//                        webInitializationBean.setExposureMode(exposureMode.value());
-//                    }
-//
-//                    @Override
-//                    public void onFailure(DJIError djiError) {
-//                    }
-//                });
-//                //返回iso数据
-//                camera.getLens(camera.getIndex()).getISO(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ISO>() {
-//                    @Override
-//                    public void onSuccess(SettingsDefinitions.ISO iso) {
-//                        webInitializationBean.setISO(iso.value());
-//                    }
-//
-//                    @Override
-//                    public void onFailure(DJIError djiError) {
-//
-//                    }
-//                });
-//                //返回shutter数据
-//                camera.getLens(0).getShutterSpeed(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ShutterSpeed>() {
-//                    @Override
-//                    public void onSuccess(SettingsDefinitions.ShutterSpeed shutterSpeed) {
-//                        webInitializationBean.setShutter(shutterSpeed.value());
-//                    }
-//
-//                    @Override
-//                    public void onFailure(DJIError djiError) {
-//                    }
-//                });
-//                //返回曝光补偿
-//                camera.getLens(camera.getIndex()).getExposureCompensation(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ExposureCompensation>() {
-//                    @Override
-//                    public void onSuccess(SettingsDefinitions.ExposureCompensation exposureCompensation) {
-//                        webInitializationBean.setExposureCompensation(exposureCompensation.value());
-//                    }
-//
-//                    @Override
-//                    public void onFailure(DJIError djiError) {
-//
-//                    }
-//                });
-//
-//                camera.getLens(0).getFocusMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.FocusMode>() {
-//                    @Override
-//                    public void onSuccess(SettingsDefinitions.FocusMode focusMode) {
-//                        webInitializationBean.setFocusMode(focusMode.value() + "");
-//                    }
-//
-//                    @Override
-//                    public void onFailure(DJIError djiError) {
-//
-//                    }
-//                });
-//
-//                camera.getLens(0).getAELock(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
-//                    @Override
-//                    public void onSuccess(Boolean aBoolean) {
-//                        webInitializationBean.setLockExposure(aBoolean ? "0" : "1");
-//                    }
-//
-//                    @Override
-//                    public void onFailure(DJIError djiError) {
-//
-//                    }
-//                });
-//
-//                camera.getLens(2).getThermalDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ThermalDigitalZoomFactor>() {
-//                    @Override
-//                    public void onSuccess(SettingsDefinitions.ThermalDigitalZoomFactor thermalDigitalZoomFactor) {
-//                        webInitializationBean.setThermalDigitalZoom(thermalDigitalZoomFactor.value() + "");
-//                    }
-//
-//                    @Override
-//                    public void onFailure(DJIError djiError) {
-//
-//                    }
-//                });
-//
-//                camera.getLens(2).getDisplayMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.DisplayMode>() {
-//                    @Override
-//                    public void onSuccess(SettingsDefinitions.DisplayMode displayMode) {
-//                        webInitializationBean.setHyDisplayMode(displayMode.value() + "");
-//                    }
-//
-//                    @Override
-//                    public void onFailure(DJIError djiError) {
-//
-//                    }
-//                });
-//
-//
-////                获取变焦距离
-//                camera.getLens(camera.getIndex()).getHybridZoomSpec(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.HybridZoomSpec>() {
-//                    @Override
-//                    public void onSuccess(SettingsDefinitions.HybridZoomSpec hybridZoomSpec) {
-//
-//                        Log.d("HHHHHFocalLength", hybridZoomSpec.getFocalLengthStep() + "");//11
-//                        Log.d("HHHHHMaxH", hybridZoomSpec.getMaxHybridFocalLength() + "");//55620
-//                        Log.d("HHHHHMinH", hybridZoomSpec.getMinHybridFocalLength() + "");//317
-//                        Log.d("HHHHHMaxO", hybridZoomSpec.getMaxOpticalFocalLength() + "");//5562
-//                    }
-//
-//                    @Override
-//                    public void onFailure(DJIError djiError) {
-//
-//                    }
-//                });
-////                获取当前变焦焦距
-//                camera.getLens(0).getHybridZoomFocalLength(new CommonCallbacks.CompletionCallbackWith<Integer>() {
-//                    @Override
-//                    public void onSuccess(Integer integer) {
-////                    Log.d("HHHHHcurr", integer + "");
-//                        webInitializationBean.setHybridZoom(integer);
-//                    }
-//
-//                    @Override
-//                    public void onFailure(DJIError djiError) {
-////                    Log.d("HHHHHcurr", djiError.toString());
-//                    }
-//                });
+                //返回曝光模式
+                camera.getLens(0).getExposureMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ExposureMode>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.ExposureMode exposureMode) {
+                        webInitializationBean.setExposureMode(exposureMode.value());
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+                    }
+                });
+                //返回iso数据
+                camera.getLens(camera.getIndex()).getISO(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ISO>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.ISO iso) {
+                        webInitializationBean.setISO(iso.value());
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+                //返回shutter数据
+                camera.getLens(0).getShutterSpeed(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ShutterSpeed>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.ShutterSpeed shutterSpeed) {
+                        webInitializationBean.setShutter(shutterSpeed.value());
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+                    }
+                });
+                //返回曝光补偿
+                camera.getLens(camera.getIndex()).getExposureCompensation(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ExposureCompensation>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.ExposureCompensation exposureCompensation) {
+                        webInitializationBean.setExposureCompensation(exposureCompensation.value());
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+
+                camera.getLens(0).getFocusMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.FocusMode>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.FocusMode focusMode) {
+                        webInitializationBean.setFocusMode(focusMode.value() + "");
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+
+                camera.getLens(0).getAELock(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean aBoolean) {
+                        webInitializationBean.setLockExposure(aBoolean ? "0" : "1");
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+
+                camera.getLens(2).getThermalDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ThermalDigitalZoomFactor>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.ThermalDigitalZoomFactor thermalDigitalZoomFactor) {
+                        webInitializationBean.setThermalDigitalZoom(thermalDigitalZoomFactor.value() + "");
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+
+                camera.getLens(2).getDisplayMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.DisplayMode>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.DisplayMode displayMode) {
+                        webInitializationBean.setHyDisplayMode(displayMode.value() + "");
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+
+
+//                获取变焦距离
+                camera.getLens(camera.getIndex()).getHybridZoomSpec(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.HybridZoomSpec>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.HybridZoomSpec hybridZoomSpec) {
+
+                        Log.d("HHHHHFocalLength", hybridZoomSpec.getFocalLengthStep() + "");//11
+                        Log.d("HHHHHMaxH", hybridZoomSpec.getMaxHybridFocalLength() + "");//55620
+                        Log.d("HHHHHMinH", hybridZoomSpec.getMinHybridFocalLength() + "");//317
+                        Log.d("HHHHHMaxO", hybridZoomSpec.getMaxOpticalFocalLength() + "");//5562
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+//                获取当前变焦焦距
+                camera.getLens(0).getHybridZoomFocalLength(new CommonCallbacks.CompletionCallbackWith<Integer>() {
+                    @Override
+                    public void onSuccess(Integer integer) {
+//                    Log.d("HHHHHcurr", integer + "");
+                        webInitializationBean.setHybridZoom(integer);
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+//                    Log.d("HHHHHcurr", djiError.toString());
+                    }
+                });
             } else {
                 showToast("请检查摄像头或者其他挂载类型！！！");
             }
