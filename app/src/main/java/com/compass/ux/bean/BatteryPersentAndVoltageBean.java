@@ -7,14 +7,34 @@ import java.util.List;
  * on 2020-08-05 18:34
  */
 public class BatteryPersentAndVoltageBean {
+    //是否连接
+    private int isConnectOne;
+    private int isConnectTwo;
+
+    public int getIsConnectOne() {
+        return isConnectOne;
+    }
+
+    public void setIsConnectOne(int isConnectOne) {
+        this.isConnectOne = isConnectOne;
+    }
+
+    public int getIsConnectTwo() {
+        return isConnectTwo;
+    }
+
+    public void setIsConnectTwo(int isConnectTwo) {
+        this.isConnectTwo = isConnectTwo;
+    }
+
     //电池1剩余百分百
-    private String persentOne;
+    private int persentOne;
     //电池2剩余百分百
-    private String persentTwo;
+    private int persentTwo;
     //电池1电压
-    private String voltageOne;
+    private int voltageOne;
     //电池2电压
-    private String voltageTwo;
+    private int voltageTwo;
     //电池1电压组
     private List<Float> battery_list_one;
     //电池2电压组
@@ -24,13 +44,13 @@ public class BatteryPersentAndVoltageBean {
     //电池2电量组
     private List<String> battery_list_per_two;
     //温度1
-    private String battery_temperature_one;
+    private float battery_temperature_one;
     //温度2
-    private String battery_temperature_two;
+    private float battery_temperature_two;
     //循环次数1
-    private String battery_discharges_one;
+    private int battery_discharges_one;
     //循环次数2
-    private String battery_discharges_two;
+    private int battery_discharges_two;
 
     public List<String> getBattery_list_per_one() {
         return battery_list_per_one;
@@ -48,35 +68,35 @@ public class BatteryPersentAndVoltageBean {
         this.battery_list_per_two = battery_list_per_two;
     }
 
-    public String getBattery_discharges_one() {
+    public int getBattery_discharges_one() {
         return battery_discharges_one;
     }
 
-    public void setBattery_discharges_one(String battery_discharges_one) {
+    public void setBattery_discharges_one(int battery_discharges_one) {
         this.battery_discharges_one = battery_discharges_one;
     }
 
-    public String getBattery_discharges_two() {
+    public int getBattery_discharges_two() {
         return battery_discharges_two;
     }
 
-    public void setBattery_discharges_two(String battery_discharges_two) {
+    public void setBattery_discharges_two(int battery_discharges_two) {
         this.battery_discharges_two = battery_discharges_two;
     }
 
-    public String getBattery_temperature_one() {
+    public float getBattery_temperature_one() {
         return battery_temperature_one;
     }
 
-    public void setBattery_temperature_one(String battery_temperature_one) {
+    public void setBattery_temperature_one(float battery_temperature_one) {
         this.battery_temperature_one = battery_temperature_one;
     }
 
-    public String getBattery_temperature_two() {
+    public float getBattery_temperature_two() {
         return battery_temperature_two;
     }
 
-    public void setBattery_temperature_two(String battery_temperature_two) {
+    public void setBattery_temperature_two(float battery_temperature_two) {
         this.battery_temperature_two = battery_temperature_two;
     }
 
@@ -96,35 +116,35 @@ public class BatteryPersentAndVoltageBean {
         this.battery_list_two = battery_list_two;
     }
 
-    public String getPersentOne() {
+    public int getPersentOne() {
         return persentOne;
     }
 
-    public void setPersentOne(String persentOne) {
+    public void setPersentOne(int persentOne) {
         this.persentOne = persentOne;
     }
 
-    public String getPersentTwo() {
+    public int getPersentTwo() {
         return persentTwo;
     }
 
-    public void setPersentTwo(String persentTwo) {
+    public void setPersentTwo(int persentTwo) {
         this.persentTwo = persentTwo;
     }
 
-    public String getVoltageOne() {
+    public int getVoltageOne() {
         return voltageOne;
     }
 
-    public void setVoltageOne(String voltageOne) {
+    public void setVoltageOne(int voltageOne) {
         this.voltageOne = voltageOne;
     }
 
-    public String getVoltageTwo() {
+    public int getVoltageTwo() {
         return voltageTwo;
     }
 
-    public void setVoltageTwo(String voltageTwo) {
+    public void setVoltageTwo(int voltageTwo) {
         this.voltageTwo = voltageTwo;
     }
 

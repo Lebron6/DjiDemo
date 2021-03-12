@@ -50,71 +50,10 @@ public class BatteryStateBean {
      */
     private int numberOfDischarges;
 
-
-
-    //文档有 sdk无
-//    /**
-//     * 返回电池组中电池的概述。如果未连接电池，则isConnected属性为，false且getChargeRemainingInPercent为零。对于Matrice 600，此数组中有6个元素。
-//     */
-//    private BatteryOverviewBean batteryOverviews;
-//
-//    /**
-//     *true如果组中的电池之一已断开连接。时true，飞机不允许起飞。
-//     */
-//    private boolean isAnyBatteryDisconnected;
-//
-//    /**
-//     *true如果两个电池的电压（高于1.5V）之间存在明显差异。时 true，飞机不允许起飞。
-//     */
-//    private boolean isVoltageDifferenceDetected;
-//
-//    /**
-//     *true该组中的一块电池是否已损坏。时true，飞机不允许起飞
-//     */
-//    private boolean isCellDamaged;
-//
-//    private class BatteryOverviewBean{
-//        /**
-//         * 电池的索引。索引从0开始。对于Matrice 600，数字1的电池仓与索引0相关。
-//         */
-//        private int index;
-//
-//        /**
-//         *true 当前已将电池连接至飞机。
-//         */
-//        private boolean isConnected;
-//
-//        /**
-//         *电池的剩余电量百分比范围为[0，100]。
-//         */
-//        private int chargeRemainingInPercent;
-//
-//        public int getIndex() {
-//            return index;
-//        }
-//
-//        public void setIndex(int index) {
-//            this.index = index;
-//        }
-//
-//        public boolean isConnected() {
-//            return isConnected;
-//        }
-//
-//        public void setConnected(boolean connected) {
-//            isConnected = connected;
-//        }
-//
-//        public int getChargeRemainingInPercent() {
-//            return chargeRemainingInPercent;
-//        }
-//
-//        public void setChargeRemainingInPercent(int chargeRemainingInPercent) {
-//            this.chargeRemainingInPercent = chargeRemainingInPercent;
-//        }
-//    }
-
-
+    /**
+     * 电池的索引。索引从0开始。对于Matrice 600，数字1的电池仓与索引0相关。
+     */
+    private int index;
 
     public int getFullChargeCapacity() {
         return fullChargeCapacity;
@@ -188,37 +127,26 @@ public class BatteryStateBean {
         this.numberOfDischarges = numberOfDischarges;
     }
 
+    public int getIndex() {
+        return index;
+    }
 
-    //电量
-//            FPVDemoApplication.getProductInstance().getBattery().setStateCallback(new BatteryState.Callback() {
-//                @Override
-//                public void onUpdate(BatteryState batteryState) {
-//                    Log.d("batteryState",batteryState.toString());
-//                    if (fastClick.batteryClick()) {
-//                        if (batteryStateBean == null) {
-//                            batteryStateBean = new BatteryStateBean();
-//                        }
-//                        batteryStateBean.setFullChargeCapacity(batteryState.getFullChargeCapacity());
-//                        batteryStateBean.setChargeRemaining(batteryState.getChargeRemaining());
-//                        batteryStateBean.setChargeRemainingInPercent(batteryState.getChargeRemainingInPercent());
-//                        batteryStateBean.setDesignCapacity(batteryState.getDesignCapacity());
-//                        batteryStateBean.setVoltage(batteryState.getVoltage());
-//                        batteryStateBean.setCurrent(batteryState.getCurrent());
-//                        batteryStateBean.setLifetimeRemaining(batteryState.getLifetimeRemaining());
-//                        batteryStateBean.setTemperature(batteryState.getTemperature());
-//                        batteryStateBean.setNumberOfDischarges(batteryState.getNumberOfDischarges());
-//
-//                        if (communication_battery == null) {
-//                            communication_battery = new Communication();
-//                        }
-//                        communication_battery.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                        communication_battery.setEquipmentId(MApplication.EQUIPMENT_ID);
-//                        communication_battery.setMethod(RsaUtil.encrypt("battery"));
-//                        communication_battery.setResult(gson.toJson(batteryStateBean, BatteryStateBean.class));
-////                        Log.d("NNNNN",communication_battery.toString());
-//                        NettyClient.getInstance().sendMessage(communication_battery, null);
-//                    }
-//                }
-//            });
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    public boolean isConnected() {
+        return isConnected;
+    }
+
+    public void setConnected(boolean connected) {
+        isConnected = connected;
+    }
+
+    /**
+     *true 当前已将电池连接至飞机。
+     */
+    private boolean isConnected;
+
 
 }

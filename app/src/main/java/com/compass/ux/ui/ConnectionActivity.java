@@ -24,7 +24,6 @@ import dji.common.flightcontroller.ObstacleDetectionSector;
 import dji.common.flightcontroller.RTKState;
 import dji.common.flightcontroller.VisionDetectionState;
 import dji.common.flightcontroller.WindDirection;
-import dji.common.flightcontroller.accesslocker.AccessLockerState;
 import dji.common.flightcontroller.flightassistant.PerceptionInformation;
 import dji.common.flightcontroller.rtk.CoordinateSystem;
 import dji.common.flightcontroller.rtk.NetworkServiceSettings;
@@ -81,25 +80,20 @@ import dji.common.product.Model;
 import dji.common.useraccount.UserAccountState;
 import dji.common.util.CommonCallbacks;
 import dji.keysdk.AirLinkKey;
-import dji.keysdk.BatteryKey;
 import dji.keysdk.DiagnosticsKey;
 import dji.keysdk.FlightControllerKey;
 import dji.keysdk.GimbalKey;
 import dji.keysdk.KeyManager;
 import dji.keysdk.callback.GetCallback;
-import dji.keysdk.callback.KeyListener;
 import dji.keysdk.callback.SetCallback;
-import dji.midware.data.model.P3.Ca;
 import dji.sdk.airlink.OcuSyncLink;
 import dji.sdk.airlink.WiFiLink;
 import dji.sdk.base.BaseProduct;
 import dji.sdk.base.DJIDiagnostics;
 import dji.sdk.battery.Battery;
 import dji.sdk.camera.Camera;
-import dji.sdk.camera.Lens;
 import dji.sdk.camera.VideoFeeder;
 import dji.sdk.codec.DJICodecManager;
-import dji.sdk.flightcontroller.AccessLocker;
 import dji.sdk.flightcontroller.FlightAssistant;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.flightcontroller.RTK;
@@ -118,8 +112,6 @@ import dji.sdk.sdkmanager.DJISDKManager;
 import dji.sdk.useraccount.UserAccountManager;
 
 import android.app.AlarmManager;
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -136,9 +128,7 @@ import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -149,6 +139,7 @@ import com.compass.ux.app.Constant;
 import com.compass.ux.app.MApplication;
 import com.compass.ux.R;
 import com.compass.ux.bean.BatteryPersentAndVoltageBean;
+import com.compass.ux.bean.BatteryStateBean;
 import com.compass.ux.bean.FlightControllerBean;
 import com.compass.ux.bean.LaserMeasureInformBean;
 import com.compass.ux.bean.RTKBean;
@@ -173,15 +164,8 @@ import com.compass.ux.utils.SPUtils;
 import com.compass.ux.utils.fastClick;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.squareup.wire.Message;
 
-import org.json.JSONObject;
-
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
@@ -194,7 +178,6 @@ import java.util.TimerTask;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import static dji.common.camera.CameraVideoStreamSource.DEFAULT;
 import static dji.common.camera.CameraVideoStreamSource.INFRARED_THERMAL;
@@ -735,13 +718,14 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             refreshSDKRelativeUI();
             initFlightController();
             initCamera();
-            initBattery();
+
 //            initGimbal();
 //            addWaypointMissionListener();//添加航点的监听
             initErrorLog();//初始化错误日志
             initOcuSyncLink();
             initPreviewer();
             startLiveShow(null);//开始推流
+            initBattery();
         }
     };
 
@@ -1754,130 +1738,130 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 Log.e("相机位置", camera.getIndex() + "");
 
 //                //返回曝光模式
-                camera.getLens(0).getExposureMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ExposureMode>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.ExposureMode exposureMode) {
-                        webInitializationBean.setExposureMode(exposureMode.value());
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-                    }
-                });
-                //返回iso数据
-                camera.getLens(camera.getIndex()).getISO(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ISO>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.ISO iso) {
-                        webInitializationBean.setISO(iso.value());
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
-                //返回shutter数据
-                camera.getLens(0).getShutterSpeed(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ShutterSpeed>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.ShutterSpeed shutterSpeed) {
-                        webInitializationBean.setShutter(shutterSpeed.value());
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-                    }
-                });
-                //返回曝光补偿
-                camera.getLens(camera.getIndex()).getExposureCompensation(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ExposureCompensation>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.ExposureCompensation exposureCompensation) {
-                        webInitializationBean.setExposureCompensation(exposureCompensation.value());
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
-
-                camera.getLens(0).getFocusMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.FocusMode>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.FocusMode focusMode) {
-                        webInitializationBean.setFocusMode(focusMode.value() + "");
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
-
-                camera.getLens(0).getAELock(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
-                    @Override
-                    public void onSuccess(Boolean aBoolean) {
-                        webInitializationBean.setLockExposure(aBoolean ? "0" : "1");
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
-
-                camera.getLens(2).getThermalDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ThermalDigitalZoomFactor>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.ThermalDigitalZoomFactor thermalDigitalZoomFactor) {
-                        webInitializationBean.setThermalDigitalZoom(thermalDigitalZoomFactor.value() + "");
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
-
-                camera.getLens(2).getDisplayMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.DisplayMode>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.DisplayMode displayMode) {
-                        webInitializationBean.setHyDisplayMode(displayMode.value() + "");
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
-
-
-//                获取变焦距离
-                camera.getLens(camera.getIndex()).getHybridZoomSpec(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.HybridZoomSpec>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.HybridZoomSpec hybridZoomSpec) {
-
-                        Log.d("HHHHHFocalLength", hybridZoomSpec.getFocalLengthStep() + "");//11
-                        Log.d("HHHHHMaxH", hybridZoomSpec.getMaxHybridFocalLength() + "");//55620
-                        Log.d("HHHHHMinH", hybridZoomSpec.getMinHybridFocalLength() + "");//317
-                        Log.d("HHHHHMaxO", hybridZoomSpec.getMaxOpticalFocalLength() + "");//5562
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
-//                获取当前变焦焦距
-                camera.getLens(0).getHybridZoomFocalLength(new CommonCallbacks.CompletionCallbackWith<Integer>() {
-                    @Override
-                    public void onSuccess(Integer integer) {
-//                    Log.d("HHHHHcurr", integer + "");
-                        webInitializationBean.setHybridZoom(integer);
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-//                    Log.d("HHHHHcurr", djiError.toString());
-                    }
-                });
+//                camera.getLens(0).getExposureMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ExposureMode>() {
+//                    @Override
+//                    public void onSuccess(SettingsDefinitions.ExposureMode exposureMode) {
+//                        webInitializationBean.setExposureMode(exposureMode.value());
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+//                    }
+//                });
+//                //返回iso数据
+//                camera.getLens(camera.getIndex()).getISO(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ISO>() {
+//                    @Override
+//                    public void onSuccess(SettingsDefinitions.ISO iso) {
+//                        webInitializationBean.setISO(iso.value());
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+//
+//                    }
+//                });
+//                //返回shutter数据
+//                camera.getLens(0).getShutterSpeed(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ShutterSpeed>() {
+//                    @Override
+//                    public void onSuccess(SettingsDefinitions.ShutterSpeed shutterSpeed) {
+//                        webInitializationBean.setShutter(shutterSpeed.value());
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+//                    }
+//                });
+//                //返回曝光补偿
+//                camera.getLens(camera.getIndex()).getExposureCompensation(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ExposureCompensation>() {
+//                    @Override
+//                    public void onSuccess(SettingsDefinitions.ExposureCompensation exposureCompensation) {
+//                        webInitializationBean.setExposureCompensation(exposureCompensation.value());
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+//
+//                    }
+//                });
+//
+//                camera.getLens(0).getFocusMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.FocusMode>() {
+//                    @Override
+//                    public void onSuccess(SettingsDefinitions.FocusMode focusMode) {
+//                        webInitializationBean.setFocusMode(focusMode.value() + "");
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+//
+//                    }
+//                });
+//
+//                camera.getLens(0).getAELock(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+//                    @Override
+//                    public void onSuccess(Boolean aBoolean) {
+//                        webInitializationBean.setLockExposure(aBoolean ? "0" : "1");
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+//
+//                    }
+//                });
+//
+//                camera.getLens(2).getThermalDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ThermalDigitalZoomFactor>() {
+//                    @Override
+//                    public void onSuccess(SettingsDefinitions.ThermalDigitalZoomFactor thermalDigitalZoomFactor) {
+//                        webInitializationBean.setThermalDigitalZoom(thermalDigitalZoomFactor.value() + "");
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+//
+//                    }
+//                });
+//
+//                camera.getLens(2).getDisplayMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.DisplayMode>() {
+//                    @Override
+//                    public void onSuccess(SettingsDefinitions.DisplayMode displayMode) {
+//                        webInitializationBean.setHyDisplayMode(displayMode.value() + "");
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+//
+//                    }
+//                });
+//
+//
+////                获取变焦距离
+//                camera.getLens(camera.getIndex()).getHybridZoomSpec(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.HybridZoomSpec>() {
+//                    @Override
+//                    public void onSuccess(SettingsDefinitions.HybridZoomSpec hybridZoomSpec) {
+//
+//                        Log.d("HHHHHFocalLength", hybridZoomSpec.getFocalLengthStep() + "");//11
+//                        Log.d("HHHHHMaxH", hybridZoomSpec.getMaxHybridFocalLength() + "");//55620
+//                        Log.d("HHHHHMinH", hybridZoomSpec.getMinHybridFocalLength() + "");//317
+//                        Log.d("HHHHHMaxO", hybridZoomSpec.getMaxOpticalFocalLength() + "");//5562
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+//
+//                    }
+//                });
+////                获取当前变焦焦距
+//                camera.getLens(0).getHybridZoomFocalLength(new CommonCallbacks.CompletionCallbackWith<Integer>() {
+//                    @Override
+//                    public void onSuccess(Integer integer) {
+////                    Log.d("HHHHHcurr", integer + "");
+//                        webInitializationBean.setHybridZoom(integer);
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+////                    Log.d("HHHHHcurr", djiError.toString());
+//                    }
+//                });
             } else {
                 showToast("请检查摄像头或者其他挂载类型！！！");
             }
@@ -1886,202 +1870,76 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
     }
 
-    String battery_one = "100", battery_two = "100", battery_voltages_one = "0", battery_voltages_two = "0", battery_temperature_one = "", battery_temperature_two = "";
-    List<Float> battery_list_one = new ArrayList<>();
-    List<Float> battery_list_two = new ArrayList<>();
-    List<String> battery_list_per_one = new ArrayList<>();
-    List<String> battery_list_per_two = new ArrayList<>();
-    String battery_discharges_one = "", battery_discharges_two = "";
-    boolean is_battery_one_change = false, is_battery_two_change = false;
-
-
+int chargeRemainingInPercent0,chargeRemainingInPercent1;//电池电量是否发生改变
     private void initBattery() {
-        Log.e("initBattery", "是否执行");
-        showToast("初始化电池");
-        BaseProduct product = DJISDKManager.getInstance().getProduct();
+        BaseProduct product = FPVDemoApplication.getProductInstance();
         if (product != null) {
             List<Battery> batteries = product.getBatteries();
             if (batteries != null) {
-                Log.e("initBattery", "电池数目"+batteries.size() );
-                batteries.get(0).setStateCallback(new BatteryState.Callback() {
+                Battery battery0 = batteries.get(0);
+                Battery battery1 = batteries.get(1);
+                battery0.setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                text_net_rtk_state.setText("电池电量1："+batteryState.getChargeRemainingInPercent());
-                            }
-                        });
-                        Log.e("initBattery", "电池1电量"+batteryState.getChargeRemainingInPercent() );
+                        if (chargeRemainingInPercent0!=batteryState.getChargeRemainingInPercent()){
+                           chargeRemainingInPercent0=batteryState.getChargeRemainingInPercent();
+                            submitBatteryInfo(batteryState,battery0);
+                        }
                     }
                 });
-                if (batteries.size() == 1) {
-                    Log.e("initBattery", "电池数1");
-                    return;
-                }
-                batteries.get(1).setStateCallback(new BatteryState.Callback() {
+                battery1.setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                text_net_rtk_account_state.setText("电池电量2："+batteryState.getChargeRemainingInPercent());
-                            }
-                        });
-                        Log.e("initBattery", "电池2电量"+batteryState.getChargeRemainingInPercent() );
+                        if (chargeRemainingInPercent1!=batteryState.getChargeRemainingInPercent()){
+                            chargeRemainingInPercent1=batteryState.getChargeRemainingInPercent();
+                            submitBatteryInfo(batteryState,battery1);
 
+                        }
                     }
                 });
 
             } else {
-                Log.e("initBattery", "batteries:null");
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        initBattery();
+                    }
+                },1000);
             }
-        } else {
-            Log.e("initBattery", "product:null");
         }
-//        DJISDKManager.getInstance().getProduct();
-//
-//
-//        BatteryKey battery_per_one = BatteryKey.create(BatteryKey.CHARGE_REMAINING_IN_PERCENT);
-//        BatteryKey battery_per_two = BatteryKey.create(BatteryKey.CHARGE_REMAINING_IN_PERCENT, 1);
-//
-//
-//        BatteryKey battery_voltage_one = BatteryKey.create(BatteryKey.CELL_VOLTAGES);
-//        BatteryKey battery_voltage_two = BatteryKey.create(BatteryKey.CELL_VOLTAGES, 1);
-//        BatteryKey temperature_one = BatteryKey.create(BatteryKey.TEMPERATURE);
-//        BatteryKey temperature_two = BatteryKey.create(BatteryKey.TEMPERATURE, 1);
-//        BatteryKey discharges_one = BatteryKey.create(BatteryKey.NUMBER_OF_DISCHARGES);
-//        BatteryKey discharges_two = BatteryKey.create(BatteryKey.NUMBER_OF_DISCHARGES, 1);
-//        KeyManager.getInstance().addListener(battery_per_one, new KeyListener() {
-//            @Override
-//            public void onValueChange(Object o, Object o1) {
-//                if (fastClick.batteryClick()) {
-//                    is_battery_one_change = true;
-//                    battery_one = o1.toString();
-//                    if (!is_battery_two_change) {
-//                        battery_two = o1.toString();
-//                    }
-//                    Log.d("battery_one", battery_one);
-//                    if (o1 != null && o1 instanceof Integer[]) {
-//                        for (int i = 0; i < ((Integer[]) o1).length; i++) {
-//                            int aaa = ((Integer[]) o1)[i];
-//                            battery_list_per_one.add(aaa + "");
-//                        }
-//                    }
-//                    Log.d("battery_one", battery_list_per_one.toString());
-//                    submitBatteryPersentAndV();
-//                }
-//            }
-//        });
-//        KeyManager.getInstance().addListener(battery_per_two, new KeyListener() {
-//            @Override
-//            public void onValueChange(Object o, Object o1) {
-//                if (fastClick.batteryClick()) {
-//                    battery_two = o1.toString();
-//                    is_battery_two_change = true;
-//                    if (!is_battery_one_change) {
-//                        battery_one = o1.toString();
-//                    }
-//
-//                    Log.d("battery_two", battery_two);
-//                    if (o1 != null && o1 instanceof Integer[]) {
-//                        for (int i = 0; i < ((Integer[]) o1).length; i++) {
-//                            int aaa = ((Integer[]) o1)[i];
-//                            battery_list_per_two.add(aaa + "");
-//                        }
-//                    }
-//                    Log.d("battery_two", battery_list_per_two.toString());
-//                    submitBatteryPersentAndV();
-//                }
-//            }
-//        });
-//        //十几个电池先驻掉有用
-//        KeyManager.getInstance().addListener(battery_voltage_one, new KeyListener() {
-//            @Override
-//            public void onValueChange(Object o, Object o1) {
-//                if (fastClick.batteryClick()) {
-//                    battery_voltages_one = getMinVoltage(o1) + "";
-//                    if (o1 != null && o1 instanceof Integer[]) {
-//                        for (int i = 0; i < ((Integer[]) o1).length; i++) {
-//                            int aaa = ((Integer[]) o1)[i];
-//                            battery_list_one.add((float) (aaa * 1.0F / 1000.0F));
-//                        }
-//                    }
-        submitBatteryPersentAndV();
-//                }
-//
-//            }
-//        });
-//        KeyManager.getInstance().addListener(battery_voltage_two, new KeyListener() {
-//            @Override
-//            public void onValueChange(Object o, Object o1) {
-//                if (fastClick.batteryClick()) {
-//                    battery_voltages_two = getMinVoltage(o1) + "";
-//                    if (o1 != null && o1 instanceof Integer[]) {
-//                        for (int i = 0; i < ((Integer[]) o1).length; i++) {
-//                            int aaa = ((Integer[]) o1)[i];
-//                            battery_list_two.add((float) (aaa * 1.0F / 1000.0F));
-//                        }
-//
-//                    }
-//                    submitBatteryPersentAndV();
-//                }
-//            }
-//        });
-//        KeyManager.getInstance().addListener(temperature_one, new KeyListener() {
-//            @Override
-//            public void onValueChange(Object o, Object o1) {
-//                battery_temperature_one = o1 + "";
-//                submitBatteryPersentAndV();
-//            }
-//        });
-//        KeyManager.getInstance().addListener(temperature_two, new KeyListener() {
-//            @Override
-//            public void onValueChange(Object o, Object o1) {
-//                battery_temperature_two = o1 + "";
-//                submitBatteryPersentAndV();
-//            }
-//        });
-//        KeyManager.getInstance().addListener(discharges_one, new KeyListener() {
-//            @Override
-//            public void onValueChange(Object o, Object o1) {
-//                battery_discharges_one = o1 + "";
-//                submitBatteryPersentAndV();
-//            }
-//        });
-//        KeyManager.getInstance().addListener(discharges_two, new KeyListener() {
-//            @Override
-//            public void onValueChange(Object o, Object o1) {
-//                battery_discharges_two = o1 + "";
-//                submitBatteryPersentAndV();
-//            }
-//        });
-//        //第一次获取电量
-//        KeyManager.getInstance().getValue(battery_per_one, new GetCallback() {
-//            @Override
-//            public void onSuccess(Object o) {
-//                int b_one = (Integer) o;
-//                battery_one = b_one + "";
-//                KeyManager.getInstance().getValue(battery_per_two, new GetCallback() {
-//                    @Override
-//                    public void onSuccess(Object o) {
-//                        int b_two = (Integer) o;
-//                        battery_two = b_two + "";
-//                        submitBatteryPersentAndV();
-//                    }
-//
-//                    @Override
-//                    public void onFailure(DJIError djiError) {
-//
-//                    }
-//                });
-//            }
-//
-//            @Override
-//            public void onFailure(DJIError djiError) {
-//
-//            }
-//        });
+    }
+    //推送电池状态
+    BatteryPersentAndVoltageBean stateBean;
+    private void submitBatteryInfo(BatteryState batteryState, Battery battery) {
+        if (stateBean==null){
+            stateBean=new BatteryPersentAndVoltageBean();
+        }
+        switch (battery.getIndex()){
+            case 0:
+                stateBean.setBattery_discharges_one(batteryState.getNumberOfDischarges());
+                stateBean.setBattery_temperature_one(batteryState.getTemperature());
+                stateBean.setPersentOne(batteryState.getChargeRemainingInPercent());
+                stateBean.setVoltageOne(batteryState.getVoltage());
+                stateBean.setIsConnectOne(battery.isConnected()?0:-1);
+                break;
+            case 1:
+                stateBean.setBattery_discharges_two(batteryState.getNumberOfDischarges());
+                stateBean.setBattery_temperature_two(batteryState.getTemperature());
+                stateBean.setPersentTwo(batteryState.getChargeRemainingInPercent());
+                stateBean.setVoltageTwo(batteryState.getVoltage());
+                stateBean.setIsConnectTwo(battery.isConnected()?0:-1);
+
+                break;
+        }
+
+        if (communication_battery == null) {
+            communication_battery = new Communication();
+        }
+        communication_battery.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+        communication_battery.setEquipmentId(MApplication.EQUIPMENT_ID);
+        communication_battery.setMethod((Constant.BatteryPAV));
+        communication_battery.setResult(gson.toJson(stateBean, BatteryPersentAndVoltageBean.class));
+        NettyClient.getInstance().sendMessage(communication_battery, null);
     }
 
     String gimbal_pitch_speed = "", gimbal_yaw_speed = "";
@@ -2169,29 +2027,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     }
 
-    private void submitBatteryPersentAndV() {
-        BatteryPersentAndVoltageBean batteryPersentAndVoltageBean = new BatteryPersentAndVoltageBean();
-        batteryPersentAndVoltageBean.setPersentOne(battery_one);
-        batteryPersentAndVoltageBean.setPersentTwo(battery_two);
-        batteryPersentAndVoltageBean.setVoltageOne(battery_voltages_one);
-        batteryPersentAndVoltageBean.setVoltageTwo(battery_voltages_two);
-        batteryPersentAndVoltageBean.setBattery_list_one(battery_list_one);
-        batteryPersentAndVoltageBean.setBattery_list_two(battery_list_two);
-        batteryPersentAndVoltageBean.setBattery_list_per_one(battery_list_per_one);
-        batteryPersentAndVoltageBean.setBattery_list_per_two(battery_list_per_two);
-        batteryPersentAndVoltageBean.setBattery_temperature_one(battery_temperature_one);
-        batteryPersentAndVoltageBean.setBattery_temperature_two(battery_temperature_two);
-        batteryPersentAndVoltageBean.setBattery_discharges_one(battery_discharges_one);
-        batteryPersentAndVoltageBean.setBattery_discharges_two(battery_discharges_two);
-        if (communication_battery == null) {
-            communication_battery = new Communication();
-        }
-        communication_battery.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-        communication_battery.setEquipmentId(MApplication.EQUIPMENT_ID);
-        communication_battery.setMethod((Constant.BatteryPAV));
-        communication_battery.setResult(gson.toJson(batteryPersentAndVoltageBean, BatteryPersentAndVoltageBean.class));
-        NettyClient.getInstance().sendMessage(communication_battery, null);
-    }
 
 
     @Override
@@ -4493,7 +4328,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             infoBean.setBaseStationLatitude(String.valueOf(rtkState.getBaseStationLocation().getLatitude()));
                             infoBean.setBaseStationLongitude(String.valueOf(rtkState.getBaseStationLocation().getLongitude()));
                             infoBean.setRTKBeingUsed(rtkState.isRTKBeingUsed());
-                            infoBean.setPositioningSolution(rtkState.getPositioningSolution());
+//                            infoBean.setPositioningSolution(rtkState.getPositioningSolution());
                             if (isSendRTKStatusToSocket == false) {
                                 isSendRTKStatusToSocket = true;
                                 communication.setResult(gson.toJson(infoBean, RTKBean.class));
