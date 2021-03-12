@@ -32,9 +32,9 @@ public class BatteryPersentAndVoltageBean {
     //电池2剩余百分百
     private int persentTwo;
     //电池1电压
-    private int voltageOne;
+    private String voltageOne;
     //电池2电压
-    private int voltageTwo;
+    private String voltageTwo;
     //电池1电压组
     private List<Float> battery_list_one;
     //电池2电压组
@@ -132,19 +132,19 @@ public class BatteryPersentAndVoltageBean {
         this.persentTwo = persentTwo;
     }
 
-    public int getVoltageOne() {
+    public String getVoltageOne() {
         return voltageOne;
     }
 
-    public void setVoltageOne(int voltageOne) {
+    public void setVoltageOne(String voltageOne) {
         this.voltageOne = voltageOne;
     }
 
-    public int getVoltageTwo() {
+    public String getVoltageTwo() {
         return voltageTwo;
     }
 
-    public void setVoltageTwo(int voltageTwo) {
+    public void setVoltageTwo(String voltageTwo) {
         this.voltageTwo = voltageTwo;
     }
 

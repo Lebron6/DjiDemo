@@ -168,6 +168,7 @@ import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -1242,7 +1243,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             e.printStackTrace();
                         }
 
-
                     }
                 });
 //            //低电量值，严重低电量，智能返回（都在电池ui那块） 有用
@@ -1910,6 +1910,7 @@ int chargeRemainingInPercent0,chargeRemainingInPercent1;//电池电量是否发�
     }
     //推送电池状态
     BatteryPersentAndVoltageBean stateBean;
+    DecimalFormat df = new DecimalFormat("0.00");//格式化小数
     private void submitBatteryInfo(BatteryState batteryState, Battery battery) {
         if (stateBean==null){
             stateBean=new BatteryPersentAndVoltageBean();
@@ -1919,16 +1920,15 @@ int chargeRemainingInPercent0,chargeRemainingInPercent1;//电池电量是否发�
                 stateBean.setBattery_discharges_one(batteryState.getNumberOfDischarges());
                 stateBean.setBattery_temperature_one(batteryState.getTemperature());
                 stateBean.setPersentOne(batteryState.getChargeRemainingInPercent());
-                stateBean.setVoltageOne(batteryState.getVoltage());
+                stateBean.setVoltageOne(df.format((float)batteryState.getVoltage()/12000));
                 stateBean.setIsConnectOne(battery.isConnected()?0:-1);
                 break;
             case 1:
                 stateBean.setBattery_discharges_two(batteryState.getNumberOfDischarges());
                 stateBean.setBattery_temperature_two(batteryState.getTemperature());
                 stateBean.setPersentTwo(batteryState.getChargeRemainingInPercent());
-                stateBean.setVoltageTwo(batteryState.getVoltage());
+                stateBean.setVoltageTwo(df.format((float)batteryState.getVoltage()/12000));
                 stateBean.setIsConnectTwo(battery.isConnected()?0:-1);
-
                 break;
         }
 
