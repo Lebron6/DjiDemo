@@ -4521,7 +4521,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     }
                 }
             });
-            addRTKStatus(communication);//监听RTK状态
+//            addRTKStatus(communication);//监听RTK状态
         } else {
             communication.setResult("RTK为空");
             communication.setCode(-1);
@@ -4633,14 +4633,14 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 communication.setCode(200);
                                 communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                                 NettyClient.getInstance().sendMessage(communication, null);
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        text_net_rtk_state.setText("RTK：" + rtkState.isRTKBeingUsed() + "");
-                                    }
-                                });
-                            }
 
+                            }
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    text_net_rtk_state.setText("RTK：" + rtkState.isRTKBeingUsed() + "");
+                                }
+                            });
                         }
                     });
                 }
