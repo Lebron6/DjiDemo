@@ -2050,8 +2050,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             } else {
                 showToast("请检查摄像头或者其他挂载类型！！！");
             }
-
-
         }
     }
 
@@ -5397,7 +5395,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         public void onExecutionUpdate(WaypointMissionExecutionEvent executionEvent) {
             if (executionEvent.getCurrentState().toString().equals("EXECUTING")) {
                 targetWaypointIndex = executionEvent.getProgress().targetWaypointIndex;
-//                SPUtils.getInstance().put("targetWaypointIndex",targetWaypointIndex);
+
+                //                SPUtils.getInstance().put("targetWaypointIndex",targetWaypointIndex);
                 SPUtils.put(ConnectionActivity.this, "waypoint", "targetWaypointIndex", "0");
             }
 
@@ -5512,6 +5511,22 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
             @Override
             public void onExecutionUpdate(WaypointV2MissionExecutionEvent waypointV2MissionExecutionEvent) {
+
+                for (int i = 0; i < xTIntList.size(); i++) {
+                    if (i == targetWaypointIndex) {
+                        if (communication_onExecutionFinish == null) {
+                            communication_onExecutionFinish = new Communication();
+                        }
+                        communication_onExecutionFinish.setCode(200);
+                        communication_onExecutionFinish.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        communication_onExecutionFinish.setResult("" + xTIntList.get(i));
+                        communication_onExecutionFinish.setMethod("hoverPhoto");
+                        NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
+                        Log.d("悬停航点-EU", xTIntList.get(i) + "");
+
+                    }
+                    Log.d("所有航点-EU", xTIntList.get(i) + "");
+                }
             }
 
             @Override
@@ -5576,7 +5591,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         waypointV2MissionOperator.addActionListener(waypointV2ActionListener);
     }
 
+    List<Integer> xTIntList = new ArrayList<>();
+
     private void uploadWaypointAction(Communication communication) {
+        xTIntList.clear();
 //        Toast.makeText(this, "获取netty推过来的数据" + new Gson().toJson(communication), Toast.LENGTH_SHORT).show();
         mWayPointActionV2 = communication.getPara().get(Constant.WAY_POINTS);
         List<WayPointsV2Bean.WayPointsBean> myWayPointActionList;
@@ -5629,6 +5647,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         }
                         switch (myWayPointActionList.get(i).getWayPointAction().get(j).getActionType()) {
                             case "0"://悬停
+                                xTIntList.add(i);
                                 waypointAction0Actuator = new WaypointActuator.Builder()
                                         .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
                                         .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
@@ -5724,7 +5743,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         Log.d("测试悬停actionId", "actionType" + myWayPointActionList.get(i).getWayPointAction().get(j).getActionType() + actionId + "");
 
                         //如果是悬停
-                        if ("0".equals(myWayPointActionList.get(i).getWayPointAction().get(j).getActionType())) {
+                        if ("0".equals(myWayPointActionList.get(i).getWayPointAction().get(0).getActionType()) && j == myWayPointActionList.get(i).getWayPointAction().size() -1) {
                             actionId++;
                             waypointAction0Trigger = new WaypointTrigger.Builder()
                                     .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
@@ -5957,7 +5976,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private void resumeWaypointV2(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
         showToast(waypointV2MissionOperator.getCurrentState() + "当前状态");
-        if (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.INTERRUPTED) || waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.READY_TO_UPLOAD)) {
+        if (waypointV2MissionOperator.getCurrentState() != null && (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.INTERRUPTED) || waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.READY_TO_UPLOAD))) {
             /*waypointV2MissionOperator.startMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
