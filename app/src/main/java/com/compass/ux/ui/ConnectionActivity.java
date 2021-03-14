@@ -1663,9 +1663,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     private void initCamera() {
         //接入扩音器时camera数量为2，多一个是payloadCamera,这里我们暂取第一位
-        camera = FPVDemoApplication.getProductInstance().getCameras().get(0);
-        /*List<Camera> cameras = FPVDemoApplication.getProductInstance().getCameras();//H20T
-        camera = cameras != null ? cameras.get(0) : null;*/
+//        camera = FPVDemoApplication.getProductInstance().getCameras().get(0);
+        List<Camera> cameras = FPVDemoApplication.getProductInstance().getCameras();//H20T
+        camera = cameras != null ? cameras.get(0) : null;
         List<Lens> lensList = camera.getLenses();
         Log.d("获取镜头", (lensList == null ? (null + "") : lensList.size() + ""));
         if (camera != null) {
