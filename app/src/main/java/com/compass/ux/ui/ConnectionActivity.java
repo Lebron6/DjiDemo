@@ -2062,6 +2062,28 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             if (batteries != null) {
                 Battery battery0 = batteries.get(0);
                 Battery battery1 = batteries.get(1);
+                battery0.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
+                    @Override
+                    public void onSuccess(Integer[] integers) {
+                        batteryStateBean.setVoltageOne(String.valueOf(((integers[0]+integers[1]+integers[2]))/3));
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+                battery1.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
+                    @Override
+                    public void onSuccess(Integer[] integers) {
+                        batteryStateBean.setVoltageOne(String.valueOf(((integers[0]+integers[1]+integers[2]))/3));
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
                 battery0.setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
@@ -2104,17 +2126,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                batteryStateBean.setVoltageOne(df.format((float) batteryState.getVoltage() / 12000));
                 text_net_rtk_state.setText(batteryState.getVoltage()+"");
                 batteryStateBean.setIsConnectOne(battery.isConnected() ? 0 : -1);
-                battery.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
-                    @Override
-                    public void onSuccess(Integer[] integers) {
-                        batteryStateBean.setVoltageOne(String.valueOf(((integers[0]+integers[1]+integers[2]))/3));
-                    }
 
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
                 break;
             case 1:
                 batteryStateBean.setBattery_discharges_two(batteryState.getNumberOfDischarges());
@@ -2123,17 +2135,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                batteryStateBean.setVoltageTwo(df.format((float) batteryState.getVoltage() / 12000));
                 text_net_rtk_account_state.setText(batteryState.getVoltage()+"");
                 batteryStateBean.setIsConnectTwo(battery.isConnected() ? 0 : -1);
-                battery.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
-                    @Override
-                    public void onSuccess(Integer[] integers) {
-                        batteryStateBean.setVoltageTwo(String.valueOf(((integers[0]+integers[1]+integers[2]))/3));
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
                 break;
         }
 
