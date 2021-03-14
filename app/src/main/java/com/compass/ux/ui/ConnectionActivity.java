@@ -5567,20 +5567,19 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             public void onExecutionUpdate(WaypointV2MissionExecutionEvent waypointV2MissionExecutionEvent) {
                 if (waypointV2MissionExecutionEvent != null && waypointV2MissionExecutionEvent.getProgress() != null) {
                     targetWaypointIndex = waypointV2MissionExecutionEvent.getProgress().getTargetWaypointIndex();
-                    for (int i = 0; i < xTIntList.size(); i++) {
+                    Log.d("所有航点-EU",  waypointV2MissionExecutionEvent.getProgress().isWaypointReached() + "");
+                    for (int i = 0; i < xTIntList.size() && waypointV2MissionExecutionEvent.getProgress().isWaypointReached(); i++) {
                         if (i == targetWaypointIndex) {
                             if (communication_onExecutionFinish == null) {
                                 communication_onExecutionFinish = new Communication();
                             }
                             communication_onExecutionFinish.setCode(200);
                             communication_onExecutionFinish.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                            communication_onExecutionFinish.setResult(xTIntList.get(i));
+                            communication_onExecutionFinish.setResult("{\"result\":\""+xTIntList.get(i) + "\"}");
                             communication_onExecutionFinish.setMethod("hoverPhoto");
                             NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
-                            Log.d("悬停航点-EU", xTIntList.get(i) + "");
-
+                            Log.d("悬停航点-EU", xTIntList.get(i) + "" + waypointV2MissionExecutionEvent.getProgress().isWaypointReached());
                         }
-                        Log.d("所有航点-EU", xTIntList.get(i) + "");
                     }
                 }
             }
