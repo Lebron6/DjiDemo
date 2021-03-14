@@ -2126,7 +2126,13 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 batteryStateBean.setBattery_temperature_one(batteryState.getTemperature());
                 batteryStateBean.setPersentOne(batteryState.getChargeRemainingInPercent());
 //                batteryStateBean.setVoltageOne(df.format((float) batteryState.getVoltage() / 12000));
-                text_net_rtk_state.setText(batteryState.getVoltage()+"");
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        text_net_rtk_state.setText(batteryState.getVoltage()+"");
+                    }
+                });
 //                batteryStateBean.setIsConnectOne(battery.isConnected() ? 0 : -1);
                 break;
             case 1:
@@ -2134,7 +2140,13 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 batteryStateBean.setBattery_temperature_two(batteryState.getTemperature());
                 batteryStateBean.setPersentTwo(batteryState.getChargeRemainingInPercent());
 //                batteryStateBean.setVoltageTwo(df.format((float) batteryState.getVoltage() / 12000));
-                text_net_rtk_account_state.setText(batteryState.getVoltage()+"");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        text_net_rtk_account_state.setText(batteryState.getVoltage()+"");
+                    }
+                });
+
                 //                batteryStateBean.setIsConnectTwo(battery.isConnected() ? 0 : -1);
 
                 break;
