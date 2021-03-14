@@ -57,12 +57,6 @@ public class WebInitializationBean {
     }
 
 
-
-
-
-
-
-
     public String getHyDisplayMode() {
         return hyDisplayMode;
     }

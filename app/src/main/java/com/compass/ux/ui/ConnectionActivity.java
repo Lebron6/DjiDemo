@@ -2062,6 +2062,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             if (batteries != null) {
                 Battery battery0 = batteries.get(0);
                 Battery battery1 = batteries.get(1);
+                batteryStateBean.setIsConnectTwo(battery0.isConnected() ? 0 : -1);
+                batteryStateBean.setIsConnectTwo(battery1.isConnected() ? 0 : -1);
                 battery0.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
                     @Override
                     public void onSuccess(Integer[] integers) {
@@ -2125,8 +2127,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 batteryStateBean.setPersentOne(batteryState.getChargeRemainingInPercent());
 //                batteryStateBean.setVoltageOne(df.format((float) batteryState.getVoltage() / 12000));
                 text_net_rtk_state.setText(batteryState.getVoltage()+"");
-                batteryStateBean.setIsConnectOne(battery.isConnected() ? 0 : -1);
-
+//                batteryStateBean.setIsConnectOne(battery.isConnected() ? 0 : -1);
                 break;
             case 1:
                 batteryStateBean.setBattery_discharges_two(batteryState.getNumberOfDischarges());
@@ -2134,7 +2135,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 batteryStateBean.setPersentTwo(batteryState.getChargeRemainingInPercent());
 //                batteryStateBean.setVoltageTwo(df.format((float) batteryState.getVoltage() / 12000));
                 text_net_rtk_account_state.setText(batteryState.getVoltage()+"");
-                batteryStateBean.setIsConnectTwo(battery.isConnected() ? 0 : -1);
+                //                batteryStateBean.setIsConnectTwo(battery.isConnected() ? 0 : -1);
+
                 break;
         }
 
