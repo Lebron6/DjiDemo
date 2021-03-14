@@ -296,7 +296,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     boolean isZuoYouGet = false;
     boolean isShangXiaGet = false;
     boolean isHangXianPause = false;//判断航线是否暂停
-    boolean isSendRTKStatusToSocket = false;//是否已发送RTK坐标
     double HangXianPauselongitude = 0, HangXianPauselatitude = 0;//当航线暂停时记录点
     int targetWaypointIndex = 0;
     boolean sgpre;
@@ -591,7 +590,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                send(data);
 //                }
 //                testTTSYY();
-                initBattery();
                 break;
             }
             case R.id.btn_simulator: {
@@ -2081,7 +2079,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         if (chargeRemainingInPercent1 != batteryState.getChargeRemainingInPercent()) {
                             chargeRemainingInPercent1 = batteryState.getChargeRemainingInPercent();
                             submitBatteryInfo(batteryState, battery1);
-
                         }
                     }
                 });
@@ -4525,7 +4522,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     //设置网络rtk
 //    https://bbs.dji.com/thread-247389-1-1.html
     private void setRTKNetwork(Communication communication) {
-        isSendRTKStatusToSocket = false;//设置坐标为未发送状态
         RTKNetworkServiceProvider provider = DJISDKManager.getInstance().getRTKNetworkServiceProvider();
         if (ModuleVerificationUtil.isNetRtkAvailable()) {
             //设置网络RTK账号
@@ -4584,13 +4580,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             infoBean.setBaseStationLongitude(String.valueOf(rtkState.getBaseStationLocation().getLongitude()));
                             infoBean.setRTKBeingUsed(rtkState.isRTKBeingUsed());
 //                            infoBean.setPositioningSolution(rtkState.getPositioningSolution());
-                            if (isSendRTKStatusToSocket == false) {
-                                isSendRTKStatusToSocket = true;
-                                communication.setResult(gson.toJson(infoBean, RTKBean.class));
-                                communication.setCode(200);
-                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                                NettyClient.getInstance().sendMessage(communication, null);
-                            }
+                            communication.setResult(gson.toJson(infoBean, SettingValueBean.NetRTKBean.Info.class));
+                            communication.setCode(200);
+                            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                            NettyClient.getInstance().sendMessage(communication, null);
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -5812,6 +5805,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
 
     }
+
     private WaypointV2Mission createWaypointMission(Communication communication) {
 
         String speed = communication.getPara().get(Constant.SPEED);
