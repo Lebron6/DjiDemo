@@ -2054,6 +2054,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
     int chargeRemainingInPercent0, chargeRemainingInPercent1;//电池电量是否发生改变
+    float voltageOne, voltageTwo;//电池电压是否改变
 
     private void initBattery() {
         BaseProduct product = FPVDemoApplication.getProductInstance();
@@ -2062,29 +2063,29 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             if (batteries != null) {
                 Battery battery0 = batteries.get(0);
                 Battery battery1 = batteries.get(1);
-
-
-
-
                 battery0.setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
                         if (chargeRemainingInPercent0 != batteryState.getChargeRemainingInPercent()) {
                             chargeRemainingInPercent0 = batteryState.getChargeRemainingInPercent();
                             batteryStateBean.setIsConnectOne(battery0.isConnected() ? 0 : -1);
-                            battery0.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
-                                @Override
-                                public void onSuccess(Integer[] integers) {
-                                    batteryStateBean.setVoltageOne(String.valueOf(((integers[0]+integers[1]+integers[2]))/3000));
-                                }
-
-                                @Override
-                                public void onFailure(DJIError djiError) {
-
-                                }
-                            });
                             submitBatteryInfo(batteryState, battery0);
                         }
+                        battery0.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
+                            @Override
+                            public void onSuccess(Integer[] integers) {
+                                if (voltageOne != ((integers[0] + integers[1] + integers[2]))) {
+                                    voltageOne = ((integers[0] + integers[1] + integers[2]));
+                                    batteryStateBean.setVoltageOne(df.format(((integers[0] + integers[1] + integers[2])) / 3000));
+                                    submitBatteryInfo(batteryState, battery0);
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(DJIError djiError) {
+
+                            }
+                        });
                     }
                 });
                 battery1.setStateCallback(new BatteryState.Callback() {
@@ -2093,19 +2094,23 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         if (chargeRemainingInPercent1 != batteryState.getChargeRemainingInPercent()) {
                             chargeRemainingInPercent1 = batteryState.getChargeRemainingInPercent();
                             batteryStateBean.setIsConnectTwo(battery1.isConnected() ? 0 : -1);
-                            battery1.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
-                                @Override
-                                public void onSuccess(Integer[] integers) {
-                                    batteryStateBean.setVoltageTwo(String.valueOf(((integers[0]+integers[1]+integers[2]))/3000));
-                                }
-
-                                @Override
-                                public void onFailure(DJIError djiError) {
-
-                                }
-                            });
                             submitBatteryInfo(batteryState, battery1);
                         }
+                        battery1.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
+                            @Override
+                            public void onSuccess(Integer[] integers) {
+                                if (voltageTwo != ((integers[0] + integers[1] + integers[2]))) {
+                                    voltageTwo = ((integers[0] + integers[1] + integers[2]));
+                                    batteryStateBean.setVoltageTwo(df.format(((integers[0] + integers[1] + integers[2])) / 3000));
+                                    submitBatteryInfo(batteryState, battery1);
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(DJIError djiError) {
+
+                            }
+                        });
                     }
                 });
 
@@ -2134,7 +2139,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        text_net_rtk_state.setText(batteryState.getVoltage()+"");
+                        text_net_rtk_state.setText(batteryState.getVoltage() + "");
                     }
                 });
 //                batteryStateBean.setIsConnectOne(battery.isConnected() ? 0 : -1);
@@ -2147,7 +2152,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        text_net_rtk_account_state.setText(batteryState.getVoltage()+"");
+                        text_net_rtk_account_state.setText(batteryState.getVoltage() + "");
                     }
                 });
 
@@ -4608,6 +4613,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
     double latitude;
+
     private void addRTKStatus(Communication communication) {
         if (ModuleVerificationUtil.isRtkAvailable()) {
             RTK mRtk = ((Aircraft) FPVDemoApplication.getProductInstance()).getFlightController().getRTK();
@@ -4617,8 +4623,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     mRtk.setStateCallback(new RTKState.Callback() {
                         @Override
                         public void onUpdate(RTKState rtkState) {
-                            if (rtkState.getBaseStationLocation().getLatitude()!=latitude){
-                                latitude=rtkState.getBaseStationLocation().getLatitude();
+                            if (rtkState.getBaseStationLocation().getLatitude() != latitude) {
+                                latitude = rtkState.getBaseStationLocation().getLatitude();
                                 infoBean.setBaseStationLatitude(String.valueOf(rtkState.getBaseStationLocation().getLatitude()));
                                 infoBean.setBaseStationLongitude(String.valueOf(rtkState.getBaseStationLocation().getLongitude()));
                                 infoBean.setRTKBeingUsed(rtkState.isRTKBeingUsed());
