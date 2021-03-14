@@ -2101,15 +2101,39 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 batteryStateBean.setBattery_discharges_one(batteryState.getNumberOfDischarges());
                 batteryStateBean.setBattery_temperature_one(batteryState.getTemperature());
                 batteryStateBean.setPersentOne(batteryState.getChargeRemainingInPercent());
-                batteryStateBean.setVoltageOne(df.format((float) batteryState.getVoltage() / 12000));
+//                batteryStateBean.setVoltageOne(df.format((float) batteryState.getVoltage() / 12000));
+                text_net_rtk_state.setText(batteryState.getVoltage()+"");
                 batteryStateBean.setIsConnectOne(battery.isConnected() ? 0 : -1);
+                battery.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
+                    @Override
+                    public void onSuccess(Integer[] integers) {
+                        batteryStateBean.setVoltageOne(String.valueOf(((integers[0]+integers[1]+integers[2]))/3));
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
                 break;
             case 1:
                 batteryStateBean.setBattery_discharges_two(batteryState.getNumberOfDischarges());
                 batteryStateBean.setBattery_temperature_two(batteryState.getTemperature());
                 batteryStateBean.setPersentTwo(batteryState.getChargeRemainingInPercent());
-                batteryStateBean.setVoltageTwo(df.format((float) batteryState.getVoltage() / 12000));
+//                batteryStateBean.setVoltageTwo(df.format((float) batteryState.getVoltage() / 12000));
+                text_net_rtk_account_state.setText(batteryState.getVoltage()+"");
                 batteryStateBean.setIsConnectTwo(battery.isConnected() ? 0 : -1);
+                battery.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
+                    @Override
+                    public void onSuccess(Integer[] integers) {
+                        batteryStateBean.setVoltageTwo(String.valueOf(((integers[0]+integers[1]+integers[2]))/3));
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
                 break;
         }
 
