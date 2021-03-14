@@ -2076,7 +2076,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 battery1.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
                     @Override
                     public void onSuccess(Integer[] integers) {
-                        batteryStateBean.setVoltageOne(String.valueOf(((integers[0]+integers[1]+integers[2]))/3));
+                        batteryStateBean.setVoltageTwo(String.valueOf(((integers[0]+integers[1]+integers[2]))/3));
                     }
 
                     @Override
