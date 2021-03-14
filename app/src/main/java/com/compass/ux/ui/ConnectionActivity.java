@@ -4486,7 +4486,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     //设置参考站源 D-RTK=BASE_STATION
     private void setRSS(Communication communication) {
-        isSendRTKStatusToSocket = false;//设置坐标为未发送状态
         String type = communication.getPara().get(Constant.TYPE);
         setRtkBean.setServiceType(Integer.parseInt(type));
         if (mRTK != null && !TextUtils.isEmpty(type)) {
