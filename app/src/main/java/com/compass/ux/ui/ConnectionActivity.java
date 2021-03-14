@@ -5511,21 +5511,23 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
             @Override
             public void onExecutionUpdate(WaypointV2MissionExecutionEvent waypointV2MissionExecutionEvent) {
+                if (waypointV2MissionExecutionEvent != null && waypointV2MissionExecutionEvent.getProgress() != null) {
+                    targetWaypointIndex = waypointV2MissionExecutionEvent.getProgress().getTargetWaypointIndex();
+                    for (int i = 0; i < xTIntList.size(); i++) {
+                        if (i == targetWaypointIndex) {
+                            if (communication_onExecutionFinish == null) {
+                                communication_onExecutionFinish = new Communication();
+                            }
+                            communication_onExecutionFinish.setCode(200);
+                            communication_onExecutionFinish.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                            communication_onExecutionFinish.setResult(xTIntList.get(i));
+                            communication_onExecutionFinish.setMethod("hoverPhoto");
+                            NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
+                            Log.d("悬停航点-EU", xTIntList.get(i) + "");
 
-                for (int i = 0; i < xTIntList.size(); i++) {
-                    if (i == targetWaypointIndex) {
-                        if (communication_onExecutionFinish == null) {
-                            communication_onExecutionFinish = new Communication();
                         }
-                        communication_onExecutionFinish.setCode(200);
-                        communication_onExecutionFinish.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                        communication_onExecutionFinish.setResult("" + xTIntList.get(i));
-                        communication_onExecutionFinish.setMethod("hoverPhoto");
-                        NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
-                        Log.d("悬停航点-EU", xTIntList.get(i) + "");
-
+                        Log.d("所有航点-EU", xTIntList.get(i) + "");
                     }
-                    Log.d("所有航点-EU", xTIntList.get(i) + "");
                 }
             }
 
@@ -5591,7 +5593,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         waypointV2MissionOperator.addActionListener(waypointV2ActionListener);
     }
 
-    List<Integer> xTIntList = new ArrayList<>();
+    List<String> xTIntList = new ArrayList<>();
 
     private void uploadWaypointAction(Communication communication) {
         xTIntList.clear();
@@ -5647,7 +5649,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         }
                         switch (myWayPointActionList.get(i).getWayPointAction().get(j).getActionType()) {
                             case "0"://悬停
-                                xTIntList.add(i);
+                                xTIntList.add(i + "--" + myWayPointActionList.get(i).getWayPointAction().get(0).getWaitingTime());
                                 waypointAction0Actuator = new WaypointActuator.Builder()
                                         .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
                                         .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
@@ -5742,15 +5744,15 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         waypointV2ActionList.add(waypointAction0);
                         Log.d("测试悬停actionId", "actionType" + myWayPointActionList.get(i).getWayPointAction().get(j).getActionType() + actionId + "");
 
-                        //如果是悬停
-                        if ("0".equals(myWayPointActionList.get(i).getWayPointAction().get(0).getActionType()) && j == myWayPointActionList.get(i).getWayPointAction().size() -1) {
+                        //如果是悬停并且当前是航点的最后一个动作
+                        if ("0".equals(myWayPointActionList.get(i).getWayPointAction().get(0).getActionType()) && j == myWayPointActionList.get(i).getWayPointAction().size() - 1) {
                             actionId++;
                             waypointAction0Trigger = new WaypointTrigger.Builder()
                                     .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
                                     .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
                                             .setAssociateActionID(actionId - 1)
                                             .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
-                                            .setWaitingTime(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()))
+                                            .setWaitingTime(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(0).getWaitingTime()))
                                             .build())
                                     .build();
                             Log.d("测试悬停setAssociateActionID", "悬停起飞" + (actionId - 1) + "时间" + Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()));
