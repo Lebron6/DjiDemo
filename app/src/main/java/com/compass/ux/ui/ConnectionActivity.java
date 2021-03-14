@@ -282,6 +282,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     Communication communication_BS_info;
     Communication communication_upload_mission;
     SettingValueBean.NetRTKBean setRtkBean = new SettingValueBean.NetRTKBean();//监听
+    SettingValueBean.BatteryStateBean batteryStateBean = new SettingValueBean.BatteryStateBean();//监听
     SettingValueBean.NetRTKBean.Info infoBean = new SettingValueBean.NetRTKBean.Info();
     private int currentProgress = -1;
     private boolean lastFlying = false;//判断是否起飞
@@ -1213,29 +1214,33 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                     }
                                 });
                             }
+                            //每秒一次
+                            if (fastClick.flightControllerClick()) {
+                                //每秒返回遥控器信号
+                                StringsBean upLinkBean = new StringsBean();
+                                upLinkBean.setValue(webInitializationBean.getUpLink() + "");
+                                if (communication_up_link == null) {
+                                    communication_up_link = new Communication();
+                                }
+                                communication_up_link.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                communication_up_link.setEquipmentId(MApplication.EQUIPMENT_ID);
+                                communication_up_link.setMethod((Constant.UP_LOAD_SIGNAL));
+                                communication_up_link.setResult(gson.toJson(upLinkBean, StringsBean.class));
+                                NettyClient.getInstance().sendMessage(communication_up_link, null);
+                                //每秒返回视图信号
+                                StringsBean downLinkBean = new StringsBean();
+                                upLinkBean.setValue(webInitializationBean.getDownLink() + "");
+                                if (communication_down_link == null) {
+                                    communication_down_link = new Communication();
+                                }
+                                communication_down_link.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                communication_down_link.setEquipmentId(MApplication.EQUIPMENT_ID);
+                                communication_down_link.setMethod((Constant.DOWN_LOAD_SIGNAL));
+                                communication_down_link.setResult(gson.toJson(upLinkBean, StringsBean.class));
+                                NettyClient.getInstance().sendMessage(communication_down_link, null);
 
-                            //每秒返回遥控器信号
-                            StringsBean upLinkBean = new StringsBean();
-                            upLinkBean.setValue(webInitializationBean.getUpLink() + "");
-                            if (communication_up_link == null) {
-                                communication_up_link = new Communication();
+
                             }
-                            communication_up_link.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                            communication_up_link.setEquipmentId(MApplication.EQUIPMENT_ID);
-                            communication_up_link.setMethod((Constant.UP_LOAD_SIGNAL));
-                            communication_up_link.setResult(gson.toJson(upLinkBean, StringsBean.class));
-                            NettyClient.getInstance().sendMessage(communication_up_link, null);
-                            //每秒返回视图信号
-                            StringsBean downLinkBean = new StringsBean();
-                            upLinkBean.setValue(webInitializationBean.getDownLink() + "");
-                            if (communication_down_link == null) {
-                                communication_down_link = new Communication();
-                            }
-                            communication_down_link.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                            communication_down_link.setEquipmentId(MApplication.EQUIPMENT_ID);
-                            communication_down_link.setMethod((Constant.DOWN_LOAD_SIGNAL));
-                            communication_down_link.setResult(gson.toJson(upLinkBean, StringsBean.class));
-                            NettyClient.getInstance().sendMessage(communication_down_link, null);
 
 
                         } catch (Exception e) {
@@ -1869,7 +1874,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
     }
 
-int chargeRemainingInPercent0,chargeRemainingInPercent1;//电池电量是否发生改变
+    int chargeRemainingInPercent0, chargeRemainingInPercent1;//电池电量是否发生改变
+
     private void initBattery() {
         BaseProduct product = FPVDemoApplication.getProductInstance();
         if (product != null) {
@@ -1880,54 +1886,52 @@ int chargeRemainingInPercent0,chargeRemainingInPercent1;//电池电量是否发�
                 battery0.setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
-                        if (chargeRemainingInPercent0!=batteryState.getChargeRemainingInPercent()){
-                           chargeRemainingInPercent0=batteryState.getChargeRemainingInPercent();
-                            submitBatteryInfo(batteryState,battery0);
+                        if (chargeRemainingInPercent0 != batteryState.getChargeRemainingInPercent()) {
+                            chargeRemainingInPercent0 = batteryState.getChargeRemainingInPercent();
+                            submitBatteryInfo(batteryState, battery0);
                         }
                     }
                 });
                 battery1.setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
-                        if (chargeRemainingInPercent1!=batteryState.getChargeRemainingInPercent()){
-                            chargeRemainingInPercent1=batteryState.getChargeRemainingInPercent();
-                            submitBatteryInfo(batteryState,battery1);
+                        if (chargeRemainingInPercent1 != batteryState.getChargeRemainingInPercent()) {
+                            chargeRemainingInPercent1 = batteryState.getChargeRemainingInPercent();
+                            submitBatteryInfo(batteryState, battery1);
 
                         }
                     }
                 });
 
-            } else {
+            } else {//设备连接后需要3-5秒（各部件初始化）后才能获取到电池信息，可以通过onComponentChange监听。这里延迟一秒后再获取电池信息
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         initBattery();
                     }
-                },1000);
+                }, 2000);
             }
         }
     }
+
     //推送电池状态
-    BatteryPersentAndVoltageBean stateBean;
     DecimalFormat df = new DecimalFormat("0.00");//格式化小数
+
     private void submitBatteryInfo(BatteryState batteryState, Battery battery) {
-        if (stateBean==null){
-            stateBean=new BatteryPersentAndVoltageBean();
-        }
-        switch (battery.getIndex()){
+        switch (battery.getIndex()) {
             case 0:
-                stateBean.setBattery_discharges_one(batteryState.getNumberOfDischarges());
-                stateBean.setBattery_temperature_one(batteryState.getTemperature());
-                stateBean.setPersentOne(batteryState.getChargeRemainingInPercent());
-                stateBean.setVoltageOne(df.format((float)batteryState.getVoltage()/12000));
-                stateBean.setIsConnectOne(battery.isConnected()?0:-1);
+                batteryStateBean.setBattery_discharges_one(batteryState.getNumberOfDischarges());
+                batteryStateBean.setBattery_temperature_one(batteryState.getTemperature());
+                batteryStateBean.setPersentOne(batteryState.getChargeRemainingInPercent());
+                batteryStateBean.setVoltageOne(df.format((float) batteryState.getVoltage() / 12000));
+                batteryStateBean.setIsConnectOne(battery.isConnected() ? 0 : -1);
                 break;
             case 1:
-                stateBean.setBattery_discharges_two(batteryState.getNumberOfDischarges());
-                stateBean.setBattery_temperature_two(batteryState.getTemperature());
-                stateBean.setPersentTwo(batteryState.getChargeRemainingInPercent());
-                stateBean.setVoltageTwo(df.format((float)batteryState.getVoltage()/12000));
-                stateBean.setIsConnectTwo(battery.isConnected()?0:-1);
+                batteryStateBean.setBattery_discharges_two(batteryState.getNumberOfDischarges());
+                batteryStateBean.setBattery_temperature_two(batteryState.getTemperature());
+                batteryStateBean.setPersentTwo(batteryState.getChargeRemainingInPercent());
+                batteryStateBean.setVoltageTwo(df.format((float) batteryState.getVoltage() / 12000));
+                batteryStateBean.setIsConnectTwo(battery.isConnected() ? 0 : -1);
                 break;
         }
 
@@ -1937,7 +1941,7 @@ int chargeRemainingInPercent0,chargeRemainingInPercent1;//电池电量是否发�
         communication_battery.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
         communication_battery.setEquipmentId(MApplication.EQUIPMENT_ID);
         communication_battery.setMethod((Constant.BatteryPAV));
-        communication_battery.setResult(gson.toJson(stateBean, BatteryPersentAndVoltageBean.class));
+        communication_battery.setResult(gson.toJson(batteryStateBean, SettingValueBean.BatteryStateBean.class));
         NettyClient.getInstance().sendMessage(communication_battery, null);
     }
 
@@ -2025,7 +2029,6 @@ int chargeRemainingInPercent0,chargeRemainingInPercent1;//电池电量是否发�
 
 
     }
-
 
 
     @Override
@@ -3415,16 +3418,23 @@ int chargeRemainingInPercent0,chargeRemainingInPercent1;//电池电量是否发�
         if (isM300Product() && camera != null) {
             String type = communication.getPara().get("zoom");
             if (!TextUtils.isEmpty(type)) {
-                camera.getLens(0).setHybridZoomFocalLength(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
+//                camera.getLens(0).setHybridZoomFocalLength(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
+//                    @Override
+//                    public void onResult(DJIError djiError) {
+//                        if (isCapture) {
+//                            isCapture = false;
+//                        } else {
+//
+//                        }
+//                        CommonDjiCallback(djiError, communication);
+//                        webInitializationBean.setHybridZoom(Integer.parseInt(type));
+//                    }
+//                });
+                Log.e("相机", camera.getDisplayName());
+                camera.setHybridZoomFocalLength(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
-                        if (isCapture) {
-                            isCapture = false;
-                        } else {
 
-                        }
-                        CommonDjiCallback(djiError, communication);
-                        webInitializationBean.setHybridZoom(Integer.parseInt(type));
                     }
                 });
             }
@@ -3716,7 +3726,7 @@ int chargeRemainingInPercent0,chargeRemainingInPercent1;//电池电量是否发�
         settingValueBean.setMaxFlightRadiusLimitationEnabled(maxFlightRadiusLimitationEnabled);
         setRtkBean.setInfo(infoBean);
         settingValueBean.setRtkBean(setRtkBean);
-
+        settingValueBean.setBatteryStateBean(batteryStateBean);
         if (communication == null) {
             communication = new Communication();
         }
