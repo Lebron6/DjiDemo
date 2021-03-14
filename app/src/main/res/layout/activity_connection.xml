@@ -198,7 +198,7 @@
 
     <TextureView
         android:id="@+id/video_previewer_surface"
-        android:layout_below="@+id/btn_login"
+        android:layout_below="@+id/btn_open"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"

@@ -92,6 +92,7 @@ import dji.sdk.base.BaseProduct;
 import dji.sdk.base.DJIDiagnostics;
 import dji.sdk.battery.Battery;
 import dji.sdk.camera.Camera;
+import dji.sdk.camera.Lens;
 import dji.sdk.camera.VideoFeeder;
 import dji.sdk.codec.DJICodecManager;
 import dji.sdk.flightcontroller.FlightAssistant;
@@ -1665,7 +1666,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private void initCamera() {
         //接入扩音器时camera数量为2，多一个是payloadCamera,这里我们暂取第一位
         camera = FPVDemoApplication.getProductInstance().getCameras().get(0);
-//        camera = FPVDemoApplication.getProductInstance().getCamera();
+        /*List<Camera> cameras = FPVDemoApplication.getProductInstance().getCameras();//H20T
+        camera = cameras != null ? cameras.get(0) : null;*/
+        List<Lens> lensList = camera.getLenses();
+        Log.d("获取镜头", (lensList == null ? (null + "") : lensList.size() + ""));
         if (camera != null) {
             //设置比例为16：9
 //            camera.getLens(camera.getIndex()).setPhotoAspectRatio(RATIO_16_9, new CommonCallbacks.CompletionCallback() {
@@ -1741,7 +1745,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 });
                 Log.e("相机位置", camera.getIndex() + "");
 
-                //返回曝光模式
+//                //返回曝光模式
                 camera.getLens(0).getExposureMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ExposureMode>() {
                     @Override
                     public void onSuccess(SettingsDefinitions.ExposureMode exposureMode) {
@@ -1866,6 +1870,185 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                    Log.d("HHHHHcurr", djiError.toString());
                     }
                 });
+            } else if (camera != null) {
+                camera.getLaserEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean aBoolean) {
+                        if (aBoolean) {
+                            returnLaserData();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+                Log.e("相机位置", camera.getIndex() + "");
+
+//                //返回曝光模式
+                camera.getExposureMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ExposureMode>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.ExposureMode exposureMode) {
+                        webInitializationBean.setExposureMode(exposureMode.value());
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+                    }
+                });
+                //返回iso数据
+                camera.getISO(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ISO>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.ISO iso) {
+                        webInitializationBean.setISO(iso.value());
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+                //返回shutter数据
+                camera.getShutterSpeed(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ShutterSpeed>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.ShutterSpeed shutterSpeed) {
+                        webInitializationBean.setShutter(shutterSpeed.value());
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+                    }
+                });
+                //返回曝光补偿
+                camera.getExposureCompensation(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ExposureCompensation>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.ExposureCompensation exposureCompensation) {
+                        webInitializationBean.setExposureCompensation(exposureCompensation.value());
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+
+                camera.getFocusMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.FocusMode>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.FocusMode focusMode) {
+                        webInitializationBean.setFocusMode(focusMode.value() + "");
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+
+                camera.getAELock(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean aBoolean) {
+                        webInitializationBean.setLockExposure(aBoolean ? "0" : "1");
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+
+                camera.getThermalDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ThermalDigitalZoomFactor>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.ThermalDigitalZoomFactor thermalDigitalZoomFactor) {
+                        webInitializationBean.setThermalDigitalZoom(thermalDigitalZoomFactor.value() + "");
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+
+                camera.getDisplayMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.DisplayMode>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.DisplayMode displayMode) {
+                        webInitializationBean.setHyDisplayMode(displayMode.value() + "");
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+
+
+//                获取变焦距离
+                camera.getHybridZoomSpec(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.HybridZoomSpec>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.HybridZoomSpec hybridZoomSpec) {
+
+                        Log.d("HHHHHFocalLength", hybridZoomSpec.getFocalLengthStep() + "");//11
+                        Log.d("HHHHHMaxH", hybridZoomSpec.getMaxHybridFocalLength() + "");//55620
+                        Log.d("HHHHHMinH", hybridZoomSpec.getMinHybridFocalLength() + "");//317
+                        Log.d("HHHHHMaxO", hybridZoomSpec.getMaxOpticalFocalLength() + "");//5562
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+                        Log.d("HHHHHcurr", "getHybridZoomSpec\\\\" + djiError.toString());
+                    }
+                });
+//                获取当前变焦焦距
+                camera.getHybridZoomFocalLength(new CommonCallbacks.CompletionCallbackWith<Integer>() {
+                    @Override
+                    public void onSuccess(Integer integer) {
+                        Log.d("HHHHHcurr", integer + "");
+                        webInitializationBean.setHybridZoom(integer);
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+                        Log.d("HHHHHcurr", "getHybridZoomFocalLength\\\\" + djiError.toString());
+                    }
+                });
+                camera.getTapZoomMultiplier(new CommonCallbacks.CompletionCallbackWith<Integer>() {
+                    @Override
+                    public void onSuccess(Integer integer) {
+                        Log.d("HHHHHcurr", integer + "");
+                        webInitializationBean.setHybridZoom(integer);
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+                        Log.d("HHHHHcurr", "getTapZoomMultiplier\\\\" + djiError.toString());
+
+                    }
+                });
+                camera.getDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<Float>() {
+                    @Override
+                    public void onSuccess(Float aFloat) {
+                        Log.d("HHHHHcurr", aFloat + "");
+//                        webInitializationBean.setHybridZoom(Integer.parseInt(aFloat + ""));
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+                        Log.d("HHHHHcurr", "getDigitalZoomFactor\\\\" + djiError.toString());
+
+                    }
+                });
+                camera.getOpticalZoomFocalLength(new CommonCallbacks.CompletionCallbackWith<Integer>() {
+                    @Override
+                    public void onSuccess(Integer integer) {
+                        Log.d("HHHHHcurr", integer + "");
+
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+                        Log.d("HHHHHcurr", "getOpticalZoomFocalLength\\\\" + djiError.getDescription());
+                    }
+                });
             } else {
                 showToast("请检查摄像头或者其他挂载类型！！！");
             }
@@ -1948,7 +2131,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     String gimbal_pitch_speed = "", gimbal_yaw_speed = "";
 
     private void initGimbal() {
-        if (gimbal != null && ((Aircraft) FPVDemoApplication.getProductInstance()).getGimbals() != null && ((Aircraft) FPVDemoApplication.getProductInstance()).getGimbals().size() > 0) {
+        try {
             gimbal = ((Aircraft) FPVDemoApplication.getProductInstance()).getGimbals().get(0);
             gimbal.getControllerSpeedCoefficient(PITCH, new CommonCallbacks.CompletionCallbackWith<Integer>() {
                 @Override
@@ -1978,9 +2161,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             gimbal.setStateCallback(new GimbalState.Callback() {
                 @Override
                 public void onUpdate(GimbalState gimbalState) {//左右y 上下p
-                    webInitializationBean.setHorizontalAngle(gimbalState.getAttitudeInDegrees().getYaw() + "");
-                    webInitializationBean.setPitchAngle(gimbalState.getAttitudeInDegrees().getPitch() + "");
-                    gimbalStatePitch = gimbalState.getAttitudeInDegrees().getPitch() + "";
+                    if (gimbalState != null && gimbalState.getAttitudeInDegrees() != null) {
+                        webInitializationBean.setHorizontalAngle(gimbalState.getAttitudeInDegrees().getYaw() + "");
+                        webInitializationBean.setPitchAngle(gimbalState.getAttitudeInDegrees().getPitch() + "");
+                        gimbalStatePitch = gimbalState.getAttitudeInDegrees().getPitch() + "";
+                    }
                 }
             });
             //云台俯仰限位扩展
@@ -2021,10 +2206,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
                 }
             });
-
-
-        } else {
-            showToast("云台初始化失败！！请检查摄像头类型");
+        } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            Log.d("初始化云台错误", sw.toString());
         }
 
 
@@ -2034,7 +2220,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     @Override
     protected void notifyData(Communication message) {
         Communication communication = message;
-
         switch (communication.getMethod()) {
             case Constant.LIVE_PATH://后台拿到的推流地址
                 liveShowUrl = communication.getPara().get("desRtmpUrl");
@@ -2864,7 +3049,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
             }
             webInitializationBean.setCurrentLens(type);
-            if (camera != null) {
+            if (camera != null && camera.isMultiLensCameraSupported()) {
+                //只支持H20T系列
                 camera.setCameraVideoStreamSource(source, new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
@@ -2875,12 +3061,18 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         }
                     }
                 });
+            } else if (!camera.isMultiLensCameraSupported()) {//不支持多视频源流
+                if (isCapture) {//抓拍
+                    camera_up_and_down_by_a(communication);
+                } else {
+                    CommonDjiCallback(null, communication);
+                }
+            } else {
+                communication.setResult("型号不支持");
+                communication.setCode(-1);
+                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                NettyClient.getInstance().sendMessage(communication, null);
             }
-        } else {
-            communication.setResult("型号不支持");
-            communication.setCode(-1);
-            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-            NettyClient.getInstance().sendMessage(communication, null);
         }
 
 
@@ -3417,31 +3609,85 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private void setCameraZoom(Communication communication) {
         if (isM300Product() && camera != null) {
             String type = communication.getPara().get("zoom");
-            if (!TextUtils.isEmpty(type)) {
-//                camera.getLens(0).setHybridZoomFocalLength(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
-//                    @Override
-//                    public void onResult(DJIError djiError) {
-//                        if (isCapture) {
-//                            isCapture = false;
-//                        } else {
-//
-//                        }
-//                        CommonDjiCallback(djiError, communication);
-//                        webInitializationBean.setHybridZoom(Integer.parseInt(type));
-//                    }
-//                });
-                Log.e("相机", camera.getDisplayName());
+            //设置类型不为空并且相机支持多视频流源
+            if (!TextUtils.isEmpty(type) && camera.isMultiLensCameraSupported()) {
+                camera.getLens(0).setHybridZoomFocalLength(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        if (isCapture) {
+                            isCapture = false;
+                        } else {
+
+                        }
+                        CommonDjiCallback(djiError, communication);
+                        webInitializationBean.setHybridZoom(Integer.parseInt(type));
+                    }
+                });
+                Log.d("isMultiLensCameraSupported", "true");
+            } else if (!TextUtils.isEmpty(type) && camera.isHybridZoomSupported()) {
                 camera.setHybridZoomFocalLength(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
+                        if (isCapture) {
+                            isCapture = false;
+                        } else {
 
+                        }
+                        CommonDjiCallback(djiError, communication);
+                        webInitializationBean.setHybridZoom(Integer.parseInt(type));
+                        Log.d("isHybridZoomSupported", djiError.getDescription());
                     }
                 });
-            }
+
+            } else if (!TextUtils.isEmpty(type) && camera.isTapZoomSupported()) {//光学变焦
+                camera.setTapZoomMultiplier(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        if (isCapture) {
+                            isCapture = false;
+                        } else {
+
+                        }
+                        CommonDjiCallback(djiError, communication);
+                        webInitializationBean.setHybridZoom(Integer.parseInt(type));
+                    }
+                });
+                Log.d("isTapZoomSupported", "true");
+            } /*else if (!TextUtils.isEmpty(type) && camera.isOpticalZoomSupported()) {//设置焦距
+                camera.setOpticalZoomFocalLength(117, new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        if (isCapture) {
+                            isCapture = false;
+                        } else {
+
+                        }
+                        CommonDjiCallback(djiError, communication);
+                        webInitializationBean.setHybridZoom(Integer.parseInt(type));
+                    }
+                });
+                Log.d("isOpticalZoomSupported", "true");
+            }*/ /*else if (!TextUtils.isEmpty(type) && camera.isDigitalZoomSupported()) {//数码变焦
+                camera.setDigitalZoomFactor(Float.parseFloat("2.0"), new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        if (isCapture) {
+                            isCapture = false;
+                        } else {
+
+                        }
+                        CommonDjiCallback(djiError, communication);
+                        webInitializationBean.setHybridZoom(Integer.parseInt(type));
+                    }
+                });
+
+                Log.d("isDigitalZoomSupported", "true");
+            }*/
 
         }
-    }
 
+
+    }
 
     //设置对焦模式
     private void camere_set_focus_mode(Communication communication) {
@@ -5566,7 +5812,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
 
     }
-
     private WaypointV2Mission createWaypointMission(Communication communication) {
 
         String speed = communication.getPara().get(Constant.SPEED);
