@@ -4521,7 +4521,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     }
                 }
             });
-            addRTKStatus(communication);//监听RTK状态
+//            addRTKStatus(communication);//监听RTK状态
         } else {
             communication.setResult("RTK为空");
             communication.setCode(-1);
