@@ -2062,35 +2062,27 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             if (batteries != null) {
                 Battery battery0 = batteries.get(0);
                 Battery battery1 = batteries.get(1);
-                batteryStateBean.setIsConnectTwo(battery0.isConnected() ? 0 : -1);
-                batteryStateBean.setIsConnectTwo(battery1.isConnected() ? 0 : -1);
-                battery0.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
-                    @Override
-                    public void onSuccess(Integer[] integers) {
-                        batteryStateBean.setVoltageOne(String.valueOf(((integers[0]+integers[1]+integers[2]))/3));
-                    }
 
-                    @Override
-                    public void onFailure(DJIError djiError) {
 
-                    }
-                });
-                battery1.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
-                    @Override
-                    public void onSuccess(Integer[] integers) {
-                        batteryStateBean.setVoltageTwo(String.valueOf(((integers[0]+integers[1]+integers[2]))/3));
-                    }
 
-                    @Override
-                    public void onFailure(DJIError djiError) {
 
-                    }
-                });
                 battery0.setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
                         if (chargeRemainingInPercent0 != batteryState.getChargeRemainingInPercent()) {
                             chargeRemainingInPercent0 = batteryState.getChargeRemainingInPercent();
+                            batteryStateBean.setIsConnectOne(battery0.isConnected() ? 0 : -1);
+                            battery0.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
+                                @Override
+                                public void onSuccess(Integer[] integers) {
+                                    batteryStateBean.setVoltageOne(String.valueOf(((integers[0]+integers[1]+integers[2]))/3000));
+                                }
+
+                                @Override
+                                public void onFailure(DJIError djiError) {
+
+                                }
+                            });
                             submitBatteryInfo(batteryState, battery0);
                         }
                     }
@@ -2100,6 +2092,18 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     public void onUpdate(BatteryState batteryState) {
                         if (chargeRemainingInPercent1 != batteryState.getChargeRemainingInPercent()) {
                             chargeRemainingInPercent1 = batteryState.getChargeRemainingInPercent();
+                            batteryStateBean.setIsConnectTwo(battery1.isConnected() ? 0 : -1);
+                            battery1.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
+                                @Override
+                                public void onSuccess(Integer[] integers) {
+                                    batteryStateBean.setVoltageTwo(String.valueOf(((integers[0]+integers[1]+integers[2]))/3000));
+                                }
+
+                                @Override
+                                public void onFailure(DJIError djiError) {
+
+                                }
+                            });
                             submitBatteryInfo(batteryState, battery1);
                         }
                     }
@@ -4603,6 +4607,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
     }
 
+    double latitude;
     private void addRTKStatus(Communication communication) {
         if (ModuleVerificationUtil.isRtkAvailable()) {
             RTK mRtk = ((Aircraft) FPVDemoApplication.getProductInstance()).getFlightController().getRTK();
@@ -4612,20 +4617,24 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     mRtk.setStateCallback(new RTKState.Callback() {
                         @Override
                         public void onUpdate(RTKState rtkState) {
-                            infoBean.setBaseStationLatitude(String.valueOf(rtkState.getBaseStationLocation().getLatitude()));
-                            infoBean.setBaseStationLongitude(String.valueOf(rtkState.getBaseStationLocation().getLongitude()));
-                            infoBean.setRTKBeingUsed(rtkState.isRTKBeingUsed());
+                            if (rtkState.getBaseStationLocation().getLatitude()!=latitude){
+                                latitude=rtkState.getBaseStationLocation().getLatitude();
+                                infoBean.setBaseStationLatitude(String.valueOf(rtkState.getBaseStationLocation().getLatitude()));
+                                infoBean.setBaseStationLongitude(String.valueOf(rtkState.getBaseStationLocation().getLongitude()));
+                                infoBean.setRTKBeingUsed(rtkState.isRTKBeingUsed());
 //                            infoBean.setPositioningSolution(rtkState.getPositioningSolution());
-                            communication.setResult(gson.toJson(infoBean, SettingValueBean.NetRTKBean.Info.class));
-                            communication.setCode(200);
-                            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                            NettyClient.getInstance().sendMessage(communication, null);
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    text_net_rtk_state.setText("RTK：" + rtkState.isRTKBeingUsed() + "");
-                                }
-                            });
+                                communication.setResult(gson.toJson(infoBean, SettingValueBean.NetRTKBean.Info.class));
+                                communication.setCode(200);
+                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                NettyClient.getInstance().sendMessage(communication, null);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        text_net_rtk_state.setText("RTK：" + rtkState.isRTKBeingUsed() + "");
+                                    }
+                                });
+                            }
+
                         }
                     });
                 }
