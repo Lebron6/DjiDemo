@@ -590,6 +590,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                send(data);
 //                }
 //                testTTSYY();
+                sendDataToOSDK(PagerUtils.getInstance().OPEN_LIGHT);
                 break;
             }
             case R.id.btn_simulator: {
@@ -599,17 +600,18 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                isLiveShowOn();
 //                startLiveShow(null);
 //                resumeWaypointV2(null);
-                new Thread() {
-                    @Override
-                    public void run() {
-                        PagerUtils instance = PagerUtils.getInstance();
-                        String bytesToString = instance.bytesToString(instance.readFileFromAssets(ConnectionActivity.this, null, "jun.mp3"));
-                        byte[] bytes = instance.HexString2Bytes(bytesToString);
-                        voiceByteData = instance.splitBytes(bytes, 120);
-                        send(instance.MP3STARTSINS);
-                        upLoadMP3(voiceByteData[0]);
-                    }
-                }.start();
+//                new Thread() {
+//                    @Override
+//                    public void run() {
+//                        PagerUtils instance = PagerUtils.getInstance();
+//                        String bytesToString = instance.bytesToString(instance.readFileFromAssets(ConnectionActivity.this, null, "jun.mp3"));
+//                        byte[] bytes = instance.HexString2Bytes(bytesToString);
+//                        voiceByteData = instance.splitBytes(bytes, 120);
+//                        send(instance.MP3STARTSINS);
+//                        upLoadMP3(voiceByteData[0]);
+//                    }
+//                }.start();
+                sendDataToOSDK(PagerUtils.getInstance().CLOSE_LIGHT);
 
                 break;
             }
