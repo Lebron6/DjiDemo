@@ -2136,12 +2136,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 batteryStateBean.setPersentOne(batteryState.getChargeRemainingInPercent());
 //                batteryStateBean.setVoltageOne(df.format((float) batteryState.getVoltage() / 12000));
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        text_net_rtk_state.setText(batteryState.getVoltage() + "");
-                    }
-                });
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        text_net_rtk_state.setText(batteryState.getVoltage() + "");
+//                    }
+//                });
 //                batteryStateBean.setIsConnectOne(battery.isConnected() ? 0 : -1);
                 break;
             case 1:
@@ -2149,12 +2149,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 batteryStateBean.setBattery_temperature_two(batteryState.getTemperature());
                 batteryStateBean.setPersentTwo(batteryState.getChargeRemainingInPercent());
 //                batteryStateBean.setVoltageTwo(df.format((float) batteryState.getVoltage() / 12000));
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        text_net_rtk_account_state.setText(batteryState.getVoltage() + "");
-                    }
-                });
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        text_net_rtk_account_state.setText(batteryState.getVoltage() + "");
+//                    }
+//                });
 
                 //                batteryStateBean.setIsConnectTwo(battery.isConnected() ? 0 : -1);
 
@@ -5578,7 +5578,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             communication_onExecutionFinish.setResult("{\"result\":\""+xTIntList.get(i) + "\"}");
                             communication_onExecutionFinish.setMethod("hoverPhoto");
                             NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
-                            Log.d("悬停航点-EU", xTIntList.get(i) + "" + waypointV2MissionExecutionEvent.getProgress().isWaypointReached());
+                            Log.d("悬停航点-EU", xTIntList.get(i) + "" + waypointV2MissionExecutionEvent.getProgress().isWaypointReached() + System.currentTimeMillis());
+                            xTIntList.remove(i);
+                            return;
                         }
                     }
                 }
