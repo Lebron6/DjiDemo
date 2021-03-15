@@ -2071,6 +2071,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 battery0.setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
+                        if (batteryState.getChargeRemainingInPercent() == 0) {
+                            initBattery();
+                            return;
+                        }
                         battery0.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
                             @Override
                             public void onSuccess(Integer[] integers) {
@@ -2093,6 +2097,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 battery1.setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
+                        if (batteryState.getChargeRemainingInPercent() == 0) {
+                            initBattery();
+                            return;
+                        }
                         battery1.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
                             @Override
                             public void onSuccess(Integer[] integers) {
@@ -2133,29 +2141,13 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 batteryStateBean.setBattery_discharges_one(batteryState.getNumberOfDischarges());
                 batteryStateBean.setBattery_temperature_one(batteryState.getTemperature());
                 batteryStateBean.setPersentOne(batteryState.getChargeRemainingInPercent());
-//                batteryStateBean.setVoltageOne(df.format((float) batteryState.getVoltage() / 12000));
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-//                        text_net_rtk_state.setText(batteryState.getVoltage() + "");
-                    }
-                });
                 batteryStateBean.setIsConnectOne(battery.isConnected() ? 0 : -1);
                 break;
             case 1:
                 batteryStateBean.setBattery_discharges_two(batteryState.getNumberOfDischarges());
                 batteryStateBean.setBattery_temperature_two(batteryState.getTemperature());
                 batteryStateBean.setPersentTwo(batteryState.getChargeRemainingInPercent());
-//                batteryStateBean.setVoltageTwo(df.format((float) batteryState.getVoltage() / 12000));
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-//                        text_net_rtk_account_state.setText(batteryState.getVoltage() + "");
-                    }
-                });
-
                 batteryStateBean.setIsConnectTwo(battery.isConnected() ? 0 : -1);
-
                 break;
         }
 
@@ -2168,7 +2160,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         communication_battery.setResult(gson.toJson(batteryStateBean, SettingValueBean.BatteryStateBean.class));
         NettyClient.getInstance().sendMessage(communication_battery, null);
     }
-
 
 
     String gimbal_pitch_speed = "", gimbal_yaw_speed = "";
@@ -4589,7 +4580,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError != null) {
-                        communication.setResult("CUSTOM_RTK_START_FAIL"+djiError.getDescription());
+                        communication.setResult("CUSTOM_RTK_START_FAIL" + djiError.getDescription());
                         communication.setCode(200);
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                         NettyClient.getInstance().sendMessage(communication, null);
@@ -5593,7 +5584,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             public void onExecutionUpdate(WaypointV2MissionExecutionEvent waypointV2MissionExecutionEvent) {
                 if (waypointV2MissionExecutionEvent != null && waypointV2MissionExecutionEvent.getProgress() != null) {
                     targetWaypointIndex = waypointV2MissionExecutionEvent.getProgress().getTargetWaypointIndex();
-                    Log.d("所有航点-EU",  waypointV2MissionExecutionEvent.getProgress().isWaypointReached() + "");
+                    Log.d("所有航点-EU", waypointV2MissionExecutionEvent.getProgress().isWaypointReached() + "");
                     for (int i = 0; i < xTIntList.size() && waypointV2MissionExecutionEvent.getProgress().isWaypointReached(); i++) {
                         if (i == targetWaypointIndex) {
                             if (communication_onExecutionFinish == null) {
@@ -5601,7 +5592,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             }
                             communication_onExecutionFinish.setCode(200);
                             communication_onExecutionFinish.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                            communication_onExecutionFinish.setResult("{\"result\":\""+xTIntList.get(i) + "\"}");
+                            communication_onExecutionFinish.setResult("{\"result\":\"" + xTIntList.get(i) + "\"}");
                             communication_onExecutionFinish.setMethod("hoverPhoto");
                             NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
                             Log.d("悬停航点-EU", xTIntList.get(i) + "" + waypointV2MissionExecutionEvent.getProgress().isWaypointReached() + System.currentTimeMillis());
@@ -6181,7 +6172,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         }
                     }
                 });
-            }else{
+            } else {
                 showToast("mFlightController=null");
             }
         }
