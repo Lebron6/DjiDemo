@@ -4576,6 +4576,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 infoBean.setPort(Integer.parseInt(communication.getPara().get("port")));
             }
 
+
             NetworkServiceSettings.Builder builder = new NetworkServiceSettings.Builder()
                     .userName(infoBean.getUsername()).password(infoBean.getPassword()).ip(infoBean.getIp())
                     .mountPoint(infoBean.getMountPoint()).port(infoBean.getPort());
@@ -4586,7 +4587,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError != null) {
-                        showToast("启动网络RTK失败" + djiError.getDescription());
+                        communication.setResult("CUSTOM_RTK_START_FAIL"+djiError.getDescription());
+                        communication.setCode(200);
+                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication, null);
+
                     } else {
                         showToast("启动网络RTK成功");
                     }
