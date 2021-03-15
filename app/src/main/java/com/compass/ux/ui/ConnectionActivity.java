@@ -26,6 +26,8 @@ import dji.common.flightcontroller.VisionDetectionState;
 import dji.common.flightcontroller.WindDirection;
 import dji.common.flightcontroller.flightassistant.PerceptionInformation;
 import dji.common.flightcontroller.rtk.CoordinateSystem;
+import dji.common.flightcontroller.rtk.NetworkServicePlanType;
+import dji.common.flightcontroller.rtk.NetworkServicePlansState;
 import dji.common.flightcontroller.rtk.NetworkServiceSettings;
 import dji.common.flightcontroller.rtk.NetworkServiceState;
 import dji.common.flightcontroller.rtk.RTKBaseStationInformation;
@@ -4609,6 +4611,27 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             text_net_rtk_account_state.setText("RTK账号状态:" + description5);
                         }
                     });
+                }
+            });
+            provider.activateNetworkService(NetworkServicePlanType.A, new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+
+                }
+            });
+
+            provider.getNetworkServiceOrderPlans(new CommonCallbacks.CompletionCallbackWith<NetworkServicePlansState>() {
+                @Override
+                public void onSuccess(NetworkServicePlansState networkServicePlansState) {
+                    //这获取网络服务计划
+                    String description3 = "AQ=获取网络服务计划: " + networkServicePlansState;
+                    //     NettyClient.getInstance().sendMsgToServer(description3);
+                    showToast(description3);
+                }
+
+                @Override
+                public void onFailure(DJIError djiError) {
+
                 }
             });
             addRTKStatus(communication);//监听RTK状态
