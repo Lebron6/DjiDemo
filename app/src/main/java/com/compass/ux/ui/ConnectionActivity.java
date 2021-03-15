@@ -2056,6 +2056,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     int chargeRemainingInPercent0, chargeRemainingInPercent1;//电池电量是否发生改变
     float voltageOne, voltageTwo;//电池电压是否改变
 
+
     private void initBattery() {
         BaseProduct product = FPVDemoApplication.getProductInstance();
         if (product != null) {
@@ -2066,19 +2067,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 battery0.setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
-                        if (chargeRemainingInPercent0 != batteryState.getChargeRemainingInPercent()) {
-                            chargeRemainingInPercent0 = batteryState.getChargeRemainingInPercent();
-                            batteryStateBean.setIsConnectOne(battery0.isConnected() ? 0 : -1);
-                            submitBatteryInfo(batteryState, battery0);
-                        }
                         battery0.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
                             @Override
                             public void onSuccess(Integer[] integers) {
-                                if (voltageOne != ((integers[0] + integers[1] + integers[2]))) {
-                                    voltageOne = ((integers[0] + integers[1] + integers[2]));
-                                    batteryStateBean.setVoltageOne(df.format(((integers[0] + integers[1] + integers[2])) / 3000));
-                                    submitBatteryInfo(batteryState, battery0);
-                                }
+                                int childBatteryAll = (integers[0] + integers[1] + integers[2] + integers[3] + integers[4] + integers[5] + integers[6] + integers[7] + integers[8] + integers[9] + integers[10] + integers[11]);
+                                batteryStateBean.setVoltageOne(df.format((float) childBatteryAll / 12000));
+                                submitBatteryInfo(batteryState, battery0);
                             }
 
                             @Override
@@ -2086,24 +2080,21 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
                             }
                         });
+                        if (chargeRemainingInPercent0 != batteryState.getChargeRemainingInPercent()) {
+                            chargeRemainingInPercent0 = batteryState.getChargeRemainingInPercent();
+                            submitBatteryInfo(batteryState, battery0);
+                        }
                     }
                 });
                 battery1.setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
-                        if (chargeRemainingInPercent1 != batteryState.getChargeRemainingInPercent()) {
-                            chargeRemainingInPercent1 = batteryState.getChargeRemainingInPercent();
-                            batteryStateBean.setIsConnectTwo(battery1.isConnected() ? 0 : -1);
-                            submitBatteryInfo(batteryState, battery1);
-                        }
                         battery1.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
                             @Override
                             public void onSuccess(Integer[] integers) {
-                                if (voltageTwo != ((integers[0] + integers[1] + integers[2]))) {
-                                    voltageTwo = ((integers[0] + integers[1] + integers[2]));
-                                    batteryStateBean.setVoltageTwo(df.format(((integers[0] + integers[1] + integers[2])) / 3000));
-                                    submitBatteryInfo(batteryState, battery1);
-                                }
+                                int childBatteryAll = (integers[0] + integers[1] + integers[2] + integers[3] + integers[4] + integers[5] + integers[6] + integers[7] + integers[8] + integers[9] + integers[10] + integers[11]);
+                                batteryStateBean.setVoltageTwo(df.format((float) childBatteryAll / 12000));
+                                submitBatteryInfo(batteryState, battery1);
                             }
 
                             @Override
@@ -2111,10 +2102,14 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
                             }
                         });
+                        if (chargeRemainingInPercent1 != batteryState.getChargeRemainingInPercent()) {
+                            chargeRemainingInPercent1 = batteryState.getChargeRemainingInPercent();
+                            submitBatteryInfo(batteryState, battery1);
+                        }
                     }
                 });
 
-            } else {//设备连接后需要3-5秒（各部件初始化）后才能获取到电池信息，可以通过onComponentChange监听。这里延迟一秒后再获取电池信息
+            } else {//onComponentChange之后
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -2125,8 +2120,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
     }
 
-    //推送电池状态
-    DecimalFormat df = new DecimalFormat("0.00");//格式化小数
+
+    DecimalFormat df = new DecimalFormat("0.000");//鏍煎紡鍖栧皬鏁?
 
     private void submitBatteryInfo(BatteryState batteryState, Battery battery) {
         switch (battery.getIndex()) {
@@ -2135,28 +2130,27 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 batteryStateBean.setBattery_temperature_one(batteryState.getTemperature());
                 batteryStateBean.setPersentOne(batteryState.getChargeRemainingInPercent());
 //                batteryStateBean.setVoltageOne(df.format((float) batteryState.getVoltage() / 12000));
-
-//                runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        text_net_rtk_state.setText(batteryState.getVoltage() + "");
-//                    }
-//                });
-//                batteryStateBean.setIsConnectOne(battery.isConnected() ? 0 : -1);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        text_net_rtk_state.setText(batteryState.getVoltage() + "");
+                    }
+                });
+                batteryStateBean.setIsConnectOne(battery.isConnected() ? 0 : -1);
                 break;
             case 1:
                 batteryStateBean.setBattery_discharges_two(batteryState.getNumberOfDischarges());
                 batteryStateBean.setBattery_temperature_two(batteryState.getTemperature());
                 batteryStateBean.setPersentTwo(batteryState.getChargeRemainingInPercent());
 //                batteryStateBean.setVoltageTwo(df.format((float) batteryState.getVoltage() / 12000));
-//                runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        text_net_rtk_account_state.setText(batteryState.getVoltage() + "");
-//                    }
-//                });
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        text_net_rtk_account_state.setText(batteryState.getVoltage() + "");
+                    }
+                });
 
-                //                batteryStateBean.setIsConnectTwo(battery.isConnected() ? 0 : -1);
+                batteryStateBean.setIsConnectTwo(battery.isConnected() ? 0 : -1);
 
                 break;
         }
@@ -2170,6 +2164,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         communication_battery.setResult(gson.toJson(batteryStateBean, SettingValueBean.BatteryStateBean.class));
         NettyClient.getInstance().sendMessage(communication_battery, null);
     }
+
+
 
     String gimbal_pitch_speed = "", gimbal_yaw_speed = "";
 
@@ -6137,6 +6133,30 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             change_lens(communication);
         }
     }
+
+    private void sendDataToOSDK(byte[] data) {
+        Aircraft aircraft = FPVDemoApplication.getAircraftInstance();
+
+        if (aircraft == null) {
+            showToast("Disconnected");
+        } else {
+
+            mFlightController = aircraft.getFlightController();
+            if (mFlightController != null) {
+                mFlightController.sendDataToOnboardSDKDevice(data, new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        if (djiError != null) {
+                            showToast(djiError.getDescription());
+                        }
+                    }
+                });
+            }else{
+                showToast("mFlightController=null");
+            }
+        }
+    }
+
 
     /**
      * 拼接文本指令
