@@ -4604,27 +4604,27 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     });
                 }
             });
-            provider.activateNetworkService(NetworkServicePlanType.A, new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
-
-                }
-            });
-
-            provider.getNetworkServiceOrderPlans(new CommonCallbacks.CompletionCallbackWith<NetworkServicePlansState>() {
-                @Override
-                public void onSuccess(NetworkServicePlansState networkServicePlansState) {
-                    //这获取网络服务计划
-                    String description3 = "AQ=获取网络服务计划: " + networkServicePlansState;
-                    //     NettyClient.getInstance().sendMsgToServer(description3);
-                    showToast(description3);
-                }
-
-                @Override
-                public void onFailure(DJIError djiError) {
-
-                }
-            });
+//            provider.activateNetworkService(NetworkServicePlanType.A, new CommonCallbacks.CompletionCallback() {
+//                @Override
+//                public void onResult(DJIError djiError) {
+//
+//                }
+//            });
+//
+//            provider.getNetworkServiceOrderPlans(new CommonCallbacks.CompletionCallbackWith<NetworkServicePlansState>() {
+//                @Override
+//                public void onSuccess(NetworkServicePlansState networkServicePlansState) {
+//                    //这获取网络服务计划
+//                    String description3 = "AQ=获取网络服务计划: " + networkServicePlansState;
+//                    //     NettyClient.getInstance().sendMsgToServer(description3);
+//                    showToast(description3);
+//                }
+//
+//                @Override
+//                public void onFailure(DJIError djiError) {
+//
+//                }
+//            });
             addRTKStatus(communication);//监听RTK状态
         }
     }
