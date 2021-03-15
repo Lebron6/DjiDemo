@@ -2135,7 +2135,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        text_net_rtk_state.setText(batteryState.getVoltage() + "");
+//                        text_net_rtk_state.setText(batteryState.getVoltage() + "");
                     }
                 });
                 batteryStateBean.setIsConnectOne(battery.isConnected() ? 0 : -1);
@@ -2148,7 +2148,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        text_net_rtk_account_state.setText(batteryState.getVoltage() + "");
+//                        text_net_rtk_account_state.setText(batteryState.getVoltage() + "");
                     }
                 });
 
