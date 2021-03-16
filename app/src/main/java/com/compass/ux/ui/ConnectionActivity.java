@@ -155,6 +155,7 @@ import com.compass.ux.bean.WebInitializationBean;
 import com.compass.ux.live.live.ModuleVerificationUtil;
 import com.compass.ux.netty_lib.NettyService;
 import com.compass.ux.netty_lib.activity.NettyActivity;
+import com.compass.ux.netty_lib.netty.FutureListener;
 import com.compass.ux.netty_lib.netty.NettyClient;
 import com.compass.ux.netty_lib.zhang.Communication;
 import com.compass.ux.takephoto.FPVDemoApplication;
@@ -213,7 +214,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private TextView mTextConnectionStatus;
     private TextView mTextProduct;
     private TextView mVersionTv;
-    private TextView text_net_rtk_state, text_net_rtk_account_state,text_plane_status;
+    private TextView text_net_rtk_state, text_net_rtk_account_state, text_plane_status;
     private Button mBtnOpen, btn_download, btn_gaode, btn_simulator, btn_login, btn_pl, btn_voice_end;
     private EditText et_zoom;
 
@@ -735,7 +736,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             initPreviewer();
             startLiveShow(null);//开始推流
             initBattery();
-            Log.d("广播航点-EU","广播");
+            Log.d("广播航点-EU", "广播");
         }
     };
 
@@ -1202,7 +1203,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 KeyManager.getInstance().getValue(diagnosticsKey, new GetCallback() {
                                     @Override
                                     public void onSuccess(Object o) {
-                                        text_plane_status.setText("status:"+o.toString());
+                                        text_plane_status.setText("status:" + o.toString());
                                         String planeStatusResult = "";
                                         planeStatusResult = o.toString();
 //                        Log.d("diagnosticsKey", planeStatusResult);
@@ -1220,10 +1221,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
                                     @Override
                                     public void onFailure(DJIError djiError) {
-                                        if (djiError!=null){
-                                            text_plane_status.setText("当前状态:"+djiError.getDescription());
-                                        }else{
-                                            text_plane_status.setText("当前状态:"+"未知");
+                                        if (djiError != null) {
+                                            text_plane_status.setText("status:" + djiError.getDescription());
+                                        } else {
+                                            text_plane_status.setText("status:" + "unknow");
                                         }
 
                                     }
@@ -2125,7 +2126,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     }
                 });
 
-            }else{
+            } else {
                 showToast("电池初始化中...");
             }
 //            else {//onComponentChange之后
@@ -3980,6 +3981,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     //获取设置的一些值
     private void getSettingValue(Communication communication) {
+        Log.e("王明阁航点-EU", "getSettingValue");
         SettingValueBean settingValueBean = new SettingValueBean();
         settingValueBean.setLowBatteryWarning(lowBatteryWarning);
         settingValueBean.setSeriousLowBatteryWarning(seriousLowBatteryWarning);
@@ -4020,8 +4022,17 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         communication.setEquipmentId(MApplication.EQUIPMENT_ID);
         communication.setMethod((Constant.GET_SETTING_DATA));
         communication.setResult(gson.toJson(settingValueBean, SettingValueBean.class));
-        NettyClient.getInstance().sendMessage(communication, null);
-        Log.d("王明阁航点-EU",gson.toJson(settingValueBean, SettingValueBean.class));
+        NettyClient.getInstance().sendMessage(communication, new FutureListener() {
+            @Override
+            public void success() {
+                Log.e("王明阁航点-EU", "success");
+            }
+            @Override
+            public void error() {
+                Log.e("王明阁航点-EU", "getSettingDataError");
+            }
+        });
+        Log.d("王明阁航点-EU", gson.toJson(settingValueBean, SettingValueBean.class));
     }
 
     //设置低电量
@@ -5606,7 +5617,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         }
                         switch (myWayPointActionList.get(i).getWayPointAction().get(j).getActionType()) {
                             case "0"://悬停
-                                xTIntList.add((i+1) + "--" + myWayPointActionList.get(i).getWayPointAction().get(0).getWaitingTime());
+                                xTIntList.add((i + 1) + "--" + myWayPointActionList.get(i).getWayPointAction().get(0).getWaitingTime());
                                 waypointAction0Actuator = new WaypointActuator.Builder()
                                         .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
                                         .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
@@ -5839,7 +5850,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     private void startWaypointV2(Communication communication) {
 //        if (canStartMission) {
-        Log.d("开始飞行航点-EU","紧紧测试" + communication.getPara().get(Constant.WAY_POINTS));
+        Log.d("开始飞行航点-EU", "紧紧测试" + communication.getPara().get(Constant.WAY_POINTS));
         waypointV2MissionOperator.startMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
             @Override
             public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
