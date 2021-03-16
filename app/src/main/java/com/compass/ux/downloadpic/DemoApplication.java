@@ -176,6 +176,7 @@ public class DemoApplication extends Application {
                                 componentKey,
                                 oldComponent,
                                 newComponent));
+                notifyStatusChange();
 
             }
             @Override

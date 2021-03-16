@@ -213,7 +213,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private TextView mTextConnectionStatus;
     private TextView mTextProduct;
     private TextView mVersionTv;
-    private TextView text_net_rtk_state, text_net_rtk_account_state;
+    private TextView text_net_rtk_state, text_net_rtk_account_state,text_plane_status;
     private Button mBtnOpen, btn_download, btn_gaode, btn_simulator, btn_login, btn_pl, btn_voice_end;
     private EditText et_zoom;
     private EditText et_url;
@@ -513,6 +513,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         mVersionTv = (TextView) findViewById(R.id.textView2);
         text_net_rtk_state = (TextView) findViewById(R.id.text_net_rtk_state);
         text_net_rtk_account_state = (TextView) findViewById(R.id.text_net_rtk_account_state);
+        text_plane_status = (TextView) findViewById(R.id.text_plane_status);
         mVersionTv.setText(getResources().getString(R.string.sdk_version, DJISDKManager.getInstance().getSDKVersion()));
         mBtnOpen = (Button) findViewById(R.id.btn_open);
         mBtnOpen.setOnClickListener(this);
@@ -1199,6 +1200,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 KeyManager.getInstance().getValue(diagnosticsKey, new GetCallback() {
                                     @Override
                                     public void onSuccess(Object o) {
+                                        text_plane_status.setText("status:"+o.toString());
                                         String planeStatusResult = "";
                                         planeStatusResult = o.toString();
 //                        Log.d("diagnosticsKey", planeStatusResult);
@@ -1216,6 +1218,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
                                     @Override
                                     public void onFailure(DJIError djiError) {
+                                        if (djiError!=null){
+                                            text_plane_status.setText("当前状态:"+djiError.getDescription());
+                                        }else{
+                                            text_plane_status.setText("当前状态:"+"未知");
+                                        }
 
                                     }
                                 });
@@ -2074,10 +2081,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 battery0.setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
-                        if (batteryState.getChargeRemainingInPercent() == 0) {
-                            initBattery();
-                            return;
-                        }
                         battery0.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
                             @Override
                             public void onSuccess(Integer[] integers) {
@@ -2100,10 +2103,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 battery1.setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
-                        if (batteryState.getChargeRemainingInPercent() == 0) {
-                            initBattery();
-                            return;
-                        }
                         battery1.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
                             @Override
                             public void onSuccess(Integer[] integers) {
@@ -2124,14 +2123,15 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     }
                 });
 
-            } else {//onComponentChange之后
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        initBattery();
-                    }
-                }, 2000);
             }
+//            else {//onComponentChange之后
+//                new Handler().postDelayed(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        initBattery();
+//                    }
+//                }, 2000);
+//            }
         }
     }
 
@@ -4607,27 +4607,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     });
                 }
             });
-//            provider.activateNetworkService(NetworkServicePlanType.A, new CommonCallbacks.CompletionCallback() {
-//                @Override
-//                public void onResult(DJIError djiError) {
-//
-//                }
-//            });
-//
-//            provider.getNetworkServiceOrderPlans(new CommonCallbacks.CompletionCallbackWith<NetworkServicePlansState>() {
-//                @Override
-//                public void onSuccess(NetworkServicePlansState networkServicePlansState) {
-//                    //这获取网络服务计划
-//                    String description3 = "AQ=获取网络服务计划: " + networkServicePlansState;
-//                    //     NettyClient.getInstance().sendMsgToServer(description3);
-//                    showToast(description3);
-//                }
-//
-//                @Override
-//                public void onFailure(DJIError djiError) {
-//
-//                }
-//            });
+
             addRTKStatus(communication);//监听RTK状态
         }
     }
