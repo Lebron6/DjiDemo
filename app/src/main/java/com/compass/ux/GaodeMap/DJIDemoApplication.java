@@ -125,6 +125,7 @@ public class DJIDemoApplication extends Application {
                                 componentKey,
                                 oldComponent,
                                 newComponent));
+                notifyStatusChange();
 
             }
             @Override

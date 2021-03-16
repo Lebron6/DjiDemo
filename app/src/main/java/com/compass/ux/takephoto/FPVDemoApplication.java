@@ -177,7 +177,7 @@ public class FPVDemoApplication extends Application {
                                 componentKey,
                                 oldComponent,
                                 newComponent));
-
+                notifyStatusChange();
             }
 
             @Override

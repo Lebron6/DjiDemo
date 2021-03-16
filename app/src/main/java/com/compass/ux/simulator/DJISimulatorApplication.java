@@ -141,7 +141,7 @@ public class DJISimulatorApplication extends Application {
                                 componentKey,
                                 oldComponent,
                                 newComponent));
-
+                notifyStatusChange();
             }
             @Override
             public void onInitProcess(DJISDKInitEvent djisdkInitEvent, int i) {
