@@ -2124,7 +2124,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 });
 
             }else{
-                showToast("获取电池信息失败");
+                showToast("电池初始化中...");
             }
 //            else {//onComponentChange之后
 //                new Handler().postDelayed(new Runnable() {

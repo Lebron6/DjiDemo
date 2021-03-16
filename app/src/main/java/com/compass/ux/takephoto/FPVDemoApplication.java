@@ -150,7 +150,6 @@ public class FPVDemoApplication extends Application {
             public void onProductConnect(BaseProduct baseProduct) {
                 Log.d(TAG, String.format("onProductConnect newProduct:%s", baseProduct));
                 notifyStatusChange();
-
             }
 
             @Override
@@ -189,7 +188,6 @@ public class FPVDemoApplication extends Application {
             public void onDatabaseDownloadProgress(long l, long l1) {
 
             }
-
         };
         //Check the permissions before registering the application for android system 6.0 above.
         int permissionCheck = ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
@@ -198,7 +196,6 @@ public class FPVDemoApplication extends Application {
             //This is used to start SDK services and initiate SDK.
             DJISDKManager.getInstance().registerApp(getApplicationContext(), mDJISDKManagerCallback);
             Toast.makeText(getApplicationContext(), "registering, pls wait...", Toast.LENGTH_LONG).show();
-
         } else {
             Toast.makeText(getApplicationContext(), "Please check if the permission is granted.", Toast.LENGTH_LONG).show();
         }
