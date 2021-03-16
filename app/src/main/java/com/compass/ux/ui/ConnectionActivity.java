@@ -216,6 +216,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private TextView text_net_rtk_state, text_net_rtk_account_state,text_plane_status;
     private Button mBtnOpen, btn_download, btn_gaode, btn_simulator, btn_login, btn_pl, btn_voice_end;
     private EditText et_zoom;
+
     private EditText et_url;
     private CheckBox repeat_send_checkbox;
     private SeekBar seek_bar_volume;
@@ -734,6 +735,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             initPreviewer();
             startLiveShow(null);//开始推流
             initBattery();
+            Log.d("广播航点-EU","广播");
         }
     };
 
@@ -2706,7 +2708,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             NettyClient.getInstance().sendMessage(communication, null);
             return;
         } else {
-
             FlightController mFlightController = aircraft.getFlightController();
             if (mFlightController != null) {
                 communication.setResult(mFlightController.getState().isFlying() ? "1" : "0");
@@ -4020,6 +4021,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         communication.setMethod((Constant.GET_SETTING_DATA));
         communication.setResult(gson.toJson(settingValueBean, SettingValueBean.class));
         NettyClient.getInstance().sendMessage(communication, null);
+        Log.d("王明阁航点-EU",gson.toJson(settingValueBean, SettingValueBean.class));
     }
 
     //设置低电量
@@ -5386,6 +5388,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     //航线规划v2
     private void waypoint_plan_V2(Communication communication) {
+        MissionControl.getInstance().removeAllListeners();
         waypointV2MissionOperator = MissionControl.getInstance().getWaypointMissionV2Operator();
         Log.d("航点-EU", "仅仅测试" + communication.getPara().get(Constant.WAY_POINTS));
         communication_upload_mission = communication;
@@ -5397,10 +5400,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
                     if (djiWaypointV2Error == null) {
                         Toast.makeText(ConnectionActivity.this, "Mission is loaded successfully", Toast.LENGTH_SHORT).show();
+
                         waypointV2MissionOperator.uploadMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                             @Override
                             public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
                                 if (djiWaypointV2Error != null) {
+
                                     Toast.makeText(ConnectionActivity.this, djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
                                     communication_upload_mission.setResult(djiWaypointV2Error.getDescription());
                                     communication_upload_mission.setCode(-1);
@@ -5518,6 +5523,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 //上传航线成功
                 if (actionUploadEvent.getPreviousState() == ActionState.UPLOADING
                         && actionUploadEvent.getCurrentState() == ActionState.READY_TO_EXECUTE) {
+
                     Toast.makeText(ConnectionActivity.this, "Actions are uploaded successfully", Toast.LENGTH_SHORT).show();
 
                 }
@@ -5536,7 +5542,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             @Override
             public void onExecutionFinish(int i, DJIWaypointV2Error djiWaypointV2Error) {
 
-
             }
         };
 
@@ -5550,7 +5555,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         xTIntList.clear();
 //        Toast.makeText(this, "获取netty推过来的数据" + new Gson().toJson(communication), Toast.LENGTH_SHORT).show();
         mWayPointActionV2 = communication.getPara().get(Constant.WAY_POINTS);
-        Log.d("所有航点-EU", "上传给大疆做动作的点" + mWayPointActionV2);
+        Log.d("上传航点-EU", "仅仅测试" + mWayPointActionV2);
         List<WayPointsV2Bean.WayPointsBean> myWayPointActionList;
         if (!TextUtils.isEmpty(mWayPointActionV2)) {
             try {
@@ -5834,7 +5839,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     private void startWaypointV2(Communication communication) {
 //        if (canStartMission) {
-        Log.d("开始飞行航点-EU",communication.getPara().get(Constant.WAY_POINTS));
+        Log.d("开始飞行航点-EU","紧紧测试" + communication.getPara().get(Constant.WAY_POINTS));
         waypointV2MissionOperator.startMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
             @Override
             public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
