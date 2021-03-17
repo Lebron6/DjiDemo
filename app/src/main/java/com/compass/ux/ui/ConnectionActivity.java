@@ -227,7 +227,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private FlightAssistant mFlightAssistant;
     private OcuSyncLink ocuSyncLink;
     private RTK mRTK;
-    private Battery battery;
     private Gimbal gimbal;
     private Timer mSendVirtualStickDataTimer;
     private float mPitch;
@@ -2075,6 +2074,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
 
     private void initBattery() {
+        Log.e("mg航点-EU","执行initBattery");
         BaseProduct product = FPVDemoApplication.getProductInstance();
         if (product != null) {
             List<Battery> batteries = product.getBatteries();
@@ -2094,7 +2094,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
                             @Override
                             public void onFailure(DJIError djiError) {
-
                             }
                         });
                         if (chargeRemainingInPercent0 != batteryState.getChargeRemainingInPercent()) {
@@ -2106,17 +2105,19 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 battery1.setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
+                        Log.e("mg航点-EU","电池2电量"+batteryState.getChargeRemainingInPercent());
+
                         battery1.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
                             @Override
                             public void onSuccess(Integer[] integers) {
                                 int childBatteryAll = (integers[0] + integers[1] + integers[2] + integers[3] + integers[4] + integers[5] + integers[6] + integers[7] + integers[8] + integers[9] + integers[10] + integers[11]);
                                 batteryStateBean.setVoltageTwo(df.format((float) childBatteryAll / 12000));
+                                Log.e("mg航点-EU","电池2电压"+batteryStateBean.getVoltageTwo());
                                 submitBatteryInfo(batteryState, battery1);
                             }
 
                             @Override
                             public void onFailure(DJIError djiError) {
-
                             }
                         });
                         if (chargeRemainingInPercent1 != batteryState.getChargeRemainingInPercent()) {
@@ -2127,16 +2128,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 });
 
             } else {
-                showToast("电池初始化中...");
+                Log.e("mg航点-EU","电池初始化");
             }
-//            else {//onComponentChange之后
-//                new Handler().postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        initBattery();
-//                    }
-//                }, 2000);
-//            }
         }
     }
 
@@ -3981,7 +3974,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     //获取设置的一些值
     private void getSettingValue(Communication communication) {
-        Log.e("王明阁航点-EU", "getSettingValue");
+
         SettingValueBean settingValueBean = new SettingValueBean();
         settingValueBean.setLowBatteryWarning(lowBatteryWarning);
         settingValueBean.setSeriousLowBatteryWarning(seriousLowBatteryWarning);
@@ -4021,18 +4014,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         communication.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
         communication.setEquipmentId(MApplication.EQUIPMENT_ID);
         communication.setMethod((Constant.GET_SETTING_DATA));
+        communication.setCode(200);
         communication.setResult(gson.toJson(settingValueBean, SettingValueBean.class));
-        NettyClient.getInstance().sendMessage(communication, new FutureListener() {
-            @Override
-            public void success() {
-                Log.e("王明阁航点-EU", "success");
-            }
-            @Override
-            public void error() {
-                Log.e("王明阁航点-EU", "getSettingDataError");
-            }
-        });
-        Log.d("王明阁航点-EU", gson.toJson(settingValueBean, SettingValueBean.class));
+        NettyClient.getInstance().sendMessage(communication,null);
+        Log.d("mg航点-EU", gson.toJson(settingValueBean, SettingValueBean.class));
     }
 
     //设置低电量

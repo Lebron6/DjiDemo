@@ -177,6 +177,8 @@ public class FPVDemoApplication extends Application {
                                 oldComponent,
                                 newComponent));
                 notifyStatusChange();
+                Log.e("mg航点-EU","onComponentChange");
+
             }
 
             @Override
