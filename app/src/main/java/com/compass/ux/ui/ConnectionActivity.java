@@ -5427,8 +5427,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             NettyClient.getInstance().sendMessage(communication_upload_mission, null);
         }
     }
-
+    boolean isuploadState = false;//给后台是否发送过上传成功
     private void setWayV2UpListener(Communication communication) {
+        isuploadState = false;
         waypointV2MissionOperatorListener = new WaypointV2MissionOperatorListener() {
             @Override
             public void onDownloadUpdate(WaypointV2MissionDownloadEvent waypointV2MissionDownloadEvent) {
@@ -5447,11 +5448,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         + "\nCurrentState=" + waypointV2MissionUploadEvent.getCurrentState());
                 if (waypointV2MissionUploadEvent.getPreviousState() == WaypointV2MissionState.UPLOADING
                         && waypointV2MissionUploadEvent.getCurrentState() == WaypointV2MissionState.READY_TO_EXECUTE) {
-                    Toast.makeText(ConnectionActivity.this, "Mission is uploaded successfully", Toast.LENGTH_SHORT).show();
-                    communication_upload_mission.setResult("Mission is uploaded successfully");
-                    communication_upload_mission.setCode(200);
-                    communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    NettyClient.getInstance().sendMessage(communication_upload_mission, null);
                 }
             }
 
@@ -5517,12 +5513,15 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     uploadWaypointAction(communication);
                 }
                 //上传航线成功
-                if (actionUploadEvent.getPreviousState() == ActionState.UPLOADING
+                if (!isuploadState && actionUploadEvent.getPreviousState() == ActionState.UPLOADING
                         && actionUploadEvent.getCurrentState() == ActionState.READY_TO_EXECUTE) {
-
-                    Toast.makeText(ConnectionActivity.this, "Actions are uploaded successfully", Toast.LENGTH_SHORT).show();
-
+                    communication_upload_mission.setResult("Mission is uploaded successfully");
+                    communication_upload_mission.setCode(200);
+                    communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                    NettyClient.getInstance().sendMessage(communication_upload_mission, null);
+                    Log.d("航点-EU", "上传航点动作成功");
                 }
+
 
             }
 
