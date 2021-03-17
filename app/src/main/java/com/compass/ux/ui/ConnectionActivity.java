@@ -2070,7 +2070,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
     int chargeRemainingInPercent0, chargeRemainingInPercent1;//电池电量是否发生改变
-    float voltageOne, voltageTwo;//电池电压是否改变
+    String voltageOne, voltageTwo;//电池电压是否改变
 
 
     private void initBattery() {
@@ -2088,8 +2088,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             @Override
                             public void onSuccess(Integer[] integers) {
                                 int childBatteryAll = (integers[0] + integers[1] + integers[2] + integers[3] + integers[4] + integers[5] + integers[6] + integers[7] + integers[8] + integers[9] + integers[10] + integers[11]);
-                                batteryStateBean.setVoltageOne(df.format((float) childBatteryAll / 12000));
-                                submitBatteryInfo(batteryState, battery0);
+                                if (!voltageOne.equals(df.format((float) childBatteryAll / 12000))){
+                                    voltageOne=df.format((float) childBatteryAll / 12000);
+                                    batteryStateBean.setVoltageOne(df.format((float) childBatteryAll / 12000));
+                                    submitBatteryInfo(batteryState, battery0);
+                                }
+
                             }
 
                             @Override
@@ -2111,9 +2115,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             @Override
                             public void onSuccess(Integer[] integers) {
                                 int childBatteryAll = (integers[0] + integers[1] + integers[2] + integers[3] + integers[4] + integers[5] + integers[6] + integers[7] + integers[8] + integers[9] + integers[10] + integers[11]);
-                                batteryStateBean.setVoltageTwo(df.format((float) childBatteryAll / 12000));
+                                if (!voltageTwo.equals(df.format((float) childBatteryAll / 12000))){
+                                    voltageTwo=df.format((float) childBatteryAll / 12000);
+                                    batteryStateBean.setVoltageTwo(df.format((float) childBatteryAll / 12000));
+                                    submitBatteryInfo(batteryState, battery1);
+                                }
                                 Log.e("mg航点-EU","电池2电压"+batteryStateBean.getVoltageTwo());
-                                submitBatteryInfo(batteryState, battery1);
                             }
 
                             @Override
@@ -2158,6 +2165,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         communication_battery.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
         communication_battery.setEquipmentId(MApplication.EQUIPMENT_ID);
         communication_battery.setMethod((Constant.BatteryPAV));
+        communication_battery.setCode(200);
         communication_battery.setResult(gson.toJson(batteryStateBean, SettingValueBean.BatteryStateBean.class));
         NettyClient.getInstance().sendMessage(communication_battery, null);
     }
@@ -4462,8 +4470,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         } else {
             showToast("RTK不可用");
         }
-
-
     }
 
     //开始搜索基站
@@ -4482,7 +4488,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
             NettyClient.getInstance().sendMessage(communication, null);
         }
-
     }
 
     //结束搜索基站
@@ -4512,10 +4517,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                    CommonDjiCallback(djiError, communication);
                     if (djiError != null) {
                         showToast("连接基站失败:" + djiError.getDescription());
+                    }else{
+                        addRTKStatus(communication);//监听RTK状态
                     }
                 }
             });
-//            addRTKStatus(communication);//监听RTK状态
         } else {
             communication.setResult("RTK为空");
             communication.setCode(-1);
@@ -4554,8 +4560,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 }
             }
         });
-
-
     }
 
     //设置网络rtk
@@ -4628,7 +4632,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 infoBean.setBaseStationLatitude(String.valueOf(rtkState.getBaseStationLocation().getLatitude()));
                                 infoBean.setBaseStationLongitude(String.valueOf(rtkState.getBaseStationLocation().getLongitude()));
                                 infoBean.setRTKBeingUsed(rtkState.isRTKBeingUsed());
-//                            infoBean.setPositioningSolution(rtkState.getPositioningSolution());
+                            infoBean.setPositioningSolution(rtkState.getPositioningSolution());
                                 communication.setResult(gson.toJson(infoBean, SettingValueBean.NetRTKBean.Info.class));
                                 communication.setCode(200);
                                 communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
