@@ -5507,7 +5507,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             @Override
             public void onDownloadUpdate(ActionDownloadEvent actionDownloadEvent) {
             }
-
             @Override
             public void onUploadUpdate(ActionUploadEvent actionUploadEvent) {
                 if (actionUploadEvent.getCurrentState().equals(ActionState.READY_TO_UPLOAD)) {
@@ -5534,12 +5533,12 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
             @Override
             public void onExecutionStart(int i) {
-
+                Log.d("航点-EU","onExecutionStart"+ i);
             }
 
             @Override
             public void onExecutionFinish(int i, DJIWaypointV2Error djiWaypointV2Error) {
-
+                Log.d("航点-EU","onExecutionFinish"+ i);
             }
         };
 
@@ -5729,35 +5728,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             waypointV2ActionList.add(waypointAction0);
                             Log.d("测试悬停actionId", "悬停起飞" + actionId + "");
                         }
-
-                        /*if (myWayPointActionList.get(i).getWayPointAction().get(j).getActionType().equals("0")) {
-                            WaypointTrigger waypointAction1Trigger = new WaypointTrigger.Builder()
-                                    .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
-                                    .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
-                                            .setAssociateActionID(actionId)
-                                            .setAssociateType(ActionTypes.AssociatedTimingType.SIMULTANEOUSLY)
-                                            .setWaitingTime(Integer.parseInt(myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()))
-                                            .build())
-                                    .build();
-
-                            WaypointActuator waypointAction1Actuator = new WaypointActuator.Builder()
-                                    .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
-                                    .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
-                                            .setAircraftControlType(ActionTypes.AircraftControlType.START_STOP_FLY)
-                                            .setFlyControlParam(new WaypointAircraftControlStartStopFlyParam.Builder()
-                                                    .setStartFly(true)
-                                                    .build())
-                                            .build())
-                                    .build();
-
-                            WaypointV2Action waypointAction1 = new WaypointV2Action.Builder()
-                                    .setActionID(actionId)//0会报错sdkbug
-                                    .setTrigger(waypointAction1Trigger)
-                                    .setActuator(waypointAction1Actuator)
-                                    .build();
-                            waypointV2ActionList.add(waypointAction1);
-                        }*/
-
                     }
                 }
                 showToast("actionid" + actionId);

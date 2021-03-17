@@ -18,7 +18,7 @@ import com.tencent.bugly.crashreport.CrashReport;
  */
 public class MApplication extends Application {
 //    public static String EQUIPMENT_ID= "Mobile_01";
-    public static String EQUIPMENT_ID="";
+    public static String EQUIPMENT_ID="Mobile_01";
 //    public static String UPLOAD_URL="http://61.155.157.42:7070/oauth/file/upload";
     public static boolean HAVE_Permission=false;
 
@@ -26,9 +26,6 @@ public class MApplication extends Application {
     @Override
     protected void attachBaseContext(Context paramContext) {
         super.attachBaseContext(paramContext);
-
-
-
         Helper.install(MApplication.this);
         //拍照
         if (fpvDemoApplication == null) {
