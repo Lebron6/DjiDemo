@@ -896,7 +896,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             mFlightController = aircraft.getFlightController();
             if (mFlightController != null) {
                 mFlightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
-                mFlightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
+                mFlightController.setYawControlMode(YawControlMode.ANGLE);
                 mFlightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
                 mFlightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);//相对于自己
 
@@ -2070,7 +2070,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     }
 
     int chargeRemainingInPercent0, chargeRemainingInPercent1;//电池电量是否发生改变
-    String voltageOne, voltageTwo;//电池电压是否改变
+    float voltageOne, voltageTwo;//电池电压是否改变
 
 
     private void initBattery() {
@@ -2088,8 +2088,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             @Override
                             public void onSuccess(Integer[] integers) {
                                 int childBatteryAll = (integers[0] + integers[1] + integers[2] + integers[3] + integers[4] + integers[5] + integers[6] + integers[7] + integers[8] + integers[9] + integers[10] + integers[11]);
-                                if (!voltageOne.equals(df.format((float) childBatteryAll / 12000))){
-                                    voltageOne=df.format((float) childBatteryAll / 12000);
+                                if (voltageOne!=((float) childBatteryAll / 12000)){
+                                    voltageOne=((float) childBatteryAll / 12000);
                                     batteryStateBean.setVoltageOne(df.format((float) childBatteryAll / 12000));
                                     submitBatteryInfo(batteryState, battery0);
                                 }
@@ -2109,18 +2109,16 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 battery1.setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
-                        Log.e("mg航点-EU","电池2电量"+batteryState.getChargeRemainingInPercent());
 
                         battery1.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
                             @Override
                             public void onSuccess(Integer[] integers) {
                                 int childBatteryAll = (integers[0] + integers[1] + integers[2] + integers[3] + integers[4] + integers[5] + integers[6] + integers[7] + integers[8] + integers[9] + integers[10] + integers[11]);
-                                if (!voltageTwo.equals(df.format((float) childBatteryAll / 12000))){
-                                    voltageTwo=df.format((float) childBatteryAll / 12000);
+                                if (voltageTwo!=((float) childBatteryAll / 12000)){
+                                    voltageTwo=((float) childBatteryAll / 12000);
                                     batteryStateBean.setVoltageTwo(df.format((float) childBatteryAll / 12000));
                                     submitBatteryInfo(batteryState, battery1);
                                 }
-                                Log.e("mg航点-EU","电池2电压"+batteryStateBean.getVoltageTwo());
                             }
 
                             @Override
@@ -5531,6 +5529,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
             @Override
             public void onExecutionUpdate(ActionExecutionEvent actionExecutionEvent) {
+                Log.e("航点-EU","当前状态"+actionExecutionEvent.getCurrentState() + "之前状态" + actionExecutionEvent.getPreviousState() + "\n" + actionExecutionEvent.getProgress().getExecutionActionID());
             }
 
             @Override
@@ -5647,9 +5646,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                                 .operationType(ActionTypes.GimbalOperationType.ROTATE_GIMBAL)
                                                 .rotation(new Rotation.Builder()
                                                         .mode(RotationMode.ABSOLUTE_ANGLE)
-                                                        .pitch(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getPitch()))
+                                                        .pitch(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getPitch() == null ? "0":myWayPointActionList.get(i).getWayPointAction().get(j).getPitch()))
                                                         .roll(0)
-//                                                    .yaw(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getYaw()))
+                                                        .yaw(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getYaw() == null ? "0":myWayPointActionList.get(i).getWayPointAction().get(j).getYaw()))
                                                         .time(2)
                                                         .build())
                                                 .build())
