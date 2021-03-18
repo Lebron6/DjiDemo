@@ -102,6 +102,8 @@ import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.flightcontroller.RTK;
 import dji.sdk.gimbal.Gimbal;
 import dji.sdk.mission.MissionControl;
+import dji.sdk.mission.timeline.TimelineElement;
+import dji.sdk.mission.timeline.TimelineEvent;
 import dji.sdk.mission.waypoint.WaypointMissionOperator;
 import dji.sdk.mission.waypoint.WaypointMissionOperatorListener;
 import dji.sdk.mission.waypoint.WaypointV2ActionListener;
@@ -208,7 +210,7 @@ import static dji.keysdk.FlightControllerKey.WIND_SPEED;
 import static dji.sdk.codec.DJICodecManager.VideoSource.CAMERA;
 import static dji.sdk.codec.DJICodecManager.VideoSource.FPV;
 
-public class ConnectionActivity extends NettyActivity implements View.OnClickListener, TextureView.SurfaceTextureListener, DJIDiagnostics.DiagnosticsInformationCallback, RTK.RTKBaseStationListCallback {
+public class ConnectionActivity extends NettyActivity implements MissionControl.Listener, View.OnClickListener, TextureView.SurfaceTextureListener, DJIDiagnostics.DiagnosticsInformationCallback, RTK.RTKBaseStationListCallback {
     private String liveShowUrl = "";
     private static final String TAG = ConnectionActivity.class.getName();
     private TextView mTextConnectionStatus;
@@ -1876,7 +1878,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     @Override
                     public void onSuccess(Integer integer) {
 //                    Log.d("HHHHHcurr", integer + "");
-                        webInitializationBean.setHybridZoom(integer);
+                        webInitializationBean.setHybridZoom(getSmallZoomValue(integer));
                     }
 
                     @Override
@@ -2074,7 +2076,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
 
     private void initBattery() {
-        Log.e("mg航点-EU","执行initBattery");
+        Log.e("mg航点-EU", "执行initBattery");
         BaseProduct product = FPVDemoApplication.getProductInstance();
         if (product != null) {
             List<Battery> batteries = product.getBatteries();
@@ -2088,8 +2090,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             @Override
                             public void onSuccess(Integer[] integers) {
                                 int childBatteryAll = (integers[0] + integers[1] + integers[2] + integers[3] + integers[4] + integers[5] + integers[6] + integers[7] + integers[8] + integers[9] + integers[10] + integers[11]);
-                                if (voltageOne!=((float) childBatteryAll / 12000)){
-                                    voltageOne=((float) childBatteryAll / 12000);
+                                if (voltageOne != ((float) childBatteryAll / 12000)) {
+                                    voltageOne = ((float) childBatteryAll / 12000);
                                     batteryStateBean.setVoltageOne(df.format(voltageOne));
                                     submitBatteryInfo(batteryState, battery0);
                                 }
@@ -2114,8 +2116,8 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                             @Override
                             public void onSuccess(Integer[] integers) {
                                 int childBatteryAll = (integers[0] + integers[1] + integers[2] + integers[3] + integers[4] + integers[5] + integers[6] + integers[7] + integers[8] + integers[9] + integers[10] + integers[11]);
-                                if (voltageTwo!=((float) childBatteryAll / 12000)){
-                                    voltageTwo=((float) childBatteryAll / 12000);
+                                if (voltageTwo != ((float) childBatteryAll / 12000)) {
+                                    voltageTwo = ((float) childBatteryAll / 12000);
                                     batteryStateBean.setVoltageTwo(df.format(voltageTwo));
                                     submitBatteryInfo(batteryState, battery1);
                                 }
@@ -2133,7 +2135,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 });
 
             } else {
-                Log.e("mg航点-EU","电池初始化");
+                Log.e("mg航点-EU", "电池初始化");
             }
         }
     }
@@ -3649,9 +3651,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private void setCameraZoom(Communication communication) {
         if (isM300Product() && camera != null) {
             String type = communication.getPara().get("zoom");
+            Log.d("从前端接收到的数据变焦zoom",type);
             //设置类型不为空并且相机支持多视频流源
             if (!TextUtils.isEmpty(type) && camera.isMultiLensCameraSupported()) {
-                camera.getLens(0).setHybridZoomFocalLength(Integer.parseInt(type), new CommonCallbacks.CompletionCallback() {
+                camera.getLens(0).setHybridZoomFocalLength(getbigZoomValue(type), new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
                         if (isCapture) {
@@ -3729,6 +3732,21 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     }
 
+    /**
+     * //修改变焦数据为从前端拿2-200自己计算然后放入官方的sdk
+     * @param smallZoomFromWeb
+     * @return
+     */
+   private int getbigZoomValue(String smallZoomFromWeb) {
+       int zoomLength = Integer.parseInt(smallZoomFromWeb);
+       int bigZoom = (47549 - 317) / 199 * (zoomLength - 2) + 317;
+       return bigZoom;
+    }
+    private int getSmallZoomValue(int bigZoomFromDJ) {
+
+        int smallZoom = (bigZoomFromDJ - 317)/((47549 - 317)/199 +2);
+        return smallZoom ;
+    }
     //设置对焦模式
     private void camere_set_focus_mode(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
@@ -4022,7 +4040,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         communication.setMethod((Constant.GET_SETTING_DATA));
         communication.setCode(200);
         communication.setResult(gson.toJson(settingValueBean, SettingValueBean.class));
-        NettyClient.getInstance().sendMessage(communication,null);
+        NettyClient.getInstance().sendMessage(communication, null);
         Log.d("mg航点-EU", gson.toJson(settingValueBean, SettingValueBean.class));
     }
 
@@ -4515,7 +4533,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                    CommonDjiCallback(djiError, communication);
                     if (djiError != null) {
                         showToast("连接基站失败:" + djiError.getDescription());
-                    }else{
+                    } else {
                         addRTKStatus(communication);//监听RTK状态
                     }
                 }
@@ -4630,7 +4648,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 infoBean.setBaseStationLatitude(String.valueOf(rtkState.getBaseStationLocation().getLatitude()));
                                 infoBean.setBaseStationLongitude(String.valueOf(rtkState.getBaseStationLocation().getLongitude()));
                                 infoBean.setRTKBeingUsed(rtkState.isRTKBeingUsed());
-                            infoBean.setPositioningSolution(rtkState.getPositioningSolution());
+                                infoBean.setPositioningSolution(rtkState.getPositioningSolution());
                                 communication.setResult(gson.toJson(infoBean, SettingValueBean.NetRTKBean.Info.class));
                                 communication.setCode(200);
                                 communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
@@ -4849,6 +4867,17 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         }
 
 
+    }
+
+    /**
+     * 航线飞行过程中triggers事件监听
+     * @param timelineElement
+     * @param timelineEvent
+     * @param djiError
+     */
+    @Override
+    public void onEvent(TimelineElement timelineElement, TimelineEvent timelineEvent, DJIError djiError) {
+        Log.d("triggers事件监听","timelineElement" + (timelineElement != null ? timelineElement.getTriggers().size() : "null") + "timelineEvent" + (timelineEvent != null ? timelineEvent.name() : "null"));
     }
 
     class SendVirtualStickDataTask extends TimerTask {
@@ -5393,6 +5422,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         Log.d("航点-EU", "仅仅测试" + communication.getPara().get(Constant.WAY_POINTS));
         communication_upload_mission = communication;
         setWayV2UpListener(communication);
+        Log.d("航点-EU","开始加载起飞方法loadmission");
         //loadMission
         if (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.READY_TO_UPLOAD) || waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.READY_TO_EXECUTE)) {
             waypointV2MissionOperator.loadMission(createWaypointMission(communication), new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
@@ -5431,7 +5461,9 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             NettyClient.getInstance().sendMessage(communication_upload_mission, null);
         }
     }
+
     boolean isuploadState = false;//给后台是否发送过上传成功
+
     private void setWayV2UpListener(Communication communication) {
         isuploadState = false;
         waypointV2MissionOperatorListener = new WaypointV2MissionOperatorListener() {
@@ -5452,6 +5484,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                         + "\nCurrentState=" + waypointV2MissionUploadEvent.getCurrentState());
                 if (waypointV2MissionUploadEvent.getPreviousState() == WaypointV2MissionState.UPLOADING
                         && waypointV2MissionUploadEvent.getCurrentState() == WaypointV2MissionState.READY_TO_EXECUTE) {
+                    Log.d("航点-EU", "上传航线成功");
                 }
             }
 
@@ -5509,6 +5542,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             @Override
             public void onDownloadUpdate(ActionDownloadEvent actionDownloadEvent) {
             }
+
             @Override
             public void onUploadUpdate(ActionUploadEvent actionUploadEvent) {
                 if (actionUploadEvent.getCurrentState().equals(ActionState.READY_TO_UPLOAD)) {
@@ -5529,18 +5563,19 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
             @Override
             public void onExecutionUpdate(ActionExecutionEvent actionExecutionEvent) {
-                if(actionExecutionEvent != null){
-                    Log.e("航点-EU","当前状态"+actionExecutionEvent.getCurrentState() + "之前状态" + actionExecutionEvent.getPreviousState() + "\n" +(actionExecutionEvent.getProgress() == null ?"null": actionExecutionEvent.getProgress().getExecutionActionID()));
-            }}
+                if (actionExecutionEvent != null) {
+                    Log.d("航点-EU", "当前状态" + actionExecutionEvent.getCurrentState() + "之前状态" + actionExecutionEvent.getPreviousState() + "\n" + (actionExecutionEvent.getProgress() == null ? "null" : actionExecutionEvent.getProgress().getExecutionActionID()));
+                }
+            }
 
             @Override
             public void onExecutionStart(int i) {
-                Log.d("航点-EU","onExecutionStart"+ i);
+                Log.d("航点-EU", "onExecutionStart" + i);
             }
 
             @Override
             public void onExecutionFinish(int i, DJIWaypointV2Error djiWaypointV2Error) {
-                Log.d("航点-EU","onExecutionFinish"+ i);
+                Log.d("航点-EU", "onExecutionFinish" + i);
             }
         };
 
@@ -5647,21 +5682,22 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                                 .operationType(ActionTypes.GimbalOperationType.ROTATE_GIMBAL)
                                                 .rotation(new Rotation.Builder()
                                                         .mode(RotationMode.ABSOLUTE_ANGLE)
-                                                        .pitch(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getPitch() == null ? "0":myWayPointActionList.get(i).getWayPointAction().get(j).getPitch()))
+                                                        .pitch(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getPitch() == null ? "0" : myWayPointActionList.get(i).getWayPointAction().get(j).getPitch()))
                                                         .roll(0)
-                                                        .yaw(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getYaw() == null ? "0":myWayPointActionList.get(i).getWayPointAction().get(j).getYaw()))
+                                                        .yaw(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getYaw() == null ? "0" : myWayPointActionList.get(i).getWayPointAction().get(j).getYaw()))
                                                         .time(2)
                                                         .build())
                                                 .build())
                                         .build();
                                 break;
                             case "4"://变焦
+                                //修改变焦数据为从前端拿2-200自己计算然后放入官方的sdk
                                 waypointAction0Actuator = new WaypointActuator.Builder()
                                         .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
                                         .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
                                                 .setCameraOperationType(ActionTypes.CameraOperationType.ZOOM)
                                                 .setZoomParam(new WaypointCameraZoomParam.Builder()
-                                                        .setFocalLength(Integer.parseInt(myWayPointActionList.get(i).getWayPointAction().get(j).getFocalLength()))
+                                                        .setFocalLength(getbigZoomValue(myWayPointActionList.get(i).getWayPointAction().get(j).getFocalLength()))
                                                         .build())
                                                 .build())
                                         .build();
