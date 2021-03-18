@@ -2072,7 +2072,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     int chargeRemainingInPercent0, chargeRemainingInPercent1;//电池电量是否发生改变
     float voltageOne, voltageTwo;//电池电压是否改变
 
-
+//获取电池信息
     private void initBattery() {
         Log.e("mg航点-EU","执行initBattery");
         BaseProduct product = FPVDemoApplication.getProductInstance();
