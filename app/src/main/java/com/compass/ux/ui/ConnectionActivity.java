@@ -2090,7 +2090,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 int childBatteryAll = (integers[0] + integers[1] + integers[2] + integers[3] + integers[4] + integers[5] + integers[6] + integers[7] + integers[8] + integers[9] + integers[10] + integers[11]);
                                 if (voltageOne!=((float) childBatteryAll / 12000)){
                                     voltageOne=((float) childBatteryAll / 12000);
-                                    batteryStateBean.setVoltageOne(df.format((float) childBatteryAll / 12000));
+                                    batteryStateBean.setVoltageOne(df.format(voltageOne));
                                     submitBatteryInfo(batteryState, battery0);
                                 }
 
@@ -2116,7 +2116,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                 int childBatteryAll = (integers[0] + integers[1] + integers[2] + integers[3] + integers[4] + integers[5] + integers[6] + integers[7] + integers[8] + integers[9] + integers[10] + integers[11]);
                                 if (voltageTwo!=((float) childBatteryAll / 12000)){
                                     voltageTwo=((float) childBatteryAll / 12000);
-                                    batteryStateBean.setVoltageTwo(df.format((float) childBatteryAll / 12000));
+                                    batteryStateBean.setVoltageTwo(df.format(voltageTwo));
                                     submitBatteryInfo(batteryState, battery1);
                                 }
                             }
@@ -4829,6 +4829,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     //搜索到的rtk监听
     @Override
     public void onUpdate(RTKBaseStationInformation[] rtkBaseStationInformations) {
+
         String submit = "";
         if (rtkBaseStationInformations.length > 0) {
             for (int i = 0; i < rtkBaseStationInformations.length; i++) {
@@ -4842,6 +4843,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             communication_BS_info.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
             communication_BS_info.setEquipmentId(MApplication.EQUIPMENT_ID);
             communication_BS_info.setMethod((Constant.BS_INFO));
+            communication_BS_info.setCode(200);
             communication_BS_info.setResult(gson.toJson(stringsBean));
             NettyClient.getInstance().sendMessage(communication_BS_info, null);
         }
@@ -5523,13 +5525,13 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                     Log.d("航点-EU", "上传航点动作成功");
                 }
 
-
             }
 
             @Override
             public void onExecutionUpdate(ActionExecutionEvent actionExecutionEvent) {
-                Log.e("航点-EU","当前状态"+actionExecutionEvent.getCurrentState() + "之前状态" + actionExecutionEvent.getPreviousState() + "\n" + actionExecutionEvent.getProgress().getExecutionActionID());
-            }
+                if(actionExecutionEvent != null){
+                    Log.e("航点-EU","当前状态"+actionExecutionEvent.getCurrentState() + "之前状态" + actionExecutionEvent.getPreviousState() + "\n" +(actionExecutionEvent.getProgress() == null ?"null": actionExecutionEvent.getProgress().getExecutionActionID()));
+            }}
 
             @Override
             public void onExecutionStart(int i) {
