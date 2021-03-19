@@ -89,6 +89,7 @@ public class Constant {
     public static final String SET_SMART_GOHOME="setSmartGoHome";
     public static final String SET_VISION_ASSISTED="setVisionAssistedPosition";
     public static final String SET_PRECISION_LAND="setPrecisionLand";
+    public static final String SET_COLLOSION_AVOIDANCE_ENABLED="setCollisionAvoidanceEnabled";
     public static final String SET_UPWARDS_AVOIDANCE="setUpwardsAvoidance";
     public static final String SET_LANDING_PROTECTION="setLandingProtection";
     public static final String SET_MAX_PERCEPTION_DISTANCE="setMaxPerceptionDistance";
