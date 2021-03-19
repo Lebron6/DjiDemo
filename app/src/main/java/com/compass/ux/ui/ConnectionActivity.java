@@ -892,7 +892,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             mRemoteController = null;
             return;
         } else {
-
             mFlightController = aircraft.getFlightController();
             if (mFlightController != null) {
                 mFlightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
@@ -2133,6 +2132,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 });
 
             } else {
+                showToast("MSDK获取智能电池信息失败");
                 Log.e("mg航点-EU","电池初始化");
             }
         }
@@ -3624,8 +3624,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                 public void onResult(DJIError djiError) {
                     CommonDjiCallback(djiError, communication);
                     webInitializationBean.setExposureMode(Integer.parseInt("type"));
-
-
                 }
             });
         }
@@ -4013,7 +4011,11 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
         settingValueBean.setMaxFlightRadiusLimitationEnabled(maxFlightRadiusLimitationEnabled);
         setRtkBean.setInfo(infoBean);
         settingValueBean.setRtkBean(setRtkBean);
-        settingValueBean.setBatteryStateBean(batteryStateBean);
+        if (batteryStateBean.getPersentOne()==0&&batteryStateBean.getPersentTwo()==0){
+            initBattery();//测试偶现的电池电量获取问题
+        }else{
+            settingValueBean.setBatteryStateBean(batteryStateBean);
+        }
         if (communication == null) {
             communication = new Communication();
         }
