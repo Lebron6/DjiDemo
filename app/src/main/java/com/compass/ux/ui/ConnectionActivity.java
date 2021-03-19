@@ -2092,9 +2092,7 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
                                     batteryStateBean.setVoltageOne(df.format(voltageOne));
                                     submitBatteryInfo(batteryState, battery0);
                                 }
-
                             }
-
                             @Override
                             public void onFailure(DJIError djiError) {
                             }
