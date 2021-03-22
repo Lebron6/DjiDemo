@@ -372,7 +372,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
     private ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
     private ScheduledFuture<?> scheduledFuture;
 
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -619,7 +618,6 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //                    }
 //                }.start();
                 sendDataToOSDK(PagerUtils.getInstance().CLOSE_LIGHT);
-
                 break;
             }
             case R.id.btn_voice_end: {
@@ -2573,6 +2571,10 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
             case Constant.SET_PRECISION_LAND:
                 setPrecisionLand(communication);
                 break;
+                //设置返航障碍物检测
+            case Constant.SET_COLLOSION_AVOIDANCE_ENABLED:
+                setCollisionAvoidanceEnabled(communication);
+                break;
             //向上避障
             case Constant.SET_UPWARDS_AVOIDANCE:
                 setUpwardsAvoidance(communication);
@@ -4061,47 +4063,82 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     //设置视觉定位
     private void setVisionAssistedPosition(Communication communication) {
+        Log.e("启动视觉定位",communication.getPara().get(Constant.TYPE));
         String type = communication.getPara().get(Constant.TYPE);
-        if (KeyManager.getInstance() != null) {
-            KeyManager.getInstance().setValue(flightControllerKey1, type.equals("1") ? true : false, new SetCallback() {
+        if(!TextUtils.isEmpty(type)&&mFlightAssistant!=null){
+            mFlightAssistant.setVisionAssistedPositioningEnabled (type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
                 @Override
-                public void onSuccess() {
-                    communication.setResult("Success");
-                    communication.setCode(200);
-                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    NettyClient.getInstance().sendMessage(communication, null);
-                }
-
-                @Override
-                public void onFailure(DJIError djiError) {
-                    communication.setResult(djiError.toString());
-                    communication.setCode(-1);
-                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    NettyClient.getInstance().sendMessage(communication, null);
+                public void onResult(DJIError djiError) {
+                    CommonDjiCallback(djiError, communication);
                 }
             });
         }
+//        if (KeyManager.getInstance() != null) {
+//            KeyManager.getInstance().setValue(flightControllerKey1, type.equals("1") ? true : false, new SetCallback() {
+//                @Override
+//                public void onSuccess() {
+//                    Log.e("启动视觉定位","Success");
+//
+//                    communication.setResult("Success");
+//                    communication.setCode(200);
+//                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                    NettyClient.getInstance().sendMessage(communication, null);
+//                }
+//
+//                @Override
+//                public void onFailure(DJIError djiError) {
+//                    Log.e("启动视觉定位","FALSE"+djiError);
+//
+//                    communication.setResult(djiError.toString());
+//                    communication.setCode(-1);
+//                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                    NettyClient.getInstance().sendMessage(communication, null);
+//                }
+//            });
+//        }
     }
 
     //精确着陆
     private void setPrecisionLand(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
-        if (KeyManager.getInstance() != null) {
-            KeyManager.getInstance().setValue(flightControllerKey2, type.equals("1") ? true : false, new SetCallback() {
+        if(!TextUtils.isEmpty(type)&&mFlightAssistant!=null){
+            mFlightAssistant.setPrecisionLandingEnabled  (type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
                 @Override
-                public void onSuccess() {
-                    communication.setResult("Success");
-                    communication.setCode(200);
-                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    NettyClient.getInstance().sendMessage(communication, null);
+                public void onResult(DJIError djiError) {
+                    CommonDjiCallback(djiError, communication);
                 }
+            });
+        }
 
+//        if (KeyManager.getInstance() != null) {
+//            KeyManager.getInstance().setValue(flightControllerKey2, type.equals("1") ? true : false, new SetCallback() {
+//                @Override
+//                public void onSuccess() {
+//                    communication.setResult("Success");
+//                    communication.setCode(200);
+//                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                    NettyClient.getInstance().sendMessage(communication, null);
+//                }
+//
+//                @Override
+//                public void onFailure(DJIError djiError) {
+//                    communication.setResult(djiError.toString());
+//                    communication.setCode(-1);
+//                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                    NettyClient.getInstance().sendMessage(communication, null);
+//                }
+//            });
+//        }
+    }
+
+    //返航障碍物检测
+    private void setCollisionAvoidanceEnabled(Communication communication) {
+        String type = communication.getPara().get(Constant.TYPE);
+        if(!TextUtils.isEmpty(type)&&mFlightAssistant!=null){
+            mFlightAssistant.setPrecisionLandingEnabled  (type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
                 @Override
-                public void onFailure(DJIError djiError) {
-                    communication.setResult(djiError.toString());
-                    communication.setCode(-1);
-                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    NettyClient.getInstance().sendMessage(communication, null);
+                public void onResult(DJIError djiError) {
+                    CommonDjiCallback(djiError, communication);
                 }
             });
         }
@@ -4109,53 +4146,57 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 
     //向上刹停
     private void setUpwardsAvoidance(Communication communication) {
-        String type = communication.getPara().get(Constant.TYPE);
+Log.e("向上避障",communication.getPara().get(Constant.TYPE));
+String type = communication.getPara().get(Constant.TYPE);
 
-//        if(!TextUtils.isEmpty(type)&&mFlightAssistant!=null){
-//            mFlightAssistant.setUpwardVisionObstacleAvoidanceEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
-//                @Override
-//                public void onResult(DJIError djiError) {
-//                    CommonDjiCallback(djiError, communication);
-//                }
-//            });
-//        }
-
-        if (KeyManager.getInstance() != null) {
-            KeyManager.getInstance().setValue(flightControllerKey3, type.equals("1") ? true : false, new SetCallback() {
+        if(!TextUtils.isEmpty(type)&&mFlightAssistant!=null){
+            mFlightAssistant.setUpwardVisionObstacleAvoidanceEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
                 @Override
-                public void onSuccess() {
-                    upwardsAvoidance = type.equals("1") ? true : false;
-                    communication.setResult("Success");
-                    communication.setCode(200);
-                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    NettyClient.getInstance().sendMessage(communication, null);
-                }
-
-                @Override
-                public void onFailure(DJIError djiError) {
-                    communication.setResult(djiError.toString());
-                    communication.setCode(-1);
-                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    NettyClient.getInstance().sendMessage(communication, null);
+                public void onResult(DJIError djiError) {
+                    CommonDjiCallback(djiError, communication);
                 }
             });
         }
+
+//        if (KeyManager.getInstance() != null) {
+//            KeyManager.getInstance().setValue(flightControllerKey3, type.equals("1") ? true : false, new SetCallback() {
+//                @Override
+//                public void onSuccess() {
+//                    Log.e("向上避障","成功");
+//                    upwardsAvoidance = type.equals("1") ? true : false;
+//                    communication.setResult("Success");
+//                    communication.setCode(200);
+//                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                    NettyClient.getInstance().sendMessage(communication, null);
+//                }
+//
+//                @Override
+//                public void onFailure(DJIError djiError) {
+//                    Log.e("向上避障","失败:"+djiError.getDescription());
+//                    communication.setResult(djiError.toString());
+//                    communication.setCode(-1);
+//                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                    NettyClient.getInstance().sendMessage(communication, null);
+//                }
+//            });
+//        }
     }
 
     //下避障
     private void setLandingProtection(Communication communication) {
+        Log.e("向下避障","执行");
         String type = communication.getPara().get(Constant.TYPE);
-//        if(!TextUtils.isEmpty(type)&&mFlightAssistant!=null){
-//            mFlightAssistant.setLandingProtectionEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
-//                @Override
-//                public void onResult(DJIError djiError) {
-//                    if(djiError==null){
-//                        landingProtection=type.equals("1")?true:false;
-//                    }
-//                    CommonDjiCallback(djiError, communication);
-//                }
-//            });
-//        }
+        if(!TextUtils.isEmpty(type)&&mFlightAssistant!=null){
+            mFlightAssistant.setLandingProtectionEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if(djiError==null){
+                        landingProtection=type.equals("1")?true:false;
+                    }
+                    CommonDjiCallback(djiError, communication);
+                }
+            });
+        }
 
 
 //        if(!TextUtils.isEmpty(type)&&mFlightAssistant!=null){
@@ -4167,26 +4208,26 @@ public class ConnectionActivity extends NettyActivity implements View.OnClickLis
 //            });
 //        }
 
-        if (KeyManager.getInstance() != null) {
-            KeyManager.getInstance().setValue(flightControllerKey5, type.equals("1") ? true : false, new SetCallback() {
-                @Override
-                public void onSuccess() {
-                    landingProtection = type.equals("1") ? true : false;
-                    communication.setResult("Success");
-                    communication.setCode(200);
-                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    NettyClient.getInstance().sendMessage(communication, null);
-                }
-
-                @Override
-                public void onFailure(DJIError djiError) {
-                    communication.setResult(djiError.toString());
-                    communication.setCode(-1);
-                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    NettyClient.getInstance().sendMessage(communication, null);
-                }
-            });
-        }
+//        if (KeyManager.getInstance() != null) {
+//            KeyManager.getInstance().setValue(flightControllerKey5, type.equals("1") ? true : false, new SetCallback() {
+//                @Override
+//                public void onSuccess() {
+//                    landingProtection = type.equals("1") ? true : false;
+//                    communication.setResult("Success");
+//                    communication.setCode(200);
+//                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                    NettyClient.getInstance().sendMessage(communication, null);
+//                }
+//
+//                @Override
+//                public void onFailure(DJIError djiError) {
+//                    communication.setResult(djiError.toString());
+//                    communication.setCode(-1);
+//                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                    NettyClient.getInstance().sendMessage(communication, null);
+//                }
+//            });
+//        }
 
     }
 
