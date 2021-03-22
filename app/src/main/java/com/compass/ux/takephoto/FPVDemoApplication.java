@@ -165,13 +165,13 @@ public class FPVDemoApplication extends Application {
 
                         @Override
                         public void onConnectivityChange(boolean isConnected) {
-                            Log.d(TAG, "onComponentConnectivityChanged: " + isConnected);
+                            Log.d("航线动作-EU", "onComponentConnectivityChanged: " + isConnected);
                             notifyStatusChange();
                         }
                     });
                 }
 
-                Log.d(TAG,
+                Log.d("航线动作-EU",
                         String.format("onComponentChange key:%s, oldComponent:%s, newComponent:%s",
                                 componentKey,
                                 oldComponent,
@@ -183,7 +183,7 @@ public class FPVDemoApplication extends Application {
 
             @Override
             public void onInitProcess(DJISDKInitEvent djisdkInitEvent, int i) {
-
+                Log.d("航线动作-EU",i + "");
             }
 
             @Override
