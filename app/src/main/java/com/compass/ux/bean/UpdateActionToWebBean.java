@@ -4,8 +4,8 @@ import java.util.List;
 
 public class UpdateActionToWebBean {
     private int pointIndex;
+    private List<String> actionType;
     private List<String> actionIndex;
-    private String actionType;
     private boolean isOld;
 
     public boolean isOld() {
@@ -34,8 +34,12 @@ public class UpdateActionToWebBean {
         this.pointIndex = pointIndex;
     }
 
-    public String getActionType() {
+    public List<String> getActionType() {
         return actionType;
+    }
+
+    public void setActionType(List<String> actionType) {
+        this.actionType = actionType;
     }
 
     public List<String> getActionIndex() {
@@ -46,16 +50,14 @@ public class UpdateActionToWebBean {
         this.actionIndex = actionIndex;
     }
 
-    public void setActionType(String actionType) {
-        this.actionType = actionType;
-    }
-
     @Override
     public String toString() {
         return "UpdateActionToWebBean{" +
                 "pointIndex=" + pointIndex +
+                ", actionType=" + actionType +
                 ", actionIndex=" + actionIndex +
-                ", actionType='" + actionType + '\'' +
+                ", isOld=" + isOld +
+                ", waitTime='" + waitTime + '\'' +
                 '}';
     }
 }

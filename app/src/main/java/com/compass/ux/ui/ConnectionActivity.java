@@ -3100,27 +3100,12 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             }
             webInitializationBean.setCurrentLens(type);
             if (camera != null && camera.isMultiLensCameraSupported()) {
-                if ("2".equals(mCameraVideoStreamSource) && "2".equals(type)) {
-                    showToast("当前已经是变焦模式");
-                    return;
-                }
-                if ("1".equals(mCameraVideoStreamSource) && "1".equals(type)) {
-                    showToast("当前已经是广角模式");
-                    return;
-                }
                 //只支持H20T系列
-                String finalType = type;
                 camera.setCameraVideoStreamSource(source, new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
                         if (djiError == null && communication == null) {
-                            mCameraVideoStreamSource = finalType;
-                            communication.setMethod("missionUpdateMode");
-                            communication.setResult(mCameraVideoStreamSource);
-                            communication.setCode(200);
-                            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                            NettyClient.getInstance().sendMessage(communication, null);
-
+                            getMissionUpdateData(Constant.MISSION_UPDATE_MODE);
                         } else if (isCapture) {//抓拍
                             camera_up_and_down_by_a(communication);
                         } else {
@@ -4297,7 +4282,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         mFlightAssistant.setCollisionAvoidanceEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
-
             }
         });
     }
@@ -5525,14 +5509,14 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     Log.d("测试航线动作-EU", waypointV2MissionExecutionEvent.getProgress().isWaypointReached() + "");
                     for (int i = 0; i < mUpdateActionToWebBeans.size() && waypointV2MissionExecutionEvent.getProgress().isWaypointReached(); i++) {
                         int intIndex = mUpdateActionToWebBeans.get(i).getPointIndex();
-                        currentPoint = intIndex;
-                        Log.d("悬停航点-EU", intIndex + "\n" + targetWaypointIndex + "" + waypointV2MissionExecutionEvent.getProgress().isWaypointReached() + System.currentTimeMillis());
+                        currentPoint = targetWaypointIndex;
+                        Log.d("当前到达的航点上传-EU", intIndex + "\n" + targetWaypointIndex + "" + waypointV2MissionExecutionEvent.getProgress().isWaypointReached() + System.currentTimeMillis());
                         //如果航点动作里面有变焦则将当前模式变为变焦模式
-                        if (mUpdateActionToWebBeans.get(i).getActionIndex().contains("3")) {
-                            Log.d("变焦动作上传-EU", "onExecutionUpdate");
+                        if (intIndex == targetWaypointIndex && mUpdateActionToWebBeans.get(i) != null  && mUpdateActionToWebBeans.get(i).getActionIndex() != null && mUpdateActionToWebBeans.get(i).getActionType().contains("4")&& !mUpdateActionToWebBeans.get(i).isOld()) {
+                            Log.d("切换变焦动作上传-EU", "onExecutionUpdate");
                             change_lens(null, "2");
                         }
-                        if (intIndex == targetWaypointIndex) {
+                        if (intIndex == targetWaypointIndex && mUpdateActionToWebBeans.get(i) != null  && mUpdateActionToWebBeans.get(i).getActionIndex() != null && mUpdateActionToWebBeans.get(i).getActionType().contains("0")&& !mUpdateActionToWebBeans.get(i).isOld()) {
                             if (communication_onExecutionFinish == null) {
                                 communication_onExecutionFinish = new Communication();
                             }
@@ -5543,7 +5527,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                             communication_onExecutionFinish.setMethod("hoverPhoto");
                             NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
                             mUpdateActionToWebBeans.get(i).setOld(true);
-                            mUpdateActionToWebBeans.remove(i);
                             return;
                         }
                     }
@@ -5604,13 +5587,14 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
             @Override
             public void onExecutionStart(int i) {
-                Log.d("航点-EU", "onExecutionStart" + i);
+                Log.d("上传-EU", "onExecutionStart" + i);
             }
 
             @Override
             public void onExecutionFinish(int i, DJIWaypointV2Error djiWaypointV2Error) {
-                Log.d("航点-EU", "onExecutionFinish" + i);
+                Log.d("上传-EU", "onExecutionFinish" + i);
                 for (int j = 0; j < mUpdateActionToWebBeans.size(); j++) {
+                    Log.d("1完成航点动作上传-EU", "onExecutionFinish" + mUpdateActionToWebBeans.get(j).toString());
                     int pointIndex = mUpdateActionToWebBeans.get(j).getPointIndex();
                     List<String> actionIndexList = mUpdateActionToWebBeans.get(j).getActionIndex();
                     if (currentPoint == pointIndex && actionIndexList != null) {
@@ -5619,9 +5603,17 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                             if (i == actionIndex && k == actionIndexList.size() - 2) {
                                 Log.d("完成航点动作上传-EU", "onExecutionFinish" + i);
                                 //当前航点中航点动作已经执行完毕只剩下悬停时间结束之后可以继续飞行
-                                getMissionUpdateData();
+                                getMissionUpdateData(Constant.MISSION_UPDATE_MODE);
                             }
+                            if (i == actionIndex && k == actionIndexList.size() - 1) {
+                                change_lens(null, "1");
+                                Log.d("切换广角动作上传-EU", "onExecutionFinish" + i + j);
+                                mUpdateActionToWebBeans.remove(j);
+                                return;
+                            }
+
                         }
+
                     }
                 }
             }
@@ -5630,15 +5622,16 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         waypointV2MissionOperator.addWaypointEventListener(waypointV2MissionOperatorListener);
         waypointV2MissionOperator.addActionListener(waypointV2ActionListener);
     }
-    private void getMissionUpdateData() {
+
+    private void getMissionUpdateData(String method) {
         Communication MissionUpdateComm = new Communication();
         WebInitializationBean MissionUpdateBean = new WebInitializationBean();
-        if(camera != null && camera.getLens(0) != null) {
+        if (camera != null && camera.getLens(0) != null) {
             // 获取当前变焦焦距
             camera.getLens(0).getHybridZoomFocalLength(new CommonCallbacks.CompletionCallbackWith<Integer>() {
                 @Override
                 public void onSuccess(Integer integer) {
-//                    Log.d("HHHHHcurr", integer + "");
+                    Log.d("焦距上传-EU", integer + "");
                     MissionUpdateBean.setHybridZoom(getSmallZoomValue(integer));
                 }
 
@@ -5647,25 +5640,41 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 //                    Log.d("HHHHHcurr", djiError.toString());
                 }
             });
-            //监听左右和上下云台的度数
-            gimbal.setStateCallback(new GimbalState.Callback() {
+            if (VideoFeeder.getInstance() != null && VideoFeeder.getInstance().getPrimaryVideoFeed() != null && VideoFeeder.getInstance().getPrimaryVideoFeed().getVideoSource() != null) {
+                String cvs = VideoFeeder.getInstance().getPrimaryVideoFeed().getVideoSource().value() + "";
+                if (cvs.equals("5")) {
+                    currentVideoSource = "1";//FPV
+                } else {
+                    currentVideoSource = "0";//相机
+                }
+                MissionUpdateBean.setCurrentVideoSource(currentVideoSource);
+            }
+            camera.getCameraVideoStreamSource(new CommonCallbacks.CompletionCallbackWith<CameraVideoStreamSource>() {
                 @Override
-                public void onUpdate(GimbalState gimbalState) {//左右y 上下p
-                    if (gimbalState != null && gimbalState.getAttitudeInDegrees() != null) {
-                        MissionUpdateBean.setHorizontalAngle(gimbalState.getAttitudeInDegrees().getYaw() + "");
-                        MissionUpdateBean.setPitchAngle(gimbalState.getAttitudeInDegrees().getPitch() + "");
+                public void onSuccess(CameraVideoStreamSource cameraVideoStreamSource) {
+                    if (cameraVideoStreamSource != null) {
+                        mCameraVideoStreamSource = cameraVideoStreamSource.value() + "";
+                        MissionUpdateBean.setCurrentLens(cameraVideoStreamSource.value() + "");
+                        Log.d("模式上传-EU", cameraVideoStreamSource.value() + "");
+                        Log.d("变焦完成数据上传-EU", gson.toJson(MissionUpdateBean, WebInitializationBean.class));
+                        MissionUpdateComm.setResult(gson.toJson(MissionUpdateBean, WebInitializationBean.class));
+                        MissionUpdateComm.setCode(200);
+                        MissionUpdateComm.setMethod(method);
+                        MissionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(MissionUpdateComm, null);
                     }
                 }
+
+                @Override
+                public void onFailure(DJIError djiError) {
+
+                }
             });
-            MissionUpdateComm.setResult(gson.toJson(webInitializationBean, WebInitializationBean.class));
-            MissionUpdateComm.setCode(200);
-            MissionUpdateComm.setMethod(Constant.MISSION_UPDATE_DATA);
-            MissionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-            NettyClient.getInstance().sendMessage(MissionUpdateComm, null);
-        }else {
+
+        } else {
             MissionUpdateComm.setResult("当前设备不支持");
             MissionUpdateComm.setCode(-1);
-            MissionUpdateComm.setMethod(Constant.MISSION_UPDATE_DATA);
+            MissionUpdateComm.setMethod(method);
             MissionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
             NettyClient.getInstance().sendMessage(MissionUpdateComm, null);
         }
@@ -5701,6 +5710,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             if (waypointV2ActionList != null) {
                 waypointV2ActionList.clear();
             }
+            if (mUpdateActionToWebBeans != null) {
+                mUpdateActionToWebBeans.clear();
+            }
             Log.d("测试悬停myWayPointActionList", myWayPointActionList.size() + myWayPointActionList.toString() + "\n" + new Gson().toJson(myWayPointActionList));
             try {
 
@@ -5709,7 +5721,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     UpdateActionToWebBean updateActionToWebBean = new UpdateActionToWebBean();
                     updateActionToWebBean.setPointIndex(i + 1);
                     //创建一个航点动作的集合
-                    List<String> actionList = new ArrayList<>();
+                    List<String> actionTypeList = new ArrayList<>();
+                    List<String> actionIndexList = new ArrayList<>();
                     WaypointTrigger waypointAction0Trigger = null;
                     WaypointActuator waypointAction0Actuator = null;
                     for (int j = 0; j < myWayPointActionList.get(i).getWayPointAction().size(); j++) {
@@ -5736,7 +5749,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         }
                         switch (myWayPointActionList.get(i).getWayPointAction().get(j).getActionType()) {
                             case "0"://悬停
-                                actionList.add("0");
+                                actionTypeList.add("0");
+                                actionIndexList.add(actionId + "");
                                 updateActionToWebBean.setWaitTime(myWayPointActionList.get(i).getWayPointAction().get(0).getWaitingTime());
 //                                xTIntList.add((i + 1) + "--" + myWayPointActionList.get(i).getWayPointAction().get(0).getWaitingTime());
                                 waypointAction0Actuator = new WaypointActuator.Builder()
@@ -5761,7 +5775,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                         .build();
                                 break;
                             case "2"://旋转
-                                actionList.add("2");
+                                actionTypeList.add("2");
+                                actionIndexList.add(actionId + "");
                                 waypointAction0Actuator = new WaypointActuator.Builder()
                                         .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
                                         .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
@@ -5775,7 +5790,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                         .build();
                                 break;
                             case "3"://云台
-                                actionList.add("3");
+                                actionTypeList.add("3");
+                                actionIndexList.add(actionId + "");
                                 waypointAction0Actuator = new WaypointActuator.Builder()
                                         .setActuatorType(ActionTypes.ActionActuatorType.GIMBAL)
                                         .setGimbalActuatorParam(new WaypointGimbalActuatorParam.Builder()
@@ -5792,7 +5808,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                         .build();
                                 break;
                             case "4"://变焦
-                                actionList.add("4");
+                                actionTypeList.add("4");
+                                actionIndexList.add(actionId + "");
                                 //修改变焦数据为从前端拿2-200自己计算然后放入官方的sdk
                                 waypointAction0Actuator = new WaypointActuator.Builder()
                                         .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
@@ -5805,7 +5822,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                         .build();
                                 break;
                             case "5"://拍照
-                                actionList.add("5");
+                                actionTypeList.add("5");
+                                actionIndexList.add(actionId + "");
                                 waypointAction0Actuator = new WaypointActuator.Builder()
                                         .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
                                         .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
@@ -5814,7 +5832,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                         .build();
                                 break;
                             case "6"://开始录像
-                                actionList.add("6");
+                                actionTypeList.add("6");
+                                actionIndexList.add(actionId + "");
                                 waypointAction0Actuator = new WaypointActuator.Builder()
                                         .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
                                         .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
@@ -5838,12 +5857,12 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                 .setActuator(waypointAction0Actuator)
                                 .build();
                         waypointV2ActionList.add(waypointAction0);
-                        Log.d("测试悬停actionId", "actionType" + myWayPointActionList.get(i).getWayPointAction().get(j).getActionType() + actionId + "");
 
                         //如果是悬停并且当前是航点的最后一个动作
                         if ("0".equals(myWayPointActionList.get(i).getWayPointAction().get(0).getActionType()) && j == myWayPointActionList.get(i).getWayPointAction().size() - 1) {
                             actionId++;
-                            actionList.add("1");
+                            actionTypeList.add("1");
+                            actionIndexList.add(actionId + "");
                             waypointAction0Trigger = new WaypointTrigger.Builder()
                                     .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
                                     .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
@@ -5852,7 +5871,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                             .setWaitingTime(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(0).getWaitingTime()))
                                             .build())
                                     .build();
-                            Log.d("测试悬停setAssociateActionID", "悬停起飞" + (actionId - 1) + "时间" + Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getWaitingTime()));
                             waypointAction0Actuator = new WaypointActuator.Builder()
                                     .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
                                     .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
@@ -5869,11 +5887,15 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                     .setActuator(waypointAction0Actuator)
                                     .build();
                             waypointV2ActionList.add(waypointAction0);
-                            Log.d("测试悬停actionId", "悬停起飞" + actionId + "");
                         }
-                        updateActionToWebBean.setActionIndex(actionList);
+
                     }
-                    mUpdateActionToWebBeans.add(updateActionToWebBean);
+                    updateActionToWebBean.setActionIndex(actionIndexList);
+                    updateActionToWebBean.setActionType(actionTypeList);
+                    if(actionIndexList != null && actionIndexList.size() != 0 && actionTypeList != null && actionTypeList.size() != 0) {
+                        mUpdateActionToWebBeans.add(updateActionToWebBean);
+                    }
+                    Log.d("上传航线储存数据", mUpdateActionToWebBeans.toString());
                 }
                 showToast("actionid" + actionId);
                 waypointV2MissionOperator.uploadWaypointActions(waypointV2ActionList, new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
