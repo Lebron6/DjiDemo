@@ -106,7 +106,7 @@ public class FirstActivity extends AppCompatActivity {
 
      void getvalues(){
         if (TextUtils.isEmpty(MApplication.EQUIPMENT_ID) ) {
-            MApplication.EQUIPMENT_ID = "Mobile_01";
+            MApplication.EQUIPMENT_ID = "Mobile_02";
             Intent intent=new Intent(FirstActivity.this,ConnectionActivity.class);
             startActivity(intent);
             finish();
