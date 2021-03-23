@@ -17,6 +17,7 @@ public class Constant {
     public static final String FLY_FORWARD_AND_BACK="flyForwardAndBack";
     public static final String FLY_LEFT_AND_RIGHT="flyLeftAndRight";
     public static final String CAMERA_UP_AND_DOWN="cameraUpAndDown";
+    public static final String SET_COLLOSION_AVOIDANCE_ENABLED="setCollisionAvoidanceEnabled";
     public static final String CAMERA_UP_AND_DOWN_BY_ABSOLUTE_ANGLE="cameraUpAndDownByAbsoluteAngle";
     public static final String CAMERA_LEFT_AND_RIGHT="cameraLeftAndRight";
     public static final String CAMERA_CENTER="cameraCenter";
