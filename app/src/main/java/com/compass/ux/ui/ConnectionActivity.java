@@ -956,7 +956,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     private void initFlightController() {
         Aircraft aircraft = FPVDemoApplication.getAircraftInstance();
         if (aircraft == null || !aircraft.isConnected()) {
-            showToast("Disconnected");
             mFlightController = null;
             mRemoteController = null;
             return;
@@ -965,7 +964,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             mFlightController = aircraft.getFlightController();
             if (mFlightController != null) {
                 mFlightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
-                mFlightController.setYawControlMode(YawControlMode.ANGLE);
+                mFlightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
                 mFlightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
                 mFlightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);//相对于自己
 
@@ -2778,7 +2777,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     private void getIsFlying(Communication communication) {
         Aircraft aircraft = FPVDemoApplication.getAircraftInstance();
         if (aircraft == null || !aircraft.isConnected()) {
-            showToast("Disconnected");
             communication.setResult("Disconnected");
             communication.setCode(-1);
             communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
@@ -5127,6 +5125,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     //飞机自己左转右转 -2~2
     private void turn_left_and_turn_right(Communication communication) {
+        Log.d("测试左旋右旋",communication != null ? communication.toString():"null");
+        try {
+
         String speed = communication.getPara().get(Constant.SPEED);
         if (!TextUtils.isEmpty(speed)) {
             mYaw = Float.parseFloat(speed);
@@ -5161,6 +5162,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             communication.setCode(-1);
             communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
             NettyClient.getInstance().sendMessage(communication, null);
+        }
+        }catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -5585,11 +5589,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         }
     }
 
-    boolean isuploadState = false;//给后台是否发送过上传成功
     int currentPoint;
 
     private void setWayV2UpListener(Communication communication) {
-        isuploadState = false;
         waypointV2MissionOperatorListener = new WaypointV2MissionOperatorListener() {
             @Override
             public void onDownloadUpdate(WaypointV2MissionDownloadEvent waypointV2MissionDownloadEvent) {
@@ -5684,7 +5686,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     uploadWaypointAction(communication);
                 }
                 //上传航线成功
-                if (!isuploadState && actionUploadEvent.getPreviousState() == ActionState.UPLOADING
+                if (actionUploadEvent.getPreviousState() == ActionState.UPLOADING
                         && actionUploadEvent.getCurrentState() == ActionState.READY_TO_EXECUTE) {
                     communication_upload_mission.setResult("Mission is uploaded successfully");
                     communication_upload_mission.setCode(200);
@@ -5694,7 +5696,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 } else {
                     Log.d("飞机飞行流程", "上传航点动作失败" + ((actionUploadEvent != null && actionUploadEvent.getError() != null) ? actionUploadEvent.getError().getDescription() : "没有错误"));
                 }
-
             }
 
             @Override
@@ -5834,7 +5835,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             }
             Log.d("测试悬停myWayPointActionList", myWayPointActionList.size() + myWayPointActionList.toString() + "\n" + new Gson().toJson(myWayPointActionList));
             try {
-
                 for (int i = 0; i < myWayPointActionList.size(); i++) {
                     //创建一个航点以及航点动作的bean类
                     UpdateActionToWebBean updateActionToWebBean = new UpdateActionToWebBean();
@@ -6188,8 +6188,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     private void resumeWaypointV2(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
-        showToast(waypointV2MissionOperator.getCurrentState() + "当前状态");
-        if (waypointV2MissionOperator.getCurrentState() != null && (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.INTERRUPTED) || waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.READY_TO_UPLOAD))) {
+        if (waypointV2MissionOperator != null && waypointV2MissionOperator.getCurrentState() != null && (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.INTERRUPTED) || waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.READY_TO_UPLOAD))) {
             /*waypointV2MissionOperator.startMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
@@ -6302,7 +6301,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         Aircraft aircraft = FPVDemoApplication.getAircraftInstance();
 
         if (aircraft == null) {
-            showToast("Disconnected");
         } else {
 
             mFlightController = aircraft.getFlightController();
