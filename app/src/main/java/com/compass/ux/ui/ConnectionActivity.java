@@ -634,11 +634,77 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 //                DJISDKManager.getInstance().getLiveStreamManager().stopStream();
 //                Toast.makeText(getApplicationContext(), "Stop Live Show", Toast.LENGTH_SHORT).show();
 //                pauseWaypointV2(null);
-                send(PagerUtils.getInstance().TTSSTOPINS);
+//                send(PagerUtils.getInstance().TTSSTOPINS);
+            testBaseStationRTK();
                 break;
             default:
                 break;
         }
+    }
+
+    private void testBaseStationRTK() {
+        mRTK.setRtkEnabled(true, new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                if (djiError == null) {
+                    Log.e("D-RTK:", "setRTK true");
+                } else {
+                    Log.e("D-RTK::", "setRTK false");
+
+                }
+            }
+        });
+        mRTK.startSearchBaseStation(new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                if (djiError == null) {
+                    Log.e("D-RTK::", "startSearchBaseStation true");
+                } else {
+                    Log.e("D-RTK::", "startSearchBaseStation false");
+                }
+            }
+        });
+        mRTK.setRtkBaseStationListCallback(new RTK.RTKBaseStationListCallback() {
+            @Override
+            public void onUpdate(RTKBaseStationInformation[] rtkBaseStationInformations) {
+                String submit = "";
+                if (rtkBaseStationInformations.length > 0) {
+                    for (int i = 0; i < rtkBaseStationInformations.length; i++) {
+                        submit += rtkBaseStationInformations[i].getBaseStationName() + "-" + rtkBaseStationInformations[i].getBaseStationID() + ",";
+                    }
+                    String finalSubmit = submit;
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            text_net_rtk_state.setText("BaseStationRTK:" + finalSubmit);
+
+                        }
+                    });
+                }
+            }
+        });
+        mRTK.connectToBaseStation(Long.parseLong("3057154368"), new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+//                    CommonDjiCallback(djiError, communication);
+                if (djiError != null) {
+                    Log.e("D-RTK::", "connectToBaseStation false");
+                } else {
+                    mRTK.setStateCallback(new RTKState.Callback() {
+                        @Override
+                        public void onUpdate(RTKState rtkState) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    text_net_rtk_account_state.setText("RTK:" + rtkState.isRTKBeingUsed());
+
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+        });
     }
 
 
@@ -2583,10 +2649,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             case Constant.SET_PRECISION_LAND:
                 setPrecisionLand(communication);
                 break;
-            //设置返航障碍物检测
-            case Constant.SET_COLLOSION_AVOIDANCE_ENABLED:
-                setCollisionAvoidanceEnabled(communication);
-                break;
+
             //向上避障
             case Constant.SET_UPWARDS_AVOIDANCE:
                 setUpwardsAvoidance(communication);
@@ -5559,7 +5622,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     targetWaypointIndex = waypointV2MissionExecutionEvent.getProgress().getTargetWaypointIndex();
                     Log.d("循环之前航点上传-EU",
                             waypointV2MissionExecutionEvent.getProgress().isWaypointReached() + "\n" + targetWaypointIndex
-                    + "\n" + (mUpdateActionToWebBeans == null ? "mUpdateActionToWebBeans已经为空":mUpdateActionToWebBeans.toString()));
+                                    + "\n" + (mUpdateActionToWebBeans == null ? "mUpdateActionToWebBeans已经为空" : mUpdateActionToWebBeans.toString()));
                     for (int i = 0; i < mUpdateActionToWebBeans.size() && waypointV2MissionExecutionEvent.getProgress().isWaypointReached(); i++) {
                         int intIndex = mUpdateActionToWebBeans.get(i).getPointIndex();
                         currentPoint = targetWaypointIndex;
@@ -5628,8 +5691,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                     NettyClient.getInstance().sendMessage(communication_upload_mission, null);
                     Log.d("飞机飞行流程", "上传航点动作成功");
-                }else {
-                    Log.d("飞机飞行流程", "上传航点动作失败" +((actionUploadEvent != null && actionUploadEvent.getError() != null) ? actionUploadEvent.getError().getDescription() :"没有错误"));
+                } else {
+                    Log.d("飞机飞行流程", "上传航点动作失败" + ((actionUploadEvent != null && actionUploadEvent.getError() != null) ? actionUploadEvent.getError().getDescription() : "没有错误"));
                 }
 
             }
