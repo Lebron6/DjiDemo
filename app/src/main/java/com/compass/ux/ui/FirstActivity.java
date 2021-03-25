@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
 import dji.common.error.DJIError;
 import dji.common.error.DJISDKError;
 import dji.common.useraccount.UserAccountState;
@@ -70,6 +71,7 @@ public class FirstActivity extends AppCompatActivity {
             Manifest.permission.RECORD_AUDIO
     };
     private Gson gson = new Gson();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,38 +82,33 @@ public class FirstActivity extends AppCompatActivity {
 //            startActivity(intent);
 //            finish();
 //        }else{
-            AndPermission.with(this)
-                    .runtime()
-                    .permission(REQUIRED_PERMISSION_LIST)
-                    .onGranted(permissions -> {
-                        // Storage permission are allowed.
-                        HAVE_Permission=true;
-                        getvalues();
-                    })
-                    .onDenied(permissions -> {
-                        // Storage permission are not allowed.
-                        HAVE_Permission=false;
-                        finish();
-
-                    })
-                    .start();
+        AndPermission.with(this)
+                .runtime()
+                .permission(REQUIRED_PERMISSION_LIST)
+                .onGranted(permissions -> {
+                    // Storage permission are allowed.
+                    HAVE_Permission = true;
+                    getvalues();
+                })
+                .onDenied(permissions -> {
+                    // Storage permission are not allowed.
+                    HAVE_Permission = false;
+                    finish();
+                })
+                .start();
 //        }
 
     }
 
 
-
-
-
-
-     void getvalues(){
-        if (TextUtils.isEmpty(MApplication.EQUIPMENT_ID) ) {
+    void getvalues() {
+        if (TextUtils.isEmpty(MApplication.EQUIPMENT_ID)) {
             MApplication.EQUIPMENT_ID = "Mobile_01";
-            Intent intent=new Intent(FirstActivity.this,ConnectionActivity.class);
+            Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
             startActivity(intent);
             finish();
-        }else{
-            Intent intent=new Intent(FirstActivity.this,ConnectionActivity.class);
+        } else {
+            Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
             startActivity(intent);
             finish();
         }
@@ -137,7 +134,7 @@ public class FirstActivity extends AppCompatActivity {
         } else {
 //            havePermission = true;
 
-            if (TextUtils.isEmpty(MApplication.EQUIPMENT_ID) ) {
+            if (TextUtils.isEmpty(MApplication.EQUIPMENT_ID)) {
                 String text_message = FileUtils.readString(file.getAbsolutePath(), "utf-8");
 
                 if (!TextUtils.isEmpty(text_message)) {
@@ -146,7 +143,7 @@ public class FirstActivity extends AppCompatActivity {
                     MApplication.EQUIPMENT_ID = mobile_Id;
 //                    MApplication.UPLOAD_URL = textMessageBean.getUpload_url();
                     Log.d("FileUtils", "FileUtils=" + mobile_Id);
-                    Intent intent=new Intent(FirstActivity.this,ConnectionActivity.class);
+                    Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
                     startActivity(intent);
                 } else {
                     new Thread(new Runnable() {
@@ -328,7 +325,7 @@ public class FirstActivity extends AppCompatActivity {
 //        handler.post(new Runnable() {
 //            @Override
 //            public void run() {
-                Toast.makeText(getApplicationContext(), toastMsg, Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), toastMsg, Toast.LENGTH_LONG).show();
 //            }
 //        });
 

@@ -3225,7 +3225,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                 NettyClient.getInstance().sendMessage(communication, null);
             }
-
         } else {
             communication.setResult("型号不支持");
             communication.setCode(-1);
