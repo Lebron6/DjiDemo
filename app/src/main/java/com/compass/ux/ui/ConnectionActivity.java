@@ -635,7 +635,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 //                Toast.makeText(getApplicationContext(), "Stop Live Show", Toast.LENGTH_SHORT).show();
 //                pauseWaypointV2(null);
 //                send(PagerUtils.getInstance().TTSSTOPINS);
-            testBaseStationRTK();
+                testBaseStationRTK();
                 break;
             default:
                 break;
@@ -4823,8 +4823,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                 frequencyBand = "5.8G";
                                 break;
                         }
-
-
                         TransmissionSetBean transmissionSetBean = new TransmissionSetBean();
                         transmissionSetBean.setChannelBandwidth(channelBandwidth);
                         transmissionSetBean.setFrequencyBand(frequencyBand);
@@ -4840,8 +4838,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                         NettyClient.getInstance().sendMessage(communication, null);
                     }
-
-
                     CommonDjiCallback(djiError, communication);
                 }
             });
@@ -5125,45 +5121,44 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     //飞机自己左转右转 -2~2
     private void turn_left_and_turn_right(Communication communication) {
-        Log.d("测试左旋右旋",communication != null ? communication.toString():"null");
+        Log.d("测试左旋右旋", communication != null ? communication.toString() : "null");
         try {
-
-        String speed = communication.getPara().get(Constant.SPEED);
-        if (!TextUtils.isEmpty(speed)) {
-            mYaw = Float.parseFloat(speed);
-            mThrottle = 0;
-            mPitch = 0;
-            mRoll = 0;
-            mCommunication = communication;
-            if (mFlightController != null) {
-                mFlightController.sendVirtualStickFlightControlData(
-                        new FlightControlData(
-                                mPitch, mRoll, mYaw, mThrottle
-                        ), new CommonCallbacks.CompletionCallback() {
-                            @Override
-                            public void onResult(DJIError djiError) {
-                                if (djiError != null) {
-                                    communication.setResult(djiError.getDescription());
-                                    communication.setCode(-1);
-                                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                                    NettyClient.getInstance().sendMessage(communication, null);
-                                } else {
-                                    communication.setResult(wrj_heading);
-                                    communication.setCode(200);
-                                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                                    NettyClient.getInstance().sendMessage(communication, null);
+            String speed = communication.getPara().get(Constant.SPEED);
+            if (!TextUtils.isEmpty(speed)) {
+                mYaw = Float.parseFloat(speed);
+                mThrottle = 0;
+                mPitch = 0;
+                mRoll = 0;
+                mCommunication = communication;
+                if (mFlightController != null) {
+                    mFlightController.sendVirtualStickFlightControlData(
+                            new FlightControlData(
+                                    mPitch, mRoll, mYaw, mThrottle
+                            ), new CommonCallbacks.CompletionCallback() {
+                                @Override
+                                public void onResult(DJIError djiError) {
+                                    if (djiError != null) {
+                                        communication.setResult(djiError.getDescription());
+                                        communication.setCode(-1);
+                                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                        NettyClient.getInstance().sendMessage(communication, null);
+                                    } else {
+                                        communication.setResult(wrj_heading);
+                                        communication.setCode(200);
+                                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                        NettyClient.getInstance().sendMessage(communication, null);
+                                    }
                                 }
                             }
-                        }
-                );
+                    );
+                }
+            } else {
+                communication.setResult("");
+                communication.setCode(-1);
+                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                NettyClient.getInstance().sendMessage(communication, null);
             }
-        } else {
-            communication.setResult("");
-            communication.setCode(-1);
-            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-            NettyClient.getInstance().sendMessage(communication, null);
-        }
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -5693,8 +5688,15 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                     NettyClient.getInstance().sendMessage(communication_upload_mission, null);
                     Log.d("飞机飞行流程", "上传航点动作成功");
+                } else if (actionUploadEvent != null && actionUploadEvent.getError() == null) {
+                    communication_upload_mission.setResult("Mission is uploaded successfully");
+                    communication_upload_mission.setCode(200);
+                    communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                    NettyClient.getInstance().sendMessage(communication_upload_mission, null);
+                    Log.d("飞机飞行流程", "上传航点动作成功当前没有规划航点动作");
                 } else {
-                    Log.d("飞机飞行流程", "上传航点动作失败" + ((actionUploadEvent != null && actionUploadEvent.getError() != null) ? actionUploadEvent.getError().getDescription() : "没有错误"));
+                    Log.d("飞机飞行流程", "上传航点动作成功" + ((actionUploadEvent != null && actionUploadEvent.getError() != null) ? actionUploadEvent.getError().getDescription() : "没有错误"));
+
                 }
             }
 
@@ -5745,14 +5747,14 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     private void getMissionUpdateData(String method) {
         Communication MissionUpdateComm = new Communication();
-        WebInitializationBean MissionUpdateBean = new WebInitializationBean();
+        WebInitializationBean missionUpdateBean = new WebInitializationBean();
         if (camera != null && camera.getLens(0) != null) {
             // 获取当前变焦焦距
             camera.getLens(0).getHybridZoomFocalLength(new CommonCallbacks.CompletionCallbackWith<Integer>() {
                 @Override
                 public void onSuccess(Integer integer) {
                     Log.d("焦距上传-EU", integer + "");
-                    MissionUpdateBean.setHybridZoom(getSmallZoomValue(integer));
+                    missionUpdateBean.setHybridZoom(getSmallZoomValue(integer));
                 }
 
                 @Override
@@ -5767,17 +5769,17 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 } else {
                     currentVideoSource = "0";//相机
                 }
-                MissionUpdateBean.setCurrentVideoSource(currentVideoSource);
+                missionUpdateBean.setCurrentVideoSource(currentVideoSource);
             }
             camera.getCameraVideoStreamSource(new CommonCallbacks.CompletionCallbackWith<CameraVideoStreamSource>() {
                 @Override
                 public void onSuccess(CameraVideoStreamSource cameraVideoStreamSource) {
                     if (cameraVideoStreamSource != null) {
                         mCameraVideoStreamSource = cameraVideoStreamSource.value() + "";
-                        MissionUpdateBean.setCurrentLens(cameraVideoStreamSource.value() + "");
+                        missionUpdateBean.setCurrentLens(cameraVideoStreamSource.value() + "");
                         Log.d("模式上传-EU", cameraVideoStreamSource.value() + "");
-                        Log.d("变焦完成数据上传-EU", gson.toJson(MissionUpdateBean, WebInitializationBean.class));
-                        MissionUpdateComm.setResult(gson.toJson(MissionUpdateBean, WebInitializationBean.class));
+                        Log.d("变焦完成数据上传-EU", gson.toJson(missionUpdateBean, WebInitializationBean.class));
+                        MissionUpdateComm.setResult(gson.toJson(missionUpdateBean, WebInitializationBean.class));
                         MissionUpdateComm.setCode(200);
                         MissionUpdateComm.setMethod(method);
                         MissionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
@@ -5790,6 +5792,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
                 }
             });
+
 
         } else {
             MissionUpdateComm.setResult("当前设备不支持");
