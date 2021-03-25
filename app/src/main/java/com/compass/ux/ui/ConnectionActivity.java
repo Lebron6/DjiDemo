@@ -540,6 +540,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 loginAccount();
             }
         });
+        findViewById(R.id.btn_stop_live_show).setOnClickListener(this);
+        findViewById(R.id.btn_start_live_show).setOnClickListener(this);
 //        repeat_send_checkbox = findViewById(R.id.repeat_send_checkbox);
 //        repeat_send_checkbox.setOnCheckedChangeListener(onCheckedChangeListener);
         seek_bar_volume = findViewById(R.id.seek_bar_volume);
@@ -636,6 +638,12 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 //                pauseWaypointV2(null);
 //                send(PagerUtils.getInstance().TTSSTOPINS);
                 testBaseStationRTK();
+                break;
+            case R.id.btn_start_live_show:
+                startLiveShow(null);
+                break;
+            case R.id.btn_stop_live_show:
+                DJISDKManager.getInstance().getLiveStreamManager().stopStream();
                 break;
             default:
                 break;
@@ -4822,6 +4830,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                 frequencyBand = "5.8G";
                                 break;
                         }
+
+
                         TransmissionSetBean transmissionSetBean = new TransmissionSetBean();
                         transmissionSetBean.setChannelBandwidth(channelBandwidth);
                         transmissionSetBean.setFrequencyBand(frequencyBand);
@@ -4837,6 +4847,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                         NettyClient.getInstance().sendMessage(communication, null);
                     }
+
+
                     CommonDjiCallback(djiError, communication);
                 }
             });
@@ -5122,6 +5134,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     private void turn_left_and_turn_right(Communication communication) {
         Log.d("测试左旋右旋", communication != null ? communication.toString() : "null");
         try {
+
             String speed = communication.getPara().get(Constant.SPEED);
             if (!TextUtils.isEmpty(speed)) {
                 mYaw = Float.parseFloat(speed);

@@ -198,7 +198,30 @@ android:layout_centerHorizontal="true"       android:layout_marginTop="130dp"
         android:textColor="@color/colorWhite"
         android:textSize="20dp"
         />
-
+    <Button
+        android:id="@+id/btn_stop_live_show"
+        android:layout_width="100dp"
+        android:layout_height="55dp"
+        android:layout_below="@+id/btn_login"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="30dp"
+        android:background="@drawable/round_btn"
+        android:text="停止推流"
+        android:textColor="@color/colorWhite"
+        android:textSize="20dp" />
+    <Button
+        android:id="@+id/btn_start_live_show"
+        android:layout_width="100dp"
+        android:layout_height="55dp"
+        android:layout_below="@+id/btn_stop_live_show"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="30dp"
+        android:background="@drawable/round_btn"
+        android:text="开始推流"
+        android:textColor="@color/colorWhite"
+        android:textSize="20dp" />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
