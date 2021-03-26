@@ -2418,15 +2418,16 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 break;
             //航点规划V2
             case Constant.WAYPOINT_PLAN_V2:
-
 //                Log.d("测试获取的数据", new Gson().toJson(communication));
                 try {
+
                     waypoint_plan_V2(communication);
+                    Log.d("飞机飞行流程上传航线数据",communication.toString());
                 } catch (Exception e) {
                     StringWriter sw = new StringWriter();
                     PrintWriter pw = new PrintWriter(sw);
                     e.printStackTrace(pw);
-                    Toast.makeText(ConnectionActivity.this, sw.toString(), Toast.LENGTH_LONG).show();
+                    Log.d("飞机飞行流程上传航线报错",sw.toString());
                     return;
                 }
 
@@ -5547,12 +5548,13 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             waypointMissionBuilder.waypointList(waypointList).waypointCount(waypointList.size());
         }
     }
-
+    Communication mUpLoadActionCommunication;
     //航线规划v2
     private void waypoint_plan_V2(Communication communication) {
         MissionControl.getInstance().removeAllListeners();
         waypointV2MissionOperator = MissionControl.getInstance().getWaypointMissionV2Operator();
         Log.d("飞机飞行流程", "获取数据" + communication.getPara().get(Constant.WAY_POINTS));
+        this.mUpLoadActionCommunication = communication;
         communication_upload_mission = communication;
         setWayV2UpListener(communication);
         Log.d("飞机飞行流程", "开始加载起飞方法loadmission");
@@ -5700,7 +5702,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                     NettyClient.getInstance().sendMessage(communication_upload_mission, null);
                     Log.d("飞机飞行流程", "上传航点动作成功");
-                } else if (actionUploadEvent != null && actionUploadEvent.getError() == null) {
+                } else if (actionUploadEvent != null && actionUploadEvent.getError() == null && mUpdateActionToWebBeans.size() == 0) {
                     communication_upload_mission.setResult("Mission is uploaded successfully");
                     communication_upload_mission.setCode(200);
                     communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
@@ -5822,8 +5824,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     private void uploadWaypointAction(Communication communication) {
 //        Toast.makeText(this, "获取netty推过来的数据" + new Gson().toJson(communication), Toast.LENGTH_SHORT).show();
-        mWayPointActionV2 = communication.getPara().get(Constant.WAY_POINTS);
-        Log.d("上传航点-EU", "仅仅测试" + mWayPointActionV2);
+        mWayPointActionV2 = this.mUpLoadActionCommunication.getPara().get(Constant.WAY_POINTS);
+        Log.d("飞机飞行流程上传航点动作-EU", "仅仅测试" + mWayPointActionV2);
         List<WayPointsV2Bean.WayPointsBean> myWayPointActionList;
         if (!TextUtils.isEmpty(mWayPointActionV2)) {
             try {
@@ -5934,8 +5936,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                                         .mode(RotationMode.ABSOLUTE_ANGLE)
                                                         .pitch(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getPitch() == null ? "0" : myWayPointActionList.get(i).getWayPointAction().get(j).getPitch()))
                                                         .roll(0)
-
-                                                        .yaw(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getYaw() == null ? "0" : myWayPointActionList.get(i).getWayPointAction().get(j).getYaw()))
+//                                                        .yaw(Float.parseFloat(myWayPointActionList.get(i).getWayPointAction().get(j).getYaw() == null ? "0" : myWayPointActionList.get(i).getWayPointAction().get(j).getYaw()))
                                                         .time(2)
                                                         .build())
                                                 .build())
@@ -6029,7 +6030,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     if (actionIndexList != null && actionIndexList.size() != 0 && actionTypeList != null && actionTypeList.size() != 0) {
                         mUpdateActionToWebBeans.add(updateActionToWebBean);
                     }
-                    Log.d("上传航线储存数据", mUpdateActionToWebBeans.toString());
+                    Log.d("飞机飞行流程上传航线储存数据", mUpdateActionToWebBeans.toString());
                 }
                 showToast("actionid" + actionId);
                 waypointV2MissionOperator.uploadWaypointActions(waypointV2ActionList, new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
