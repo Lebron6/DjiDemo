@@ -155,7 +155,16 @@ public class WayPointsV2Bean {
         private String longitude;
         private String flightPathMode;
         private String headingMode;
+        private VoiceBean voice;
         private List<WayPointActionBean> wayPointAction;
+
+        public VoiceBean getVoice() {
+            return voice;
+        }
+
+        public void setVoice(VoiceBean voice) {
+            this.voice = voice;
+        }
 
         public String getSpeed() {
             return speed;
@@ -322,6 +331,63 @@ public class WayPointsV2Bean {
                         ", waitingTime='" + waitingTime + '\'' +
                         '}';
             }
+        }
+        public static class VoiceBean{
+            private String flag;
+            private String word;
+            private String volume;
+            private String speed;
+
+            public String getFlag() {
+                return flag;
+            }
+
+            public void setFlag(String flag) {
+                this.flag = flag;
+            }
+
+            public String getWord() {
+                return word;
+            }
+
+            public void setWord(String word) {
+                this.word = word;
+            }
+
+            public String getVolume() {
+                return volume;
+            }
+
+            public void setVolume(String volume) {
+                this.volume = volume;
+            }
+
+            public String getSpeed() {
+                return speed;
+            }
+
+            public void setSpeed(String speed) {
+                this.speed = speed;
+            }
+
+            public String getTone() {
+                return tone;
+            }
+
+            public void setTone(String tone) {
+                this.tone = tone;
+            }
+
+            public String getModel() {
+                return model;
+            }
+
+            public void setModel(String model) {
+                this.model = model;
+            }
+
+            private String tone;
+            private String model;
         }
     }
 

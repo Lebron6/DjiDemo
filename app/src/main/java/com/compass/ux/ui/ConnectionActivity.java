@@ -2764,11 +2764,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 //文本喊话
                 break;
             case Constant.SEND_VOICE_COMMAND:
-//                showToast(communication.getPara().get("word")+"-"
-//                        +communication.getPara().get("tone")+"-"+communication.getPara().get("speed")+"-"
-//                        +communication.getPara().get("volume")+"-"+communication.getPara().get("model"));
                 sendTTS2Payload(communication);
-                showToast(new Gson().toJson(communication));
                 break;
             case Constant.SEND_VOICE_MP3:
                 sendMP32Payload(communication);
@@ -5805,12 +5801,12 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         missionUpdateBean.setCurrentLens(cameraVideoStreamSource.value() + "");
                         Log.d("模式上传-EU", cameraVideoStreamSource.value() + "");
                         Log.d("变焦完成数据上传-EU", gson.toJson(missionUpdateBean, WebInitializationBean.class));
-                        if(method == null) {
+                        if (method == null) {
                             MissionUpdateComm.setResult(gson.toJson(missionUpdateBean, WebInitializationBean.class));
                             MissionUpdateComm.setCode(200);
                             MissionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                             NettyClient.getInstance().sendMessage(MissionUpdateComm, null);
-                        }else {
+                        } else {
                             MissionUpdateComm.setResult(gson.toJson(missionUpdateBean, WebInitializationBean.class));
                             MissionUpdateComm.setCode(200);
                             MissionUpdateComm.setMethod(method);
@@ -6296,6 +6292,36 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         }
     }
 
+    /**
+     * 航点动作监听到的喊话
+     * @param voiceBean
+     */
+    private void wayPointSendTTS2Payload(WayPointsV2Bean.WayPointsBean.VoiceBean voiceBean) {
+        String tts = voiceBean.getWord();
+        String sign = "[" + "d" + "]";//标记
+        String fre = "0";
+        if (TextUtils.isEmpty(tts)) {
+            tts = "未检测到语音文本";
+        } else {
+            fre = voiceBean.getModel();
+            String volume = voiceBean.getVolume();//音量
+            String tone = voiceBean.getTone();//性别 52男 53女
+            String speed = voiceBean.getSpeed();//语速
+            String sex = "53";
+            if (tone.equals("0")) {
+                sex = "53";
+            } else {
+                sex = "52";
+            }
+            sign = "[" + "v" + volume + "]" + "[" + "s" + speed + "]" + "[" + "m" + sex + "]";//科大讯飞标记使用
+        }
+
+        PagerUtils pagerUtils = PagerUtils.getInstance();
+        byte[] content = pagerUtils.HexString2Bytes(pagerUtils.toChineseHex(sign + tts));
+        byte[] data = pagerUtils.dataCopy(voiceBean.getFlag().equals("1")?pagerUtils.TTSINS:pagerUtils.TTSSTOPINS, content);
+        send(fre.equals("0") ? pagerUtils.TTSONEINS : pagerUtils.TTSREPEATINS);
+        send(data);
+    }
 
     /**
      * 拼接文本指令
