@@ -2422,12 +2422,12 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 try {
 
                     waypoint_plan_V2(communication);
-                    Log.d("飞机飞行流程上传航线数据",communication.toString());
+                    Log.d("飞机飞行流程上传航线数据", communication.toString());
                 } catch (Exception e) {
                     StringWriter sw = new StringWriter();
                     PrintWriter pw = new PrintWriter(sw);
                     e.printStackTrace(pw);
-                    Log.d("飞机飞行流程上传航线报错",sw.toString());
+                    Log.d("飞机飞行流程上传航线报错", sw.toString());
                     return;
                 }
 
@@ -3185,7 +3185,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         } else if (isCapture) {//抓拍
                             camera_up_and_down_by_a(communication);
                         } else {
-                            CommonDjiCallback(null, communication);
+                            getMissionUpdateData(null);
                         }
                     }
                 });
@@ -3202,8 +3202,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 NettyClient.getInstance().sendMessage(communication, null);
             }
         }
-
-
     }
 
     //切换摄像头还是fpv视角
@@ -5548,7 +5546,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             waypointMissionBuilder.waypointList(waypointList).waypointCount(waypointList.size());
         }
     }
+
     Communication mUpLoadActionCommunication;
+
     //航线规划v2
     private void waypoint_plan_V2(Communication communication) {
         MissionControl.getInstance().removeAllListeners();
@@ -5785,20 +5785,10 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 }
                 missionUpdateBean.setCurrentVideoSource(currentVideoSource);
             }
-            camera.getCameraVideoStreamSource(new CommonCallbacks.CompletionCallbackWith<CameraVideoStreamSource>() {
+            camera.getLens(2).getThermalDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ThermalDigitalZoomFactor>() {
                 @Override
-                public void onSuccess(CameraVideoStreamSource cameraVideoStreamSource) {
-                    if (cameraVideoStreamSource != null) {
-                        mCameraVideoStreamSource = cameraVideoStreamSource.value() + "";
-                        missionUpdateBean.setCurrentLens(cameraVideoStreamSource.value() + "");
-                        Log.d("模式上传-EU", cameraVideoStreamSource.value() + "");
-                        Log.d("变焦完成数据上传-EU", gson.toJson(missionUpdateBean, WebInitializationBean.class));
-                        MissionUpdateComm.setResult(gson.toJson(missionUpdateBean, WebInitializationBean.class));
-                        MissionUpdateComm.setCode(200);
-                        MissionUpdateComm.setMethod(method);
-                        MissionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                        NettyClient.getInstance().sendMessage(MissionUpdateComm, null);
-                    }
+                public void onSuccess(SettingsDefinitions.ThermalDigitalZoomFactor thermalDigitalZoomFactor) {
+                    missionUpdateBean.setThermalDigitalZoom(thermalDigitalZoomFactor.value() + "");
                 }
 
                 @Override
@@ -5807,7 +5797,33 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 }
             });
 
+            camera.getCameraVideoStreamSource(new CommonCallbacks.CompletionCallbackWith<CameraVideoStreamSource>() {
+                @Override
+                public void onSuccess(CameraVideoStreamSource cameraVideoStreamSource) {
+                    if (cameraVideoStreamSource != null) {
+                        mCameraVideoStreamSource = cameraVideoStreamSource.value() + "";
+                        missionUpdateBean.setCurrentLens(cameraVideoStreamSource.value() + "");
+                        Log.d("模式上传-EU", cameraVideoStreamSource.value() + "");
+                        Log.d("变焦完成数据上传-EU", gson.toJson(missionUpdateBean, WebInitializationBean.class));
+                        if(method == null) {
+                            MissionUpdateComm.setResult(gson.toJson(missionUpdateBean, WebInitializationBean.class));
+                            MissionUpdateComm.setCode(200);
+                            MissionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                            NettyClient.getInstance().sendMessage(MissionUpdateComm, null);
+                        }else {
+                            MissionUpdateComm.setResult(gson.toJson(missionUpdateBean, WebInitializationBean.class));
+                            MissionUpdateComm.setCode(200);
+                            MissionUpdateComm.setMethod(method);
+                            MissionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                            NettyClient.getInstance().sendMessage(MissionUpdateComm, null);
+                        }
+                    }
+                }
 
+                @Override
+                public void onFailure(DJIError djiError) {
+                }
+            });
         } else {
             MissionUpdateComm.setResult("当前设备不支持");
             MissionUpdateComm.setCode(-1);
@@ -6033,6 +6049,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     Log.d("飞机飞行流程上传航线储存数据", mUpdateActionToWebBeans.toString());
                 }
                 showToast("actionid" + actionId);
+                if (waypointV2MissionOperator != null && waypointV2MissionOperator.getLoadedActions() != null) {
+                    waypointV2MissionOperator.getLoadedActions().clear();
+                }
                 waypointV2MissionOperator.uploadWaypointActions(waypointV2ActionList, new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                     @Override
                     public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
@@ -6161,25 +6180,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     private void pauseWaypointV2(Communication communication) {
         if (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.EXECUTING)) {
-            /*waypointV2MissionOperator.stopMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
-                @Override
-                public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
-                    Toast.makeText(ConnectionActivity.this, djiWaypointV2Error == null ? "The mission has been stoped" : djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
-
-                    if (djiWaypointV2Error != null) {
-                        communication.setResult(djiWaypointV2Error.getDescription());
-                        communication.setCode(-1);
-                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                        NettyClient.getInstance().sendMessage(communication, null);
-                    } else {
-                        communication.setResult("Success");
-                        communication.setCode(200);
-                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                        NettyClient.getInstance().sendMessage(communication, null);
-                        isHangXianPause = true;
-                    }
-                }
-            });*/
             waypointV2MissionOperator.interruptMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
@@ -6205,25 +6205,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     private void resumeWaypointV2(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
         if (waypointV2MissionOperator != null && waypointV2MissionOperator.getCurrentState() != null && (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.INTERRUPTED) || waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.READY_TO_UPLOAD))) {
-            /*waypointV2MissionOperator.startMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
-                @Override
-                public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
-                    Toast.makeText(ConnectionActivity.this, djiWaypointV2Error == null ? "The mission has been recovered" : djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
-
-                    if (djiWaypointV2Error != null) {
-                        communication.setResult(djiWaypointV2Error.getDescription());
-                        communication.setCode(-1);
-                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                        NettyClient.getInstance().sendMessage(communication, null);
-                    } else {
-                        communication.setResult("Success");
-                        communication.setCode(200);
-                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                        NettyClient.getInstance().sendMessage(communication, null);
-                        isHangXianPause = true;
-                    }
-                }
-            });*/
             waypointV2MissionOperator.recoverMission(InterruptRecoverActionType.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
@@ -6243,26 +6224,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     }
                 }
             });
-
-            /*waypointV2MissionOperator.recoverMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
-                @Override
-                public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
-                    Toast.makeText(ConnectionActivity.this, djiWaypointV2Error == null ? "The mission has been recovered" : djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
-
-                    if (djiWaypointV2Error != null) {
-                        communication.setResult(djiWaypointV2Error.getDescription());
-                        communication.setCode(-1);
-                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                        NettyClient.getInstance().sendMessage(communication, null);
-                    } else {
-                        communication.setResult("Success");
-                        communication.setCode(200);
-                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                        NettyClient.getInstance().sendMessage(communication, null);
-                        isHangXianPause = true;
-                    }
-                }
-            });*/
         }
 
     }
