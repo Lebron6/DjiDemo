@@ -5802,6 +5802,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         Log.d("模式上传-EU", cameraVideoStreamSource.value() + "");
                         Log.d("变焦完成数据上传-EU", gson.toJson(missionUpdateBean, WebInitializationBean.class));
                         if (method == null) {
+                            Log.d("飞机飞行流程", cameraVideoStreamSource.value() + "");
                             MissionUpdateComm.setResult(gson.toJson(missionUpdateBean, WebInitializationBean.class));
                             MissionUpdateComm.setCode(200);
                             MissionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
