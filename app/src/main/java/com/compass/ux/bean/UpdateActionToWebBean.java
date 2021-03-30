@@ -7,6 +7,15 @@ public class UpdateActionToWebBean {
     private List<String> actionType;
     private List<String> actionIndex;
     private boolean isOld;
+    private WayPointsV2Bean.WayPointsBean.VoiceBean voice;
+
+    public WayPointsV2Bean.WayPointsBean.VoiceBean getVoice() {
+        return voice;
+    }
+
+    public void setVoice(WayPointsV2Bean.WayPointsBean.VoiceBean voice) {
+        this.voice = voice;
+    }
 
     public boolean isOld() {
         return isOld;

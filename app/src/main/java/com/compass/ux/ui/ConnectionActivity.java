@@ -3177,11 +3177,11 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     @Override
                     public void onResult(DJIError djiError) {
                         if (djiError == null && communication == null) {
-                            getMissionUpdateData(Constant.MISSION_UPDATE_MODE);
+                            getMissionUpdateData(Constant.MISSION_UPDATE_MODE,communication);
                         } else if (isCapture) {//抓拍
                             camera_up_and_down_by_a(communication);
                         } else {
-                            getMissionUpdateData(null);
+                            getMissionUpdateData(null,communication);
                         }
                     }
                 });
@@ -5735,7 +5735,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                             if (i == actionIndex && k == actionIndexList.size() - 2) {
                                 Log.d("完成航点动作上传-EU", "onExecutionFinish" + i);
                                 //当前航点中航点动作已经执行完毕只剩下悬停时间结束之后可以继续飞行
-                                getMissionUpdateData(Constant.MISSION_UPDATE_MODE);
+                                getMissionUpdateData(Constant.MISSION_UPDATE_MODE,communication);
                             }
                             if (i == actionIndex && k == actionIndexList.size() - 1) {
                                 change_lens(null, "1");
@@ -5755,8 +5755,10 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         waypointV2MissionOperator.addActionListener(waypointV2ActionListener);
     }
 
-    private void getMissionUpdateData(String method) {
-        Communication MissionUpdateComm = new Communication();
+    private void getMissionUpdateData(String method,Communication missionUpdateComm) {
+        if(missionUpdateComm == null) {
+            missionUpdateComm = new Communication();
+        }
         WebInitializationBean missionUpdateBean = new WebInitializationBean();
         if (camera != null && camera.getLens(0) != null) {
             // 获取当前变焦焦距
@@ -5793,6 +5795,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 }
             });
 
+            Communication finalMissionUpdateComm = missionUpdateComm;
             camera.getCameraVideoStreamSource(new CommonCallbacks.CompletionCallbackWith<CameraVideoStreamSource>() {
                 @Override
                 public void onSuccess(CameraVideoStreamSource cameraVideoStreamSource) {
@@ -5803,16 +5806,18 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         Log.d("变焦完成数据上传-EU", gson.toJson(missionUpdateBean, WebInitializationBean.class));
                         if (method == null) {
                             Log.d("飞机飞行流程", cameraVideoStreamSource.value() + "");
-                            MissionUpdateComm.setResult(gson.toJson(missionUpdateBean, WebInitializationBean.class));
-                            MissionUpdateComm.setCode(200);
-                            MissionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                            NettyClient.getInstance().sendMessage(MissionUpdateComm, null);
+                            finalMissionUpdateComm.setResult(gson.toJson(missionUpdateBean, WebInitializationBean.class));
+                            finalMissionUpdateComm.setCode(200);
+                            finalMissionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                            NettyClient.getInstance().sendMessage(finalMissionUpdateComm,null);
+                            Log.d("飞机飞行流程", finalMissionUpdateComm.toString() + gson.toJson(missionUpdateBean, WebInitializationBean.class) + "");
+
                         } else {
-                            MissionUpdateComm.setResult(gson.toJson(missionUpdateBean, WebInitializationBean.class));
-                            MissionUpdateComm.setCode(200);
-                            MissionUpdateComm.setMethod(method);
-                            MissionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                            NettyClient.getInstance().sendMessage(MissionUpdateComm, null);
+                            finalMissionUpdateComm.setResult(gson.toJson(missionUpdateBean, WebInitializationBean.class));
+                            finalMissionUpdateComm.setCode(200);
+                            finalMissionUpdateComm.setMethod(method);
+                            finalMissionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                            NettyClient.getInstance().sendMessage(finalMissionUpdateComm, null);
                         }
                     }
                 }
@@ -5822,11 +5827,11 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 }
             });
         } else {
-            MissionUpdateComm.setResult("当前设备不支持");
-            MissionUpdateComm.setCode(-1);
-            MissionUpdateComm.setMethod(method);
-            MissionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-            NettyClient.getInstance().sendMessage(MissionUpdateComm, null);
+            missionUpdateComm.setResult("当前设备不支持");
+            missionUpdateComm.setCode(-1);
+            missionUpdateComm.setMethod(method);
+            missionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+            NettyClient.getInstance().sendMessage(missionUpdateComm, null);
         }
 
     }
@@ -6040,6 +6045,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     }
                     updateActionToWebBean.setActionIndex(actionIndexList);
                     updateActionToWebBean.setActionType(actionTypeList);
+                    if(myWayPointActionList.get(i).getVoice() != null) {
+                        updateActionToWebBean.setVoice(myWayPointActionList.get(i).getVoice());
+                    }
                     if (actionIndexList != null && actionIndexList.size() != 0 && actionTypeList != null && actionTypeList.size() != 0) {
                         mUpdateActionToWebBeans.add(updateActionToWebBean);
                     }
@@ -6232,6 +6240,14 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         }
     }
 
+    /**
+     * 航线中监听到的变化推送给前端
+     * @param djiError
+     * @param communication
+     */
+    private void missionDjiCallback(DJIError djiError, Communication communication){
+
+    }
 
     //通用的Callback
     private void CommonDjiCallback(DJIError djiError, Communication communication) {
@@ -6295,6 +6311,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     /**
      * 航点动作监听到的喊话
+     *
      * @param voiceBean
      */
     private void wayPointSendTTS2Payload(WayPointsV2Bean.WayPointsBean.VoiceBean voiceBean) {
@@ -6319,7 +6336,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
         PagerUtils pagerUtils = PagerUtils.getInstance();
         byte[] content = pagerUtils.HexString2Bytes(pagerUtils.toChineseHex(sign + tts));
-        byte[] data = pagerUtils.dataCopy(voiceBean.getFlag().equals("1")?pagerUtils.TTSINS:pagerUtils.TTSSTOPINS, content);
+        byte[] data = pagerUtils.dataCopy(voiceBean.getFlag().equals("1") ? pagerUtils.TTSINS : pagerUtils.TTSSTOPINS, content);
         send(fre.equals("0") ? pagerUtils.TTSONEINS : pagerUtils.TTSREPEATINS);
         send(data);
     }
