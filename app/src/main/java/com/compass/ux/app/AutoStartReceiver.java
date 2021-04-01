@@ -3,6 +3,7 @@ package com.compass.ux.app;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import com.compass.ux.ui.FirstActivity;
 
@@ -16,6 +17,7 @@ public class AutoStartReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
 
         if(Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())){
+            Log.e("是否监听到开机广播","true");
             Intent thisIntent = new Intent(context, FirstActivity.class);
             thisIntent.setAction("android.intent.action.MAIN");
             thisIntent.addCategory("android.intent.category.LAUNCHER");
