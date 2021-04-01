@@ -3177,11 +3177,11 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     @Override
                     public void onResult(DJIError djiError) {
                         if (djiError == null && communication == null) {
-                            getMissionUpdateData(Constant.MISSION_UPDATE_MODE,communication);
+                            getMissionUpdateData(Constant.MISSION_UPDATE_MODE, communication);
                         } else if (isCapture) {//抓拍
                             camera_up_and_down_by_a(communication);
                         } else {
-                            getMissionUpdateData(null,communication);
+                            getMissionUpdateData(null, communication);
                         }
                     }
                 });
@@ -5630,6 +5630,27 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     Log.d("循环之前航点上传-EU",
                             waypointV2MissionExecutionEvent.getProgress().isWaypointReached() + "\n" + targetWaypointIndex
                                     + "\n" + (mUpdateActionToWebBeans == null ? "mUpdateActionToWebBeans已经为空" : mUpdateActionToWebBeans.toString()));
+                    List<WayPointsV2Bean.WayPointsBean> myWayPointActionList = gson.fromJson(mWayPointActionV2, new TypeToken<List<WayPointsV2Bean.WayPointsBean>>() {
+                    }.getType());
+                    for (int i = 0; i < myWayPointActionList.size(); i++) {
+                        WayPointsV2Bean.WayPointsBean wayPointsBean = myWayPointActionList.get(i);
+                        if (waypointV2MissionExecutionEvent.getProgress().isWaypointReached() && (i + 1) == targetWaypointIndex && "0".equals((wayPointsBean != null && wayPointsBean.getVoice() != null) ? wayPointsBean.getVoice().getFlag() : "-1")) {
+                            if (communication_onExecutionFinish == null) {
+                                communication_onExecutionFinish = new Communication();
+                            }
+                            communication_onExecutionFinish.setEquipmentId(MApplication.EQUIPMENT_ID);
+                            communication_onExecutionFinish.setCode(200);
+                            communication_onExecutionFinish.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                            communication_onExecutionFinish.setResult(new Gson().toJson(wayPointsBean.getVoice()));
+                            communication_onExecutionFinish.setMethod(Constant.SHOUTING);
+                            NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
+
+                        } else if (waypointV2MissionExecutionEvent.getProgress().isWaypointReached() && (i + 1) == targetWaypointIndex && "1".equals((wayPointsBean != null && wayPointsBean.getVoice() != null) ? wayPointsBean.getVoice().getFlag() : "-1")) {
+                            wayPointSendTTS2Payload(wayPointsBean.getVoice());
+                        } else if ((i + 1) == targetWaypointIndex && waypointV2MissionExecutionEvent.getProgress().isWaypointReached()) {
+                            Log.d("飞机飞行流程", "当前航点无喊话");
+                        }
+                    }
                     for (int i = 0; i < mUpdateActionToWebBeans.size() && waypointV2MissionExecutionEvent.getProgress().isWaypointReached(); i++) {
                         int intIndex = mUpdateActionToWebBeans.get(i).getPointIndex();
                         currentPoint = targetWaypointIndex;
@@ -5677,86 +5698,91 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             @Override
             public void onExecutionStopped() {
             }
-        };
+        }
 
-        waypointV2ActionListener = new WaypointV2ActionListener() {
-            @Override
-            public void onDownloadUpdate(ActionDownloadEvent actionDownloadEvent) {
-            }
+        ;
 
-            @Override
-            public void onUploadUpdate(ActionUploadEvent actionUploadEvent) {
-                if (actionUploadEvent.getCurrentState().equals(ActionState.READY_TO_UPLOAD)) {
-                    //TODO 添加执行操作
-                    uploadWaypointAction(communication);
-                }
-                //上传航线成功
-                if (actionUploadEvent.getPreviousState() == ActionState.UPLOADING
-                        && actionUploadEvent.getCurrentState() == ActionState.READY_TO_EXECUTE) {
-                    communication_upload_mission.setResult("Mission is uploaded successfully");
-                    communication_upload_mission.setCode(200);
-                    communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    NettyClient.getInstance().sendMessage(communication_upload_mission, null);
-                    Log.d("飞机飞行流程", "上传航点动作成功");
-                } else if (actionUploadEvent != null && actionUploadEvent.getError() == null && mUpdateActionToWebBeans.size() == 0) {
-                    communication_upload_mission.setResult("Mission is uploaded successfully");
-                    communication_upload_mission.setCode(200);
-                    communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    NettyClient.getInstance().sendMessage(communication_upload_mission, null);
-                    Log.d("飞机飞行流程", "上传航点动作成功当前没有规划航点动作");
-                } else {
-                    Log.d("飞机飞行流程", "上传航点动作成功" + ((actionUploadEvent != null && actionUploadEvent.getError() != null) ? actionUploadEvent.getError().getDescription() : "没有错误"));
+        waypointV2ActionListener = new
 
-                }
-            }
+                WaypointV2ActionListener() {
+                    @Override
+                    public void onDownloadUpdate(ActionDownloadEvent actionDownloadEvent) {
+                    }
 
-            @Override
-            public void onExecutionUpdate(ActionExecutionEvent actionExecutionEvent) {
-                if (actionExecutionEvent != null) {
-                    Log.d("航点-EU", "当前状态" + actionExecutionEvent.getCurrentState() + "之前状态" + actionExecutionEvent.getPreviousState() + "\n" + (actionExecutionEvent.getProgress() == null ? "null" : actionExecutionEvent.getProgress().getExecutionActionID()));
-                }
-            }
-
-            @Override
-            public void onExecutionStart(int i) {
-                Log.d("上传-EU", "onExecutionStart" + i);
-            }
-
-            @Override
-            public void onExecutionFinish(int i, DJIWaypointV2Error djiWaypointV2Error) {
-                Log.d("上传-EU", "onExecutionFinish" + i);
-                for (int j = 0; j < mUpdateActionToWebBeans.size(); j++) {
-                    Log.d("1完成航点动作上传-EU", "onExecutionFinish" + mUpdateActionToWebBeans.get(j).toString());
-                    int pointIndex = mUpdateActionToWebBeans.get(j).getPointIndex();
-                    List<String> actionIndexList = mUpdateActionToWebBeans.get(j).getActionIndex();
-                    if (currentPoint == pointIndex && actionIndexList != null) {
-                        for (int k = 0; k < actionIndexList.size(); k++) {
-                            int actionIndex = Integer.parseInt(actionIndexList.get(k));
-                            if (i == actionIndex && k == actionIndexList.size() - 2) {
-                                Log.d("完成航点动作上传-EU", "onExecutionFinish" + i);
-                                //当前航点中航点动作已经执行完毕只剩下悬停时间结束之后可以继续飞行
-                                getMissionUpdateData(Constant.MISSION_UPDATE_MODE,communication);
-                            }
-                            if (i == actionIndex && k == actionIndexList.size() - 1) {
-                                change_lens(null, "1");
-                                Log.d("切换广角动作上传-EU", "onExecutionFinish" + i + j);
-                                mUpdateActionToWebBeans.remove(j);
-                                return;
-                            }
+                    @Override
+                    public void onUploadUpdate(ActionUploadEvent actionUploadEvent) {
+                        if (actionUploadEvent.getCurrentState().equals(ActionState.READY_TO_UPLOAD)) {
+                            uploadWaypointAction(communication);
+                        }
+                        //上传航线成功
+                        if (actionUploadEvent.getPreviousState() == ActionState.UPLOADING
+                                && actionUploadEvent.getCurrentState() == ActionState.READY_TO_EXECUTE) {
+                            communication_upload_mission.setResult("Mission is uploaded successfully");
+                            communication_upload_mission.setCode(200);
+                            communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                            NettyClient.getInstance().sendMessage(communication_upload_mission, null);
+                            Log.d("飞机飞行流程", "上传航点动作成功");
+                        } else if (actionUploadEvent != null && actionUploadEvent.getError() == null && mUpdateActionToWebBeans.size() == 0) {
+                            communication_upload_mission.setResult("Mission is uploaded successfully");
+                            communication_upload_mission.setCode(200);
+                            communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                            NettyClient.getInstance().sendMessage(communication_upload_mission, null);
+                            Log.d("飞机飞行流程", "上传航点动作成功当前没有规划航点动作");
+                        } else {
+                            Log.d("飞机飞行流程", "上传航点动作成功" + ((actionUploadEvent != null && actionUploadEvent.getError() != null) ? actionUploadEvent.getError().getDescription() : "没有错误"));
 
                         }
+                    }
 
+                    @Override
+                    public void onExecutionUpdate(ActionExecutionEvent actionExecutionEvent) {
+                        if (actionExecutionEvent != null) {
+                            Log.d("航点-EU", "当前状态" + actionExecutionEvent.getCurrentState() + "之前状态" + actionExecutionEvent.getPreviousState() + "\n" + (actionExecutionEvent.getProgress() == null ? "null" : actionExecutionEvent.getProgress().getExecutionActionID()));
+                        }
+                    }
+
+                    @Override
+                    public void onExecutionStart(int i) {
+                        Log.d("上传-EU", "onExecutionStart" + i);
+                    }
+
+                    @Override
+                    public void onExecutionFinish(int i, DJIWaypointV2Error djiWaypointV2Error) {
+                        Log.d("上传-EU", "onExecutionFinish" + i);
+                        for (int j = 0; j < mUpdateActionToWebBeans.size(); j++) {
+                            Log.d("1完成航点动作上传-EU", "onExecutionFinish" + mUpdateActionToWebBeans.get(j).toString());
+                            int pointIndex = mUpdateActionToWebBeans.get(j).getPointIndex();
+                            List<String> actionIndexList = mUpdateActionToWebBeans.get(j).getActionIndex();
+                            if (currentPoint == pointIndex && actionIndexList != null) {
+                                for (int k = 0; k < actionIndexList.size(); k++) {
+                                    int actionIndex = Integer.parseInt(actionIndexList.get(k));
+                                    if (i == actionIndex && k == actionIndexList.size() - 2) {
+                                        Log.d("完成航点动作上传-EU", "onExecutionFinish" + i);
+                                        //当前航点中航点动作已经执行完毕只剩下悬停时间结束之后可以继续飞行
+                                        getMissionUpdateData(Constant.MISSION_UPDATE_MODE, communication);
+                                    }
+                                    if (i == actionIndex && k == actionIndexList.size() - 1) {
+                                        change_lens(null, "1");
+                                        Log.d("切换广角动作上传-EU", "onExecutionFinish" + i + j);
+                                        mUpdateActionToWebBeans.remove(j);
+                                        return;
+                                    }
+
+                                }
+
+                            }
+                        }
                     }
                 }
-            }
-        };
+
+        ;
 
         waypointV2MissionOperator.addWaypointEventListener(waypointV2MissionOperatorListener);
         waypointV2MissionOperator.addActionListener(waypointV2ActionListener);
     }
 
-    private void getMissionUpdateData(String method,Communication missionUpdateComm) {
-        if(missionUpdateComm == null) {
+    private void getMissionUpdateData(String method, Communication missionUpdateComm) {
+        if (missionUpdateComm == null) {
             missionUpdateComm = new Communication();
         }
         WebInitializationBean missionUpdateBean = new WebInitializationBean();
@@ -5809,7 +5835,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                             finalMissionUpdateComm.setResult(gson.toJson(missionUpdateBean, WebInitializationBean.class));
                             finalMissionUpdateComm.setCode(200);
                             finalMissionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                            NettyClient.getInstance().sendMessage(finalMissionUpdateComm,null);
+                            NettyClient.getInstance().sendMessage(finalMissionUpdateComm, null);
                             Log.d("飞机飞行流程", finalMissionUpdateComm.toString() + gson.toJson(missionUpdateBean, WebInitializationBean.class) + "");
 
                         } else {
@@ -6045,7 +6071,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     }
                     updateActionToWebBean.setActionIndex(actionIndexList);
                     updateActionToWebBean.setActionType(actionTypeList);
-                    if(myWayPointActionList.get(i).getVoice() != null) {
+                    if (myWayPointActionList.get(i).getVoice() != null) {
                         updateActionToWebBean.setVoice(myWayPointActionList.get(i).getVoice());
                     }
                     if (actionIndexList != null && actionIndexList.size() != 0 && actionTypeList != null && actionTypeList.size() != 0) {
@@ -6242,10 +6268,11 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     /**
      * 航线中监听到的变化推送给前端
+     *
      * @param djiError
      * @param communication
      */
-    private void missionDjiCallback(DJIError djiError, Communication communication){
+    private void missionDjiCallback(DJIError djiError, Communication communication) {
 
     }
 
@@ -6338,7 +6365,30 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         byte[] content = pagerUtils.HexString2Bytes(pagerUtils.toChineseHex(sign + tts));
         byte[] data = pagerUtils.dataCopy(voiceBean.getFlag().equals("1") ? pagerUtils.TTSINS : pagerUtils.TTSSTOPINS, content);
         send(fre.equals("0") ? pagerUtils.TTSONEINS : pagerUtils.TTSREPEATINS);
-        send(data);
+        FPVDemoApplication.getProductInstance().getPayload().sendDataToPayload(data, new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                if (communication_onExecutionFinish == null) {
+                    communication_onExecutionFinish = new Communication();
+                }
+                if (djiError != null) {
+                    showToast("Error:" + djiError.getErrorCode());
+                    communication_onExecutionFinish.setEquipmentId(MApplication.EQUIPMENT_ID);
+                    communication_onExecutionFinish.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                    communication_onExecutionFinish.setResult(djiError.getDescription());
+                    communication_onExecutionFinish.setCode(-1);
+                    communication_onExecutionFinish.setMethod(Constant.SHOUTING);
+                    NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
+                } else {
+                    communication_onExecutionFinish.setEquipmentId(MApplication.EQUIPMENT_ID);
+                    communication_onExecutionFinish.setCode(200);
+                    communication_onExecutionFinish.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                    communication_onExecutionFinish.setResult(new Gson().toJson(voiceBean));
+                    communication_onExecutionFinish.setMethod(Constant.SHOUTING);
+                    NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
+                }
+            }
+        });
     }
 
     /**
