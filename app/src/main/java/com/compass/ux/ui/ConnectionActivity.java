@@ -4310,9 +4310,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             mFlightAssistant.setLandingProtectionEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    if (djiError == null) {
-                        landingProtection = type.equals("1") ? true : false;
-                    }
                     CommonDjiCallback(djiError, communication);
                 }
             });
