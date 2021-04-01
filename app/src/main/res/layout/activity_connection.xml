@@ -127,7 +127,7 @@ android:layout_centerHorizontal="true"       android:layout_marginTop="130dp"
         android:layout_alignParentRight="true"
         android:layout_marginRight="30dp"
         android:background="@drawable/round_btn"
-        android:text="录音停止"
+        android:text="关闭D-RTK"
         android:textColor="@color/colorWhite"
         android:textSize="20dp"
         />
@@ -183,7 +183,7 @@ android:layout_centerHorizontal="true"       android:layout_marginTop="130dp"
         android:layout_marginTop="30dp"
         android:layout_marginRight="30dp"
         android:background="@drawable/round_btn"
-        android:text="测试语音"
+        android:text="开启D-RTK"
         android:textColor="@color/colorWhite"
         android:textSize="20dp" />
 

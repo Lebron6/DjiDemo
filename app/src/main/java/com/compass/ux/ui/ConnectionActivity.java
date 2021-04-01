@@ -275,6 +275,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     Communication communication_rtk = null;
     Communication communication_takePhoto = null;
     Communication communication_battery = null;
+    Communication communication_rtkState = null;
     Communication communication_up_link = null;
     Communication communication_down_link = null;
     Communication communication_TSB = null;
@@ -623,12 +624,22 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 //                        upLoadMP3(voiceByteData[0]);
 //                    }
 //                }.start();
-                sendDataToOSDK(PagerUtils.getInstance().CLOSE_LIGHT);
-
+//                sendDataToOSDK(PagerUtils.getInstance().CLOSE_LIGHT);
+                testBaseStationRTK();
                 break;
             }
             case R.id.btn_voice_end: {
-                send(PagerUtils.getInstance().MP3STOPSINS);
+//                send(PagerUtils.getInstance().MP3STOPSINS);
+                mRTK.setRtkEnabled(false, new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        if (djiError == null) {
+                            Log.e("D-RTK:关闭", "setRTK true");
+                        } else {
+                            Log.e("D-RTK:关闭", "setRTK false" + djiError.getDescription());
+                        }
+                    }
+                });
             }
             break;
 
@@ -637,7 +648,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 //                Toast.makeText(getApplicationContext(), "Stop Live Show", Toast.LENGTH_SHORT).show();
 //                pauseWaypointV2(null);
 //                send(PagerUtils.getInstance().TTSSTOPINS);
-                testBaseStationRTK();
+
                 break;
             case R.id.btn_start_live_show:
                 startLiveShow(null);
@@ -657,8 +668,18 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 if (djiError == null) {
                     Log.e("D-RTK:", "setRTK true");
                 } else {
-                    Log.e("D-RTK::", "setRTK false");
-
+                    Log.e("D-RTK:", "setRTK false" + djiError.getDescription());
+                }
+            }
+        });
+        //设置信号源  移动站
+        mRTK.setReferenceStationSource(ReferenceStationSource.BASE_STATION, new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                if (djiError == null) {
+                    Log.e("D-RTK:", "setRTK true");
+                } else {
+                    Log.e("D-RTK:", "setReferenceStationSource false" + djiError.getDescription());
                 }
             }
         });
@@ -668,7 +689,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 if (djiError == null) {
                     Log.e("D-RTK::", "startSearchBaseStation true");
                 } else {
-                    Log.e("D-RTK::", "startSearchBaseStation false");
+                    Log.e("D-RTK:", "startSearchBaseStation false" + djiError.getDescription());
                 }
             }
         });
@@ -681,6 +702,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         submit += rtkBaseStationInformations[i].getBaseStationName() + "-" + rtkBaseStationInformations[i].getBaseStationID() + ",";
                     }
                     String finalSubmit = submit;
+                    Log.e("D-RTK:", "rtkBaseStationInformations" + submit);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -696,7 +718,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             public void onResult(DJIError djiError) {
 //                    CommonDjiCallback(djiError, communication);
                 if (djiError != null) {
-                    Log.e("D-RTK::", "connectToBaseStation false");
+                    Log.e("D-RTK:", "connectToBaseStation false" + djiError.getDescription());
                 } else {
                     mRTK.setStateCallback(new RTKState.Callback() {
                         @Override
@@ -4574,7 +4596,12 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 mRtk.setRtkEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
+                        if (djiError != null) {
+                            Log.e("TRUE D-RTK:", "setRtkEnabled" + djiError.getDescription());
+                        } else {
+                            Log.e("TRUE D-RTK:", "setRtkEnabled" + "true");
 
+                        }
                     }
                 });
                 mRtk.getRtkEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
@@ -4616,6 +4643,12 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             mRTK.startSearchBaseStation(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
+                    if (djiError != null) {
+                        Log.e("TRUE D-RTK:", "startSearchBaseStation" + djiError.getDescription());
+                    } else {
+                        Log.e("TRUE D-RTK:", "startSearchBaseStation" + "true");
+
+                    }
                     CommonDjiCallback(djiError, communication);
                 }
             });
@@ -4633,6 +4666,12 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             mRTK.stopSearchBaseStation(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
+                    if (djiError != null) {
+                        Log.e("TRUE D-RTK:", "stopSearchBaseStation" + djiError.getDescription());
+                    } else {
+                        Log.e("TRUE D-RTK:", "stopSearchBaseStation" + "true");
+
+                    }
                     CommonDjiCallback(djiError, communication);
                 }
             });
@@ -4653,8 +4692,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 public void onResult(DJIError djiError) {
 //                    CommonDjiCallback(djiError, communication);
                     if (djiError != null) {
-                        showToast("连接基站失败:" + djiError.getDescription());
+                        Log.e("TRUE D-RTK:", "connectToBaseStation" + djiError.getDescription());
                     } else {
+                        Log.e("TRUE D-RTK:", "connectToBaseStation" + "true");
                         addRTKStatus(communication);//监听RTK状态
                     }
                 }
@@ -4754,8 +4794,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     }
 
     double latitude;
+    private boolean isSendRTKState=false;//是否已通过接口返回RTK数据
 
-    private void addRTKStatus(Communication communication) {
+    private void addRTKStatus(Communication rtkCommunication) {
         if (ModuleVerificationUtil.isRtkAvailable()) {
             RTK mRtk = ((Aircraft) FPVDemoApplication.getProductInstance()).getFlightController().getRTK();
             if (mRtk != null) {
@@ -4764,16 +4805,26 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     mRtk.setStateCallback(new RTKState.Callback() {
                         @Override
                         public void onUpdate(RTKState rtkState) {
+                            infoBean.setRtkState(rtkState);
+                            if (isSendRTKState==false){//接口返回
+                                isSendRTKState=true;
+                                rtkCommunication.setResult(gson.toJson(infoBean, SettingValueBean.NetRTKBean.Info.class));
+                                rtkCommunication.setCode(200);
+                                rtkCommunication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                NettyClient.getInstance().sendMessage(rtkCommunication, null);
+                            }
                             if (rtkState.getBaseStationLocation().getLatitude() != latitude) {
                                 latitude = rtkState.getBaseStationLocation().getLatitude();
-                                infoBean.setBaseStationLatitude(String.valueOf(rtkState.getBaseStationLocation().getLatitude()));
-                                infoBean.setBaseStationLongitude(String.valueOf(rtkState.getBaseStationLocation().getLongitude()));
-                                infoBean.setRTKBeingUsed(rtkState.isRTKBeingUsed());
-                                infoBean.setPositioningSolution(rtkState.getPositioningSolution());
-                                communication.setResult(gson.toJson(infoBean, SettingValueBean.NetRTKBean.Info.class));
-                                communication.setCode(200);
-                                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                                NettyClient.getInstance().sendMessage(communication, null);
+                                if (communication_rtkState == null) {
+                                    communication_rtkState = new Communication();
+                                }
+                                communication_rtkState.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                communication_rtkState.setEquipmentId(MApplication.EQUIPMENT_ID);
+                                communication_rtkState.setMethod((Constant.RTKBean));
+                                communication_rtkState.setCode(200);
+                                setRtkBean.setInfo(infoBean);
+                                communication_rtkState.setResult(gson.toJson(setRtkBean, SettingValueBean.NetRTKBean.class));
+                                NettyClient.getInstance().sendMessage(communication_rtkState, null);
 
                             }
                             runOnUiThread(new Runnable() {
@@ -4974,6 +5025,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             for (int i = 0; i < rtkBaseStationInformations.length; i++) {
                 submit += rtkBaseStationInformations[i].getBaseStationName() + "-" + rtkBaseStationInformations[i].getBaseStationID() + ",";
             }
+            Log.e("TRUE D-RTK:", "rtkBaseStationInformations" + submit);
             StringsBean stringsBean = new StringsBean();
             stringsBean.setValue(submit);
             if (communication_BS_info == null) {

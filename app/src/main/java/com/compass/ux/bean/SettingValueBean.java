@@ -2,7 +2,12 @@ package com.compass.ux.bean;
 
 import java.util.List;
 
+import dji.common.flightcontroller.HeadingSolution;
 import dji.common.flightcontroller.PositioningSolution;
+import dji.common.flightcontroller.RTKState;
+import dji.common.flightcontroller.rtk.DataSource;
+import dji.common.flightcontroller.rtk.LocationStandardDeviation;
+import dji.common.model.LocationCoordinate2D;
 
 /**
  * Created by xhf
@@ -495,6 +500,15 @@ public class SettingValueBean {
             private String baseStationLatitude;
             private String baseStationLongitude;
             private PositioningSolution positioningSolution;
+           private RTKState rtkState;
+
+            public RTKState getRtkState() {
+                return rtkState;
+            }
+
+            public void setRtkState(RTKState rtkState) {
+                this.rtkState = rtkState;
+            }
 
             public PositioningSolution getPositioningSolution() {
                 return positioningSolution;
