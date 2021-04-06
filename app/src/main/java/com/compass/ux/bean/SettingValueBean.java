@@ -7,6 +7,7 @@ import dji.common.flightcontroller.PositioningSolution;
 import dji.common.flightcontroller.RTKState;
 import dji.common.flightcontroller.rtk.DataSource;
 import dji.common.flightcontroller.rtk.LocationStandardDeviation;
+import dji.common.flightcontroller.rtk.RTKBaseStationInformation;
 import dji.common.model.LocationCoordinate2D;
 
 /**
@@ -315,7 +316,8 @@ public class SettingValueBean {
     public void setRtkBean(NetRTKBean rtkBean) {
         this.rtkBean = rtkBean;
     }
-    public static class BatteryStateBean{
+
+    public static class BatteryStateBean {
         //是否连接
         private int isConnectOne;
         private int isConnectTwo;
@@ -459,7 +461,7 @@ public class SettingValueBean {
 
     }
 
-    public static class NetRTKBean{
+    public static class NetRTKBean {
 
         private int rtkSwitch;//SETRTK状态
         private int serviceType;//RTK类型
@@ -489,18 +491,23 @@ public class SettingValueBean {
             this.serviceType = serviceType;
         }
 
-        public static class Info{
+        public static class Info {
 
-            private boolean isRTKBeingUsed;
             private String username;
             private String password;
             private String ip;
             private String mountPoint;
             private int port;
-            private String baseStationLatitude;
-            private String baseStationLongitude;
-            private PositioningSolution positioningSolution;
-           private RTKState rtkState;
+            private RTKState rtkState;
+            private RTKBaseStationInformation rtkBaseStationInformation;
+
+            public RTKBaseStationInformation getRtkBaseStationInformation() {
+                return rtkBaseStationInformation;
+            }
+
+            public void setRtkBaseStationInformation(RTKBaseStationInformation rtkBaseStationInformation) {
+                this.rtkBaseStationInformation = rtkBaseStationInformation;
+            }
 
             public RTKState getRtkState() {
                 return rtkState;
@@ -508,22 +515,6 @@ public class SettingValueBean {
 
             public void setRtkState(RTKState rtkState) {
                 this.rtkState = rtkState;
-            }
-
-            public PositioningSolution getPositioningSolution() {
-                return positioningSolution;
-            }
-
-            public void setPositioningSolution(PositioningSolution positioningSolution) {
-                this.positioningSolution = positioningSolution;
-            }
-
-            public boolean isRTKBeingUsed() {
-                return isRTKBeingUsed;
-            }
-
-            public void setRTKBeingUsed(boolean RTKBeingUsed) {
-                isRTKBeingUsed = RTKBeingUsed;
             }
 
             public String getUsername() {
@@ -566,21 +557,6 @@ public class SettingValueBean {
                 this.port = port;
             }
 
-            public String getBaseStationLatitude() {
-                return baseStationLatitude;
-            }
-
-            public void setBaseStationLatitude(String baseStationLatitude) {
-                this.baseStationLatitude = baseStationLatitude;
-            }
-
-            public String getBaseStationLongitude() {
-                return baseStationLongitude;
-            }
-
-            public void setBaseStationLongitude(String baseStationLongitude) {
-                this.baseStationLongitude = baseStationLongitude;
-            }
         }
 
     }

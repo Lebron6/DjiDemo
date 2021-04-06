@@ -31,6 +31,7 @@ import dji.common.flightcontroller.rtk.NetworkServicePlansState;
 import dji.common.flightcontroller.rtk.NetworkServiceSettings;
 import dji.common.flightcontroller.rtk.NetworkServiceState;
 import dji.common.flightcontroller.rtk.RTKBaseStationInformation;
+import dji.common.flightcontroller.rtk.RTKConnectionStateWithBaseStationReferenceSource;
 import dji.common.flightcontroller.rtk.ReferenceStationSource;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
 import dji.common.flightcontroller.virtualstick.FlightCoordinateSystem;
@@ -1465,82 +1466,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
 
                 if (KeyManager.getInstance() != null) {
-
-                    //视觉定位
-                    KeyManager.getInstance().getValue(flightControllerKey1, new GetCallback() {
-                        @Override
-                        public void onSuccess(Object o) {
-                            visionAssistedPosition = (boolean) o;
-                        }
-
-                        @Override
-                        public void onFailure(DJIError djiError) {
-
-                        }
-                    });
-                    //精确着陆
-                    KeyManager.getInstance().getValue(flightControllerKey2, new GetCallback() {
-                        @Override
-                        public void onSuccess(Object o) {
-                            precisionLand = (boolean) o;
-                        }
-
-                        @Override
-                        public void onFailure(DJIError djiError) {
-
-                        }
-                    });
-                    //向上避免
-                    KeyManager.getInstance().getValue(flightControllerKey3, new GetCallback() {
-                        @Override
-                        public void onSuccess(Object o) {
-                            upwardsAvoidance = (boolean) o;
-                        }
-
-                        @Override
-                        public void onFailure(DJIError djiError) {
-
-                        }
-                    });
-                    //向下避障
-                    KeyManager.getInstance().getValue(flightControllerKey5, new GetCallback() {
-                        @Override
-                        public void onSuccess(Object o) {
-                            landingProtection = (boolean) o;
-                        }
-
-                        @Override
-                        public void onFailure(DJIError djiError) {
-
-                        }
-                    });
-
-                    //向上避障
-//                    mFlightAssistant.getUpwardVisionObstacleAvoidanceEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
-//                        @Override
-//                        public void onSuccess(Boolean aBoolean) {
-//                            upwardsAvoidance = aBoolean;
-//                        }
-//
-//                        @Override
-//                        public void onFailure(DJIError djiError) {
-//
-//                        }
-//                    });
-//                    //向下避障
-//                    mFlightAssistant.getLandingProtectionEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
-//                        @Override
-//                        public void onSuccess(Boolean aBoolean) {
-//                            landingProtection=aBoolean;
-//                        }
-//
-//                        @Override
-//                        public void onFailure(DJIError djiError) {
-//
-//                        }
-//                    });
-
-
                     //
                     KeyManager.getInstance().getValue(flightControllerKey4, new GetCallback() {
                         @Override
@@ -1610,9 +1535,77 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 mRemoteController = aircraft.getRemoteController();
                 //rtk
                 mRTK = mFlightController.getRTK();
-
+                addRTKStatus();//rtk实时状态返回
+                mRTK.setRtkBaseStationListCallback(this);//监听搜索到的基站
 
                 mFlightAssistant = mFlightController.getFlightAssistant();
+                //向上避障
+                mFlightAssistant.getUpwardVisionObstacleAvoidanceEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean aBoolean) {
+                        upwardsAvoidance = aBoolean;
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+                    }
+                });
+                //向下避障
+                mFlightAssistant.getLandingProtectionEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean aBoolean) {
+                        landingProtection = aBoolean;
+
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+                    }
+                });
+
+                //水平避障
+                mFlightAssistant.getHorizontalVisionObstacleAvoidanceEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean aBoolean) {
+                        activeObstacleAvoidance = aBoolean;
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                text_net_rtk_state.setText("初始四项：" + aBoolean);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+                //精确着陆
+                mFlightAssistant.getPrecisionLandingEnabled (new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean aBoolean) {
+                        precisionLand = aBoolean;
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+                //视觉定位
+                mFlightAssistant.getVisionAssistedPositioningEnabled (new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean aBoolean) {
+                        visionAssistedPosition = aBoolean;
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
+
                 mFlightAssistant.setVisionDetectionStateUpdatedCallback(new VisionDetectionState.Callback() {
                     //                视觉系统可以以60度水平视场（FOV）和55度垂直FOV看到飞机前方。水平视场分为四个相等的扇区，此类给出了一个扇区的距离和警告级别。
                     @Override
@@ -1632,38 +1625,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 });
 
                 if (isM300Product()) {
-                    //避障4.14没用了
-//                    mFlightController.getFlightAssistant().setObstacleAvoidanceSensorStateListener(new CommonCallbacks.CompletionCallbackWith<ObstacleAvoidanceSensorState>() {
-//                        @Override
-//                        public void onSuccess(ObstacleAvoidanceSensorState obstacleAvoidanceSensorState) {
-//                            ObstacleAvoidanceSensorStateBean bean = new ObstacleAvoidanceSensorStateBean();
-//                            bean.setAreObstacleAvoidanceSensorsInHorizo​​ntalDirectionEnabled(obstacleAvoidanceSensorState.areObstacleAvoidanceSensorsInHorizontalDirectionEnabled());
-//                            bean.setAreObstacleAvoidanceSensorsInHorizo​​ntalDirectionWorking(obstacleAvoidanceSensorState.areObstacleAvoidanceSensorsInHorizontalDirectionWorking());
-//                            bean.setAreObstacleAvoidanceSensorsInVerticalDirectionEnabled(obstacleAvoidanceSensorState.areObstacleAvoidanceSensorsInVerticalDirectionEnabled());
-//                            bean.setAreObstacleAvoidanceSensorsInVerticalDirectionWorking(obstacleAvoidanceSensorState.areObstacleAvoidanceSensorsInVerticalDirectionWorking());
-//                            bean.setUpwardObstacleAvoidanceSensorEnabled(obstacleAvoidanceSensorState.isUpwardObstacleAvoidanceSensorEnabled());
-//                            bean.setUpwardObstacleAvoidanceSensorWorking(obstacleAvoidanceSensorState.isUpwardObstacleAvoidanceSensorWorking());
-//                            bean.setLeftSideObstacleAvoidanceSensorEnabled(obstacleAvoidanceSensorState.isLeftSideObstacleAvoidanceSensorEnabled());
-//                            bean.setLeftSideObstacleAvoidanceSensorWorking(obstacleAvoidanceSensorState.isLeftSideObstacleAvoidanceSensorWorking());
-//                            bean.setRightSideObstacleAvoidanceSensorEnabled(obstacleAvoidanceSensorState.isRightSideObstacleAvoidanceSensorEnabled());
-//                            bean.setRightSideObstacleAvoidanceSensorWorking(obstacleAvoidanceSensorState.isRightSideObstacleAvoidanceSensorWorking());
-//                            bean.setBackwardObstacleAvoidanceSensorEnabled(obstacleAvoidanceSensorState.isBackwardObstacleAvoidanceSensorEnabled());
-//                            bean.setBackwardObstacleAvoidanceSensorWorking(obstacleAvoidanceSensorState.isBackwardObstacleAvoidanceSensorWorking());
-//
-//                            if (communication_ObstacleAvoidanceSensorState == null) {
-//                                communication_ObstacleAvoidanceSensorState = new Communication();
-//                            }
-//                            communication_ObstacleAvoidanceSensorState.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                            communication_ObstacleAvoidanceSensorState.setEquipmentId(MApplication.EQUIPMENT_ID);
-//                            communication_ObstacleAvoidanceSensorState.setMethod((Constant.OASS));
-//                            communication_ObstacleAvoidanceSensorState.setResult(gson.toJson(bean, ObstacleAvoidanceSensorStateBean.class));
-//                            NettyClient.getInstance().sendMessage(communication_ObstacleAvoidanceSensorState, null);
-//                        }
-//
-//                        @Override
-//                        public void onFailure(DJIError djiError) {
-//                        }
-//                    });
+
                     mFlightAssistant.getVisualObstaclesAvoidanceDistance(Upward, new CommonCallbacks.CompletionCallbackWith<Float>() {
                         @Override
                         public void onSuccess(Float aFloat) {
@@ -1733,17 +1695,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         }
                     });
 
-                    mFlightAssistant.getActiveObstacleAvoidanceEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
-                        @Override
-                        public void onSuccess(Boolean aBoolean) {
-                            activeObstacleAvoidance = aBoolean;
-                        }
-
-                        @Override
-                        public void onFailure(DJIError djiError) {
-
-                        }
-                    });
 
                     int loginvalue = UserAccountManager.getInstance().getUserAccountState().value();
                     webInitializationBean.setUserAccountState(loginvalue + "");
@@ -4045,9 +3996,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         });
     }
 
-    private void setPrecisionLandingEnabled(Communication communication) {
-
-    }
 
     //设置是否启用最大半径限制(传0没有 传1有然后就是设置值)
     private void setMaxFlightRadiusLimit(Communication communication) {
@@ -4183,48 +4131,26 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     //设置视觉定位
     private void setVisionAssistedPosition(Communication communication) {
-        Log.e("启动视觉定位", communication.getPara().get(Constant.TYPE));
         String type = communication.getPara().get(Constant.TYPE);
         if (!TextUtils.isEmpty(type) && mFlightAssistant != null) {
             mFlightAssistant.setVisionAssistedPositioningEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
+                    visionAssistedPosition=type.equals("1") ? true : false;
                     CommonDjiCallback(djiError, communication);
                 }
             });
         }
-//        if (KeyManager.getInstance() != null) {
-//            KeyManager.getInstance().setValue(flightControllerKey1, type.equals("1") ? true : false, new SetCallback() {
-//                @Override
-//                public void onSuccess() {
-//                    Log.e("启动视觉定位","Success");
-//
-//                    communication.setResult("Success");
-//                    communication.setCode(200);
-//                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                    NettyClient.getInstance().sendMessage(communication, null);
-//                }
-//
-//                @Override
-//                public void onFailure(DJIError djiError) {
-//                    Log.e("启动视觉定位","FALSE"+djiError);
-//
-//                    communication.setResult(djiError.toString());
-//                    communication.setCode(-1);
-//                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                    NettyClient.getInstance().sendMessage(communication, null);
-//                }
-//            });
-//        }
     }
 
     //精确着陆
     private void setPrecisionLand(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
         if (!TextUtils.isEmpty(type) && mFlightAssistant != null) {
-            mFlightAssistant.setPrecisionLandingEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
+            mFlightAssistant.setPrecisionLandingEnabled (type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
+                    precisionLand=type.equals("1") ? true : false;
                     CommonDjiCallback(djiError, communication);
                 }
             });
@@ -4251,100 +4177,38 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 //        }
     }
 
-    //返航障碍物检测
-    private void setCollisionAvoidanceEnabled(Communication communication) {
-        String type = communication.getPara().get(Constant.TYPE);
-        if (!TextUtils.isEmpty(type) && mFlightAssistant != null) {
-            mFlightAssistant.setPrecisionLandingEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
-                    CommonDjiCallback(djiError, communication);
-                }
-            });
-        }
-    }
 
     //向上刹停
     private void setUpwardsAvoidance(Communication communication) {
-        Log.e("向上避障", communication.getPara().get(Constant.TYPE));
         String type = communication.getPara().get(Constant.TYPE);
-
         if (!TextUtils.isEmpty(type) && mFlightAssistant != null) {
             mFlightAssistant.setUpwardVisionObstacleAvoidanceEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
                     CommonDjiCallback(djiError, communication);
+                    if (djiError == null) {
+                        upwardsAvoidance = type.equals("1") ? true : false;
+                    }
                 }
             });
         }
 
-//        if (KeyManager.getInstance() != null) {
-//            KeyManager.getInstance().setValue(flightControllerKey3, type.equals("1") ? true : false, new SetCallback() {
-//                @Override
-//                public void onSuccess() {
-//                    Log.e("向上避障","成功");
-//                    upwardsAvoidance = type.equals("1") ? true : false;
-//                    communication.setResult("Success");
-//                    communication.setCode(200);
-//                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                    NettyClient.getInstance().sendMessage(communication, null);
-//                }
-//
-//                @Override
-//                public void onFailure(DJIError djiError) {
-//                    Log.e("向上避障","失败:"+djiError.getDescription());
-//                    communication.setResult(djiError.toString());
-//                    communication.setCode(-1);
-//                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                    NettyClient.getInstance().sendMessage(communication, null);
-//                }
-//            });
-//        }
     }
 
     //下避障
     private void setLandingProtection(Communication communication) {
-        Log.e("向下避障", "执行");
         String type = communication.getPara().get(Constant.TYPE);
         if (!TextUtils.isEmpty(type) && mFlightAssistant != null) {
             mFlightAssistant.setLandingProtectionEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
                     CommonDjiCallback(djiError, communication);
+                    if (djiError == null) {
+                        landingProtection = type.equals("1") ? true : false;
+                    }
                 }
             });
         }
-
-
-//        if(!TextUtils.isEmpty(type)&&mFlightAssistant!=null){
-//            mFlightAssistant.setUpwardVisionObstacleAvoidanceEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
-//                @Override
-//                public void onResult(DJIError djiError) {
-//                    CommonDjiCallback(djiError, communication);
-//                }
-//            });
-//        }
-
-//        if (KeyManager.getInstance() != null) {
-//            KeyManager.getInstance().setValue(flightControllerKey5, type.equals("1") ? true : false, new SetCallback() {
-//                @Override
-//                public void onSuccess() {
-//                    landingProtection = type.equals("1") ? true : false;
-//                    communication.setResult("Success");
-//                    communication.setCode(200);
-//                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                    NettyClient.getInstance().sendMessage(communication, null);
-//                }
-//
-//                @Override
-//                public void onFailure(DJIError djiError) {
-//                    communication.setResult(djiError.toString());
-//                    communication.setCode(-1);
-//                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-//                    NettyClient.getInstance().sendMessage(communication, null);
-//                }
-//            });
-//        }
 
     }
 
@@ -4400,16 +4264,20 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     //设置避障刹车功能
     private void setActiveObstacleAvoidance(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
-        mFlightAssistant.setActiveObstacleAvoidanceEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
+        mFlightAssistant.setHorizontalVisionObstacleAvoidanceEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
-                CommonDjiCallback(djiError, communication);
-            }
-        });
-        mFlightAssistant.setCollisionAvoidanceEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-
+                if (djiError==null){
+                    activeObstacleAvoidance = type.equals("1") ? true : false;
+                    CommonDjiCallback(djiError, communication);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            text_net_rtk_account_state.setText("设置四项："+activeObstacleAvoidance);
+                        }
+                    });
+                }
+//
             }
         });
     }
@@ -4588,46 +4456,27 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     private void setRTK(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
         if (ModuleVerificationUtil.isRtkAvailable()) {
-            RTK mRtk = ((Aircraft) FPVDemoApplication.getProductInstance()).getFlightController().getRTK();
-            if (mRtk != null) {
-                mRtk.setRtkEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
+            if (mRTK != null) {
+                mRTK.setRtkEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
-                        if (djiError != null) {
-                            Log.e("TRUE D-RTK:", "setRtkEnabled" + djiError.getDescription());
-                        } else {
-                            Log.e("TRUE D-RTK:", "setRtkEnabled" + "true");
-
-                        }
+                        CommonDjiCallback(djiError, communication);
                     }
                 });
-                mRtk.getRtkEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
-                    @Override
-                    public void onSuccess(Boolean aBoolean) {
-                        setRtkBean.setRtkSwitch(aBoolean ? 1 : 0);
-                        String description2 = "启用RTK模块: " + aBoolean;
-                        communication.setResult(description2);
-                        communication.setCode(200);
-                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                        NettyClient.getInstance().sendMessage(communication, null);
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-                        communication.setResult("RTK连接失败");
-                        communication.setCode(-1);
-                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                        NettyClient.getInstance().sendMessage(communication, null);
-                    }
-                });
-
-            } else {
-                communication.setResult("RTK为空");
-                communication.setCode(-1);
-                communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                NettyClient.getInstance().sendMessage(communication, null);
 
             }
+            //检测RKT开关
+            mRTK.getRtkEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                @Override
+                public void onSuccess(Boolean aBoolean) {
+                    setRtkBean.setRtkSwitch(aBoolean ? 1 : 0);
+                }
+
+                @Override
+                public void onFailure(DJIError djiError) {
+                    setRtkBean.setRtkSwitch(-1);
+                }
+            });
         } else {
             showToast("RTK不可用");
         }
@@ -4636,26 +4485,41 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     //开始搜索基站
     private void startSearchBS(Communication communication) {
         if (mRTK != null) {
-            mRTK.setRtkBaseStationListCallback(this);//监听搜索到的基站
             mRTK.startSearchBaseStation(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    if (djiError != null) {
-                        Log.e("TRUE D-RTK:", "startSearchBaseStation" + djiError.getDescription());
-                    } else {
-                        Log.e("TRUE D-RTK:", "startSearchBaseStation" + "true");
-
-                    }
                     CommonDjiCallback(djiError, communication);
                 }
             });
-        } else {
-            communication.setResult("RTK为空");
-            communication.setCode(-1);
-            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-            NettyClient.getInstance().sendMessage(communication, null);
         }
     }
+
+
+    //搜索到的rtk监听
+    @Override
+    public void onUpdate(RTKBaseStationInformation[] rtkBaseStationInformations) {
+        String submit = "";
+
+        if (rtkBaseStationInformations.length > 0) {
+            for (int i = 0; i < rtkBaseStationInformations.length; i++) {
+                submit += rtkBaseStationInformations[i].getBaseStationName() + "-" + rtkBaseStationInformations[i].getBaseStationID() + ",";
+            }
+            StringsBean stringsBean = new StringsBean();
+            stringsBean.setValue(submit);
+            if (communication_BS_info == null) {
+                communication_BS_info = new Communication();
+            }
+            communication_BS_info.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+            communication_BS_info.setEquipmentId(MApplication.EQUIPMENT_ID);
+            communication_BS_info.setMethod((Constant.BS_INFO));
+            communication_BS_info.setCode(200);
+            communication_BS_info.setResult(gson.toJson(stringsBean));
+            NettyClient.getInstance().sendMessage(communication_BS_info, null);
+        }
+
+
+    }
+
 
     //结束搜索基站
     private void stopSearchBS(Communication communication) {
@@ -4663,20 +4527,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             mRTK.stopSearchBaseStation(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    if (djiError != null) {
-                        Log.e("TRUE D-RTK:", "stopSearchBaseStation" + djiError.getDescription());
-                    } else {
-                        Log.e("TRUE D-RTK:", "stopSearchBaseStation" + "true");
-
-                    }
                     CommonDjiCallback(djiError, communication);
                 }
             });
-        } else {
-            communication.setResult("RTK为空");
-            communication.setCode(-1);
-            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-            NettyClient.getInstance().sendMessage(communication, null);
         }
     }
 
@@ -4687,20 +4540,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             mRTK.connectToBaseStation(type, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-//                    CommonDjiCallback(djiError, communication);
-                    if (djiError != null) {
-                        Log.e("TRUE D-RTK:", "connectToBaseStation" + djiError.getDescription());
-                    } else {
-                        Log.e("TRUE D-RTK:", "connectToBaseStation" + "true");
-                        addRTKStatus(communication);//监听RTK状态
-                    }
+                    CommonDjiCallback(djiError, communication);
                 }
             });
-        } else {
-            communication.setResult("RTK为空");
-            communication.setCode(-1);
-            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-            NettyClient.getInstance().sendMessage(communication, null);
         }
     }
 
@@ -4715,41 +4557,21 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     CommonDjiCallback(djiError, communication);
                 }
             });
-        } else {
-            communication.setResult("RTK为空");
-            communication.setCode(-1);
-            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-            NettyClient.getInstance().sendMessage(communication, null);
         }
     }
 
-    //设置坐标系
-    private void setNSCS() {
-        RTKNetworkServiceProvider provider = DJISDKManager.getInstance().getRTKNetworkServiceProvider().getInstance();
-        provider.setNetworkServiceCoordinateSystem(CoordinateSystem.WGS84, new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                if (djiError != null) {
-                    showToast("设置坐标系失败");
-                }
-            }
-        });
-    }
 
-    //设置网络rtk
+    //设置自定义网络rtk
 //    https://bbs.dji.com/thread-247389-1-1.html
     private void setRTKNetwork(Communication communication) {
         RTKNetworkServiceProvider provider = DJISDKManager.getInstance().getRTKNetworkServiceProvider();
         if (ModuleVerificationUtil.isNetRtkAvailable()) {
             //设置网络RTK账号
-            if (communication != null) {
-                infoBean.setUsername(communication.getPara().get("username"));
-                infoBean.setPassword(communication.getPara().get("password"));
-                infoBean.setMountPoint(communication.getPara().get("mountPoint"));
-                infoBean.setIp(communication.getPara().get("ip"));
-                infoBean.setPort(Integer.parseInt(communication.getPara().get("port")));
-            }
-
+            infoBean.setUsername(communication.getPara().get("username"));
+            infoBean.setPassword(communication.getPara().get("password"));
+            infoBean.setMountPoint(communication.getPara().get("mountPoint"));
+            infoBean.setIp(communication.getPara().get("ip"));
+            infoBean.setPort(Integer.parseInt(communication.getPara().get("port")));
 
             NetworkServiceSettings.Builder builder = new NetworkServiceSettings.Builder()
                     .userName(infoBean.getUsername()).password(infoBean.getPassword()).ip(infoBean.getIp())
@@ -4760,15 +4582,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             provider.startNetworkService(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    if (djiError != null) {
-                        communication.setResult("CUSTOM_RTK_START_FAIL" + djiError.getDescription());
-                        communication.setCode(200);
-                        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                        NettyClient.getInstance().sendMessage(communication, null);
-
-                    } else {
-                        showToast("启动网络RTK成功");
-                    }
+                    CommonDjiCallback(djiError, communication);
                 }
             });
             //账号连接状态
@@ -4776,7 +4590,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 @Override
                 public void onNetworkServiceStateUpdate(NetworkServiceState networkServiceState) {
                     String description5 = String.valueOf(networkServiceState.getChannelState());
-                    //  NettyClient.getInstance().sendMsgToServer(description5);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -4786,55 +4599,70 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 }
             });
 
-            addRTKStatus(communication);//监听RTK状态
         }
     }
 
     double latitude;
-    private boolean isSendRTKState=false;//是否已通过接口返回RTK数据
 
-    private void addRTKStatus(Communication rtkCommunication) {
+    //监听RTK状态
+    private void addRTKStatus() {
         if (ModuleVerificationUtil.isRtkAvailable()) {
-            RTK mRtk = ((Aircraft) FPVDemoApplication.getProductInstance()).getFlightController().getRTK();
-            if (mRtk != null) {
-                //检测RKT连接状态
-                if (mRtk != null) {
-                    mRtk.setStateCallback(new RTKState.Callback() {
-                        @Override
-                        public void onUpdate(RTKState rtkState) {
-                            infoBean.setRtkState(rtkState);
-                            if (isSendRTKState==false){//接口返回
-                                isSendRTKState=true;
-                                rtkCommunication.setResult(gson.toJson(infoBean, SettingValueBean.NetRTKBean.Info.class));
-                                rtkCommunication.setCode(200);
-                                rtkCommunication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                                NettyClient.getInstance().sendMessage(rtkCommunication, null);
-                            }
-                            if (rtkState.getBaseStationLocation().getLatitude() != latitude) {
-                                latitude = rtkState.getBaseStationLocation().getLatitude();
-                                if (communication_rtkState == null) {
-                                    communication_rtkState = new Communication();
-                                }
-                                communication_rtkState.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                                communication_rtkState.setEquipmentId(MApplication.EQUIPMENT_ID);
-                                communication_rtkState.setMethod((Constant.RTKBean));
-                                communication_rtkState.setCode(200);
-                                setRtkBean.setInfo(infoBean);
-                                communication_rtkState.setResult(gson.toJson(setRtkBean, SettingValueBean.NetRTKBean.class));
-                                NettyClient.getInstance().sendMessage(communication_rtkState, null);
+            mRTK = ((Aircraft) FPVDemoApplication.getProductInstance()).getFlightController().getRTK();
+            if (mRTK != null) {
+                mRTK.addReferenceStationSourceCallback(new ReferenceStationSource.Callback() {
+                    @Override
+                    public void onReferenceStationSourceUpdate(ReferenceStationSource referenceStationSource) {
+                        setRtkBean.setServiceType(referenceStationSource.value);
+                    }
+                });
+                //检测RKT开关
+                mRTK.getRtkEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean aBoolean) {
+                        setRtkBean.setRtkSwitch(aBoolean ? 1 : 0);
+                    }
 
-                            }
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    text_net_rtk_state.setText("RTK：" + rtkState.isRTKBeingUsed() + "");
-                                }
-                            });
+                    @Override
+                    public void onFailure(DJIError djiError) {
+                        setRtkBean.setRtkSwitch(-1);
+                    }
+                });
+                if (isM300Product()) {
+                    //D-RTK实时返回信息
+                    mRTK.setRtkConnectionStateWithBaseStationCallback(new RTK.RTKConnectionStateWithBaseStationReferenceSourceCallback() {
+                        @Override
+                        public void onUpdate(RTKConnectionStateWithBaseStationReferenceSource rtkConnectionStateWithBaseStationReferenceSource, RTKBaseStationInformation rtkBaseStationInformation) {
+                            infoBean.setRtkBaseStationInformation(rtkBaseStationInformation);
+                            setRtkBean.setInfo(infoBean);
                         }
                     });
                 }
-
+                //监听RTK状态
+                mRTK.setStateCallback(new RTKState.Callback() {
+                    @Override
+                    public void onUpdate(RTKState rtkState) {
+                        infoBean.setRtkState(rtkState);
+                        if (communication_rtkState == null) {
+                            communication_rtkState = new Communication();
+                        }
+                        communication_rtkState.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        communication_rtkState.setEquipmentId(MApplication.EQUIPMENT_ID);
+                        communication_rtkState.setMethod((Constant.RTKBean));
+                        communication_rtkState.setCode(200);
+                        setRtkBean.setInfo(infoBean);
+                        communication_rtkState.setResult(gson.toJson(setRtkBean, SettingValueBean.NetRTKBean.class));
+                        NettyClient.getInstance().sendMessage(communication_rtkState, null);
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                text_net_rtk_state.setText("RTK：" + rtkState.isRTKBeingUsed() + "");
+//                            }
+//                        });
+                    }
+                });
             }
+
+
         }
     }
 
@@ -4861,7 +4689,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError == null) {
-
                         switch (type) {
                             case "0":
                                 frequencyBand = "双频";
@@ -4873,7 +4700,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                 frequencyBand = "5.8G";
                                 break;
                         }
-
 
                         TransmissionSetBean transmissionSetBean = new TransmissionSetBean();
                         transmissionSetBean.setChannelBandwidth(channelBandwidth);
@@ -5013,31 +4839,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     }
 
-    //搜索到的rtk监听
-    @Override
-    public void onUpdate(RTKBaseStationInformation[] rtkBaseStationInformations) {
-
-        String submit = "";
-        if (rtkBaseStationInformations.length > 0) {
-            for (int i = 0; i < rtkBaseStationInformations.length; i++) {
-                submit += rtkBaseStationInformations[i].getBaseStationName() + "-" + rtkBaseStationInformations[i].getBaseStationID() + ",";
-            }
-            Log.e("TRUE D-RTK:", "rtkBaseStationInformations" + submit);
-            StringsBean stringsBean = new StringsBean();
-            stringsBean.setValue(submit);
-            if (communication_BS_info == null) {
-                communication_BS_info = new Communication();
-            }
-            communication_BS_info.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-            communication_BS_info.setEquipmentId(MApplication.EQUIPMENT_ID);
-            communication_BS_info.setMethod((Constant.BS_INFO));
-            communication_BS_info.setCode(200);
-            communication_BS_info.setResult(gson.toJson(stringsBean));
-            NettyClient.getInstance().sendMessage(communication_BS_info, null);
-        }
-
-
-    }
 
     /**
      * 航线飞行过程中triggers事件监听
