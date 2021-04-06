@@ -544,36 +544,13 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         });
         findViewById(R.id.btn_stop_live_show).setOnClickListener(this);
         findViewById(R.id.btn_start_live_show).setOnClickListener(this);
-//        repeat_send_checkbox = findViewById(R.id.repeat_send_checkbox);
-//        repeat_send_checkbox.setOnCheckedChangeListener(onCheckedChangeListener);
-        seek_bar_volume = findViewById(R.id.seek_bar_volume);
-        seek_bar_volume.setOnSeekBarChangeListener(onSeekBarChangeListener);
+
         mVideoSurface = (TextureView) findViewById(R.id.video_previewer_surface);
         if (null != mVideoSurface) {
             mVideoSurface.setSurfaceTextureListener(this);
         }
     }
 
-    SeekBar.OnSeekBarChangeListener onSeekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
-        @Override
-        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
-        }
-
-        @Override
-        public void onStartTrackingTouch(SeekBar seekBar) {
-
-        }
-
-        @Override
-        public void onStopTrackingTouch(SeekBar seekBar) {
-            PagerUtils instance = PagerUtils.getInstance();
-            byte[] content = instance.intToBytes(seekBar.getProgress());
-            byte[] ins = {0x56};
-//            Log.e("测试音量",seekBar.getProgress()+"");
-            send(instance.dataCopy(ins, content));
-        }
-    };
 
     @Override
     public void onClick(View v) {
@@ -4716,8 +4693,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                         NettyClient.getInstance().sendMessage(communication, null);
                     }
-
-
                     CommonDjiCallback(djiError, communication);
                 }
             });
@@ -6263,9 +6238,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             } else {
                 sex = "52";
             }
-
             sign = "[" + "v" + volume + "]" + "[" + "s" + speed + "]" + "[" + "m" + sex + "]";//科大讯飞标记使用
-
         }
 
         PagerUtils pagerUtils = PagerUtils.getInstance();
@@ -6298,11 +6271,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         }.start();
     }
 
-    //测试数据
-    private byte[] data = {0x24, 0x00, 0x0A, 0x54, (byte) 0xc2, (byte) 0xde, (byte) 0xc5, (byte) 0xcc, 0x00, 0x23};//文本：罗盘
-
     private void send(byte[] bytes) {
-
         if (FPVDemoApplication.getProductInstance() != null) {
             Payload payload = FPVDemoApplication.getProductInstance().getPayload();
             payload.sendDataToPayload(bytes, new CommonCallbacks.CompletionCallback() {
@@ -6413,13 +6382,4 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         }
     };
 
-
-    private void testTTSYY() {
-        String testTTS = "[m54]我是唐老鸭,[m51][s2][v1][t10]请打开苏康码，[m3][s10][v3][t2]配合防疫检查";
-        PagerUtils pagerUtils = PagerUtils.getInstance();
-        byte[] content = pagerUtils.HexString2Bytes(pagerUtils.toChineseHex(testTTS));
-        byte[] data = pagerUtils.dataCopy(pagerUtils.TTSINS, content);
-        send(pagerUtils.TTSREPEATINS);
-        send(data);
-    }
 }
