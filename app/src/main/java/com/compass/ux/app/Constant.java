@@ -127,6 +127,7 @@ public class Constant {
     public static final String END_VOICE = "endVoice";
     public static final String SEND_VOICE_MP3 = "sendVoiceMP3";
     public static final String VOLUME_CONTROL = "volumeControl";
+    public static final String ISRTKBEINGUSED = "isRTKBeingUsed";
 
     public static String LINE_SEPARATOR=System.getProperty("line.separator");
 

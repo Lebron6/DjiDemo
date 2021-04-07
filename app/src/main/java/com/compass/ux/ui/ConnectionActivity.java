@@ -296,6 +296,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     SettingValueBean.NetRTKBean setRtkBean = new SettingValueBean.NetRTKBean();//监听
     SettingValueBean.BatteryStateBean batteryStateBean = new SettingValueBean.BatteryStateBean();//监听
     SettingValueBean.NetRTKBean.Info infoBean = new SettingValueBean.NetRTKBean.Info();
+
     private int currentProgress = -1;
     private boolean lastFlying = false;//判断是否起飞
     private boolean lastDistance = false;//判断距离
@@ -1559,7 +1560,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     }
                 });
                 //精确着陆
-                mFlightAssistant.getPrecisionLandingEnabled (new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                mFlightAssistant.getPrecisionLandingEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
                     @Override
                     public void onSuccess(Boolean aBoolean) {
                         precisionLand = aBoolean;
@@ -1571,7 +1572,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     }
                 });
                 //视觉定位
-                mFlightAssistant.getVisionAssistedPositioningEnabled (new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                mFlightAssistant.getVisionAssistedPositioningEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
                     @Override
                     public void onSuccess(Boolean aBoolean) {
                         visionAssistedPosition = aBoolean;
@@ -2695,6 +2696,10 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             case Constant.GET_IS_FLYING:
                 getIsFlying(communication);
                 break;
+            //判断RTK是否在用
+            case Constant.ISRTKBEINGUSED:
+                getRTKUseState(communication);
+                break;
             //获取返航点经纬度
             case "getSLngLat":
                 if (goHomeLat == 0 && goHomeLong == 0) {
@@ -2758,6 +2763,17 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         }
     }
 
+    //rtk实时状态
+    private int isRTKBeingUsed = 0;
+
+    //获取飞行状态
+    private void getRTKUseState(Communication communication) {
+
+        communication.setResult(isRTKBeingUsed + "");
+        communication.setCode(200);
+        communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+        NettyClient.getInstance().sendMessage(communication, null);
+    }
 
     //起飞
     private void startTakeoff(Communication communication) {
@@ -4113,7 +4129,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             mFlightAssistant.setVisionAssistedPositioningEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    visionAssistedPosition=type.equals("1") ? true : false;
+                    visionAssistedPosition = type.equals("1") ? true : false;
                     CommonDjiCallback(djiError, communication);
                 }
             });
@@ -4124,10 +4140,10 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     private void setPrecisionLand(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
         if (!TextUtils.isEmpty(type) && mFlightAssistant != null) {
-            mFlightAssistant.setPrecisionLandingEnabled (type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
+            mFlightAssistant.setPrecisionLandingEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    precisionLand=type.equals("1") ? true : false;
+                    precisionLand = type.equals("1") ? true : false;
                     CommonDjiCallback(djiError, communication);
                 }
             });
@@ -4244,13 +4260,13 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         mFlightAssistant.setHorizontalVisionObstacleAvoidanceEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
-                if (djiError==null){
+                if (djiError == null) {
                     activeObstacleAvoidance = type.equals("1") ? true : false;
                     CommonDjiCallback(djiError, communication);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            text_net_rtk_account_state.setText("设置四项："+activeObstacleAvoidance);
+                            text_net_rtk_account_state.setText("设置四项：" + activeObstacleAvoidance);
                         }
                     });
                 }
@@ -4584,6 +4600,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     //监听RTK状态
     private void addRTKStatus() {
         if (ModuleVerificationUtil.isRtkAvailable()) {
+
             mRTK = ((Aircraft) FPVDemoApplication.getProductInstance()).getFlightController().getRTK();
             if (mRTK != null) {
                 mRTK.addReferenceStationSourceCallback(new ReferenceStationSource.Callback() {
@@ -4618,6 +4635,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 mRTK.setStateCallback(new RTKState.Callback() {
                     @Override
                     public void onUpdate(RTKState rtkState) {
+                        isRTKBeingUsed = rtkState.isRTKBeingUsed() ? 1 : 0;
                         infoBean.setRtkState(rtkState);
                         if (communication_rtkState == null) {
                             communication_rtkState = new Communication();
@@ -4629,12 +4647,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         setRtkBean.setInfo(infoBean);
                         communication_rtkState.setResult(gson.toJson(setRtkBean, SettingValueBean.NetRTKBean.class));
                         NettyClient.getInstance().sendMessage(communication_rtkState, null);
-//                        runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                text_net_rtk_state.setText("RTK：" + rtkState.isRTKBeingUsed() + "");
-//                            }
-//                        });
+
                     }
                 });
             }
