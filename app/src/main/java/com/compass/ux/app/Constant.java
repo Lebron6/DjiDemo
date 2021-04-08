@@ -5,7 +5,8 @@ package com.compass.ux.app;
  */
 public class Constant {
     public static final String MISSION_UPDATE_MODE="missionUpdateMode";
-    public static final String SHOUTING="shouting";
+    public static final String MISSIONWAYPOINT="missionWaypoint";
+    public static final String MISSIONWAYPOINT_SHOUTTING="missionWaypoint";
 
     public static final String START_TAKE_OFF="startTakeoff";
     public static final String ENABLE_VIRTUAL_STICK="enableVirtualStick";

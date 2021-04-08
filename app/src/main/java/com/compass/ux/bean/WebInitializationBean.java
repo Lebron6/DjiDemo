@@ -34,6 +34,8 @@ public class WebInitializationBean {
     private String horizontalAngle;
     //获取上下俯仰角
     private String pitchAngle;
+    //喊话
+     private WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean voiceBean;
 
     //获取四个灯光
     private String beacons;
@@ -65,9 +67,13 @@ public class WebInitializationBean {
         this.hyDisplayMode = hyDisplayMode;
     }
 
+    public WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean getVoiceBean() {
+        return voiceBean;
+    }
 
-
-
+    public void setVoiceBean(WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean voiceBean) {
+        this.voiceBean = voiceBean;
+    }
 
     public String getCurrentVideoSource() {
         return currentVideoSource;
