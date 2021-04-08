@@ -2116,7 +2116,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             List<Battery> batteries = product.getBatteries();
             if (batteries != null) {
                 Battery battery0 = batteries.get(0);
-                Battery battery1 = batteries.get(1);
                 battery0.setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
@@ -2142,32 +2141,33 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         }
                     }
                 });
-                battery1.setStateCallback(new BatteryState.Callback() {
-                    @Override
-                    public void onUpdate(BatteryState batteryState) {
-
-                        battery1.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
-                            @Override
-                            public void onSuccess(Integer[] integers) {
-                                int childBatteryAll = (integers[0] + integers[1] + integers[2] + integers[3] + integers[4] + integers[5] + integers[6] + integers[7] + integers[8] + integers[9] + integers[10] + integers[11]);
-                                if (voltageTwo != ((float) childBatteryAll / 12000)) {
-                                    voltageTwo = ((float) childBatteryAll / 12000);
-                                    batteryStateBean.setVoltageTwo(df.format(voltageTwo));
-                                    submitBatteryInfo(batteryState, battery1);
+                if (batteries.size()>1){
+                    Battery battery1 = batteries.get(1);
+                    battery1.setStateCallback(new BatteryState.Callback() {
+                        @Override
+                        public void onUpdate(BatteryState batteryState) {
+                            battery1.getCellVoltages(new CommonCallbacks.CompletionCallbackWith<Integer[]>() {
+                                @Override
+                                public void onSuccess(Integer[] integers) {
+                                    int childBatteryAll = (integers[0] + integers[1] + integers[2] + integers[3] + integers[4] + integers[5] + integers[6] + integers[7] + integers[8] + integers[9] + integers[10] + integers[11]);
+                                    if (voltageTwo != ((float) childBatteryAll / 12000)) {
+                                        voltageTwo = ((float) childBatteryAll / 12000);
+                                        batteryStateBean.setVoltageTwo(df.format(voltageTwo));
+                                        submitBatteryInfo(batteryState, battery1);
+                                    }
                                 }
-                            }
 
-                            @Override
-                            public void onFailure(DJIError djiError) {
+                                @Override
+                                public void onFailure(DJIError djiError) {
+                                }
+                            });
+                            if (chargeRemainingInPercent1 != batteryState.getChargeRemainingInPercent()) {
+                                chargeRemainingInPercent1 = batteryState.getChargeRemainingInPercent();
+                                submitBatteryInfo(batteryState, battery1);
                             }
-                        });
-                        if (chargeRemainingInPercent1 != batteryState.getChargeRemainingInPercent()) {
-                            chargeRemainingInPercent1 = batteryState.getChargeRemainingInPercent();
-                            submitBatteryInfo(batteryState, battery1);
                         }
-                    }
-                });
-
+                    });
+                }
             } else {
                 Log.e("mg航点-EU", "电池初始化");
             }
