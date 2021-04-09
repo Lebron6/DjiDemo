@@ -606,7 +606,26 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 //                    }
 //                }.start();
 //                sendDataToOSDK(PagerUtils.getInstance().CLOSE_LIGHT);
-                testBaseStationRTK();
+//                testBaseStationRTK();
+                //水平避障
+                mFlightAssistant.getHorizontalVisionObstacleAvoidanceEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean aBoolean) {
+                        activeObstacleAvoidance = aBoolean;
+                        showToast("监听水平避障："+aBoolean);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                text_net_rtk_state.setText("初始四项：" + aBoolean);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
                 break;
             }
             case R.id.btn_voice_end: {
