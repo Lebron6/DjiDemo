@@ -1,8 +1,6 @@
 package com.compass.ux.netty_lib.zhang;
 
 import android.util.Log;
-
-
 import com.compass.ux.app.Constant;
 import com.compass.ux.netty_lib.netty.NettyClient;
 import com.compass.ux.netty_lib.netty.NettyListener;
@@ -76,7 +74,6 @@ public class HeartBeatClientHandler extends ChannelInboundHandlerAdapter {
 //
 //
 //  }
-
   @Override
   public void channelInactive(ChannelHandlerContext ctx) {
     NettyClient.getInstance().setConnectStatus(false);

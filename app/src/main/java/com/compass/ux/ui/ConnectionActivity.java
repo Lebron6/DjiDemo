@@ -380,6 +380,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     private ScheduledFuture<?> scheduledFuture;
 
     private MissionPointBean mMissionPointBean;
+    private WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean mVoiceBeanShottingContant;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -2162,7 +2164,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         }
                     }
                 });
-                if (batteries.size()>1){
+                if (batteries.size() > 1) {
                     Battery battery1 = batteries.get(1);
                     battery1.setStateCallback(new BatteryState.Callback() {
                         @Override
@@ -2529,17 +2531,16 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 break;
             //获取初始数据
             case Constant.GET_INITIALIZATION_DATA:
-                String str = (String) SPUtils.get(ConnectionActivity.this, Constant.MISSIONWAYPOINT, Constant.MISSIONWAYPOINT_SHOUTTING, null);
-                MissionPointBean missionPointBean = null;
-                if (str != null) {
-                    missionPointBean = gson.fromJson(str, MissionPointBean.class);
+                if(mVoiceBeanShottingContant == null) {
+                    mVoiceBeanShottingContant = new WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean();
+                    mVoiceBeanShottingContant.setFlag("0");
                 }
-                if (missionPointBean != null) {
-                    webInitializationBean.setVoiceBean(missionPointBean.getVoiceBean());
-                }
+                webInitializationBean.setVoiceBean(mVoiceBeanShottingContant);
                 communication.setResult(gson.toJson(webInitializationBean, WebInitializationBean.class));
                 communication.setCode(200);
                 communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                Log.d("飞机飞行流程", "获取初始值" + communication.toString());
+                Toast.makeText(ConnectionActivity.this, "", Toast.LENGTH_SHORT).show();
                 NettyClient.getInstance().sendMessage(communication, null);
                 break;
             //登录
@@ -5507,11 +5508,15 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     for (int i = 0; i < mMissionPointBeans.size(); i++) {
                         mMissionPointBean = mMissionPointBeans.get(i);
                         if (targetWaypointIndex == mMissionPointBean.getPointIndex() && "9".equals(mMissionPointBean.getShoutingType())) {
+                            mVoiceBeanShottingContant = mMissionPointBean.getVoiceBean();
+                            mVoiceBeanShottingContant.setFlag("0");
                             missionSendStop(PagerUtils.getInstance().TTSSTOPINS, mMissionPointBean);
                             mMissionPointBeans.remove(i);
                             Log.d("飞机飞行流程", "当前航点" + targetWaypointIndex + mMissionPointBeans.toString() + "\n" + mMissionPointBean != null ? mMissionPointBean.toString() : "Null");
                             return;
                         } else if (targetWaypointIndex == mMissionPointBean.getPointIndex() && "8".equals(mMissionPointBean.getShoutingType())) {
+                            mVoiceBeanShottingContant = mMissionPointBean.getVoiceBean();
+                            mVoiceBeanShottingContant.setFlag("1");
                             wayPointSendTTS2Payload(mMissionPointBean.getVoiceBean());
                             mMissionPointBeans.remove(i);
                             Log.d("飞机飞行流程", "当前航点" + targetWaypointIndex + mMissionPointBeans.toString() + "\n" + mMissionPointBean != null ? mMissionPointBean.toString() : "Null");
@@ -5520,20 +5525,10 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                             if (communication_onExecutionFinish == null) {
                                 communication_onExecutionFinish = new Communication();
                             }
-                            String str = (String) SPUtils.get(ConnectionActivity.this, Constant.MISSIONWAYPOINT, Constant.MISSIONWAYPOINT_SHOUTTING, null);
-                            MissionPointBean missionPointBean = null;
-                            if (str != null) {
-                                missionPointBean = gson.fromJson(str, MissionPointBean.class);
-                            }
                             communication_onExecutionFinish.setEquipmentId(MApplication.EQUIPMENT_ID);
                             communication_onExecutionFinish.setCode(200);
                             communication_onExecutionFinish.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                            if (missionPointBean != null && missionPointBean.getVoiceBean() != null) {
-                                communication_onExecutionFinish.setResult(gson.toJson(missionPointBean.getVoiceBean()));
-                            } else {
-                                communication_onExecutionFinish.setResult("{\"result\":\"" + "当前没有喊话信息" + "\"}");
-
-                            }
+                            communication_onExecutionFinish.setResult(gson.toJson(mMissionPointBean));
                             communication_onExecutionFinish.setMethod(Constant.MISSIONWAYPOINT);
                             NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
                             mMissionPointBeans.remove(i);
@@ -5569,6 +5564,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
             @Override
             public void onExecutionStart() {
+                Log.d("飞机飞行流程", "onExecutionStart");
             }
 
             @Override
@@ -5577,6 +5573,10 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 if (communication_onExecutionFinish == null) {
                     communication_onExecutionFinish = new Communication();
                 }
+                /**
+                 * 航点结束时停止喊话
+                 */
+                send(PagerUtils.getInstance().TTSSTOPINS);
                 Log.d("飞机飞行流程", "上传航线完成成功");
                 communication_onExecutionFinish.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                 communication_onExecutionFinish.setEquipmentId(MApplication.EQUIPMENT_ID);
@@ -5587,6 +5587,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
             @Override
             public void onExecutionStopped() {
+                Log.d("飞机飞行流程", "onExecutionStopped");
             }
         }
 
@@ -5688,11 +5689,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         communication_onExecutionFinish.setResult("{\"result\":\"" + djiError.getDescription() + "\"}");
                     } else {
                         communication_onExecutionFinish.setCode(200);
-                        WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean voiceBean = new WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean();
-                        voiceBean.setFlag("0");
-                        mMissionPointBean.setVoiceBean(voiceBean);
                         communication_onExecutionFinish.setResult(gson.toJson(missionPointBean));
-                        SPUtils.put(ConnectionActivity.this, Constant.MISSIONWAYPOINT, Constant.MISSIONWAYPOINT_SHOUTTING, gson.toJson(mMissionPointBean));
+                        Log.d("飞机飞行流程", "航线喊话开始存储本地的值" + gson.toJson(missionPointBean));
                     }
                     mMissionPointBean.setShoutingType("9");
                     NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
@@ -5790,6 +5788,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     List<MissionPointBean> mMissionPointBeans = new ArrayList<>();
 
     private void uploadWaypointAction(Communication communication) {
+        WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean voiceBeanShottingContant = null;
 //        Toast.makeText(this, "获取netty推过来的数据" + new Gson().toJson(communication), Toast.LENGTH_SHORT).show();
         mWayPointActionV2 = this.mUpLoadActionCommunication.getPara().get(Constant.WAY_POINTS);
         Log.d("飞机飞行流程上传航点动作-EU", "仅仅测试" + mWayPointActionV2);
@@ -5956,11 +5955,19 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                 break;
                             case "8"://开始喊话
                                 missionPointBean.setShoutingType("8");
-                                WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean voiceBean1 = wayPointActionBean.getVoice();
-                                voiceBean1.setFlag("1");
-                                missionPointBean.setVoiceBean(voiceBean1);
+                                voiceBeanShottingContant = wayPointActionBean.getVoice();
+                                voiceBeanShottingContant.setFlag("1");
+                                missionPointBean.setVoiceBean(voiceBeanShottingContant);
                                 break;
                             case "9"://结束喊话
+                                if (voiceBeanShottingContant != null) {
+                                    voiceBeanShottingContant.setFlag("0");
+                                    missionPointBean.setVoiceBean(voiceBeanShottingContant);
+                                }else {
+                                    voiceBeanShottingContant = new WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean();
+                                    voiceBeanShottingContant.setFlag("0");
+                                    missionPointBean.setVoiceBean(voiceBeanShottingContant);
+                                }
                                 missionPointBean.setShoutingType("9");
                                 break;
                         }
@@ -6283,6 +6290,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
         }
         if (djiError != null) {
+            Log.d("飞机飞行流程", djiError.getDescription());
             communication.setResult(djiError.getDescription());
             communication.setCode(-1);
             communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
@@ -6388,7 +6396,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     communication_onExecutionFinish.setResult(gson.toJson(mMissionPointBean));
                     communication_onExecutionFinish.setMethod(Constant.MISSIONWAYPOINT);
                     NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
-                    SPUtils.put(ConnectionActivity.this, Constant.MISSIONWAYPOINT, Constant.MISSIONWAYPOINT_SHOUTTING, gson.toJson(mMissionPointBean));
                     Log.d("飞机飞行流程", "喊话成功推送给前端" + communication_onExecutionFinish.toString());
                 }
             }
