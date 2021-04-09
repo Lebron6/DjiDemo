@@ -64,7 +64,6 @@ public class NettyClient {
                     isConnect = false;
                 }
 
-
             } catch (Exception e) {
                 e.printStackTrace();
                 listener.onServiceStatusConnectChanged(NettyListener.STATUS_CONNECT_ERROR);
@@ -75,7 +74,10 @@ public class NettyClient {
     }
 
     public void disconnect() {
-        group.shutdownGracefully();
+        if (group!=null){
+            group.shutdownGracefully();
+        }
+
     }
 
     public void reconnect() {

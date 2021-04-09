@@ -1524,6 +1524,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     @Override
                     public void onSuccess(Boolean aBoolean) {
                         upwardsAvoidance = aBoolean;
+                        showToast("监听向上避障："+aBoolean);
                     }
 
                     @Override
@@ -1535,7 +1536,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     @Override
                     public void onSuccess(Boolean aBoolean) {
                         landingProtection = aBoolean;
-
+                        showToast("监听向下避障："+aBoolean);
                     }
 
                     @Override
@@ -1548,6 +1549,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     @Override
                     public void onSuccess(Boolean aBoolean) {
                         activeObstacleAvoidance = aBoolean;
+                        showToast("监听水平避障："+aBoolean);
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
