@@ -9,6 +9,9 @@ import com.compass.ux.crash.CaocConfig;
 import com.compass.ux.takephoto.FPVDemoApplication;
 import com.compass.ux.ui.ConnectionActivity;
 import com.compass.ux.ui.FirstActivity;
+import com.compass.ux.xclog.CrashHandler;
+import com.compass.ux.xclog.XcFileLog;
+import com.compass.ux.xclog.XcLogConfig;
 import com.secneo.sdk.Helper;
 import com.squareup.leakcanary.LeakCanary;
 import com.tencent.bugly.crashreport.CrashReport;
@@ -27,6 +30,8 @@ public class MApplication extends Application {
     protected void attachBaseContext(Context paramContext) {
         super.attachBaseContext(paramContext);
         Helper.install(MApplication.this);
+        XcFileLog.init(new XcLogConfig());
+        CrashHandler.getInstance().init();
         //拍照
         if (fpvDemoApplication == null) {
             fpvDemoApplication = new FPVDemoApplication();
