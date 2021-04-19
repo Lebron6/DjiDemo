@@ -395,6 +395,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         mHandler = new Handler(Looper.getMainLooper());
         initAllKeys();
         initUI();
+        initCustomLoggers();
         //注册广播接收器以接收设备连接的更改。
         IntentFilter filter = new IntentFilter();
         filter.addAction(FPVDemoApplication.FLAG_CONNECTION_CHANGE);
@@ -841,7 +842,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     protected BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            initCustomLoggers();
             refreshSDKRelativeUI();
             initFlightController();
             initCamera();
