@@ -136,6 +136,18 @@ public class WayPointsV2Bean {
         this.wayPoints = wayPoints;
     }
 
+    @Override
+    public String toString() {
+        return "WayPointsV2Bean{" +
+                "speed='" + speed + '\'' +
+                ", altitude='" + altitude + '\'' +
+                ", flightPathMode='" + flightPathMode + '\'' +
+                ", headingMode='" + headingMode + '\'' +
+                ", finishedAction='" + finishedAction + '\'' +
+                ", wayPoints=" + wayPoints +
+                '}';
+    }
+
     public static class WayPointsBean {
         /**
          * speed : 5
@@ -389,6 +401,18 @@ public class WayPointsV2Bean {
 
                 private String tone;
                 private String model;
+
+                @Override
+                public String toString() {
+                    return "VoiceBean{" +
+                            "flag='" + flag + '\'' +
+                            ", word='" + word + '\'' +
+                            ", volume='" + volume + '\'' +
+                            ", speed='" + speed + '\'' +
+                            ", tone='" + tone + '\'' +
+                            ", model='" + model + '\'' +
+                            '}';
+                }
             }
         }
 
