@@ -30,8 +30,7 @@ public class MApplication extends Application {
     protected void attachBaseContext(Context paramContext) {
         super.attachBaseContext(paramContext);
         Helper.install(MApplication.this);
-        XcFileLog.init(new XcLogConfig());
-        CrashHandler.getInstance().init();
+
         //拍照
         if (fpvDemoApplication == null) {
             fpvDemoApplication = new FPVDemoApplication();

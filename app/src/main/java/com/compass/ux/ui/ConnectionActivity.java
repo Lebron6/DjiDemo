@@ -171,7 +171,9 @@ import com.compass.ux.utils.MapConvertUtils;
 import com.compass.ux.utils.SPUtils;
 import com.compass.ux.utils.WenDuUtils;
 import com.compass.ux.utils.fastClick;
+import com.compass.ux.xclog.CrashHandler;
 import com.compass.ux.xclog.XcFileLog;
+import com.compass.ux.xclog.XcLogConfig;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -556,17 +558,17 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         if (null != mVideoSurface) {
             mVideoSurface.setSurfaceTextureListener(this);
         }
-       TextView tvWendu = findViewById(R.id.text_wendu);
+        TextView tvWendu = findViewById(R.id.text_wendu);
         tvWendu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               List<String> listWendu = WenDuUtils.getThermalInfo();
+                List<String> listWendu = WenDuUtils.getThermalInfo();
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if(listWendu != null && listWendu.get(1) != null) {
+                        if (listWendu != null && listWendu.get(1) != null) {
                             tvWendu.setText(listWendu.get(1));
-                        }else {
+                        } else {
                             tvWendu.setText("Failed");
                         }
                     }
@@ -633,13 +635,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     @Override
                     public void onSuccess(Boolean aBoolean) {
                         activeObstacleAvoidance = aBoolean;
-                        showToast("监听水平避障：" + aBoolean);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                text_net_rtk_state.setText("初始四项：" + aBoolean);
-                            }
-                        });
+
                     }
 
                     @Override
@@ -792,8 +788,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         new Thread() {
             @Override
             public void run() {
-                Log.d("吕升",DJISDKManager.class.getClassLoader().getClass().getClassLoader() + "");
-                Log.d("吕升",DJISDKManager.getInstance().getClass().getClassLoader() + "");
+                Log.d("吕升", DJISDKManager.class.getClassLoader().getClass().getClassLoader() + "");
+                Log.d("吕升", DJISDKManager.getInstance().getClass().getClassLoader() + "");
                 DJISDKManager.getInstance().getLiveStreamManager().setLiveUrl(et_url.getText().toString().trim());
                 Log.d("et_url", et_url.getText().toString().trim());
 
@@ -845,7 +841,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     protected BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-
+            initCustomLoggers();
             refreshSDKRelativeUI();
             initFlightController();
             initCamera();
@@ -858,7 +854,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             startLiveShow(null);//开始推流
             initBattery();
             Log.d("广播航点-EU", "广播");
-            if(isAppInterrupt && mWayPointsV2BeanInterrupt != null) {
+            if (isAppInterrupt && mWayPointsV2BeanInterrupt != null) {
                 Log.d("飞机飞行流程获取回复航线数据", mWayPointsV2BeanInterrupt.toString());
                 XcFileLog.getInstace().i("飞机飞行流程获取回复航线数据gson格式化后", mWayPointsV2BeanInterrupt != null ? mWayPointsV2BeanInterrupt.toString() : "空的");
                 if (mWayPointsV2BeanInterrupt != null) {
@@ -867,6 +863,11 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             }
         }
     };
+
+    private void initCustomLoggers() {
+        XcFileLog.init(new XcLogConfig());
+        CrashHandler.getInstance().init();
+    }
 
     private void initOcuSyncLink() {
         try {
@@ -2345,6 +2346,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     boolean isAppInterrupt = false;
     WayPointsV2Bean mWayPointsV2BeanInterrupt;
+
     @Override
     protected void notifyData(Communication message) {
         Communication communication = message;
@@ -5584,7 +5586,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         mMissionPointBean = mMissionPointBeans.get(i);
                         if (targetWaypointIndex == mMissionPointBean.getPointIndex() && "9".equals(mMissionPointBean.getShoutingType())) {
                             mVoiceBeanShottingContant = mMissionPointBean.getVoiceBean();
-                            if(mVoiceBeanShottingContant == null) {
+                            if (mVoiceBeanShottingContant == null) {
                                 mVoiceBeanShottingContant = new WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean();
                             }
                             mVoiceBeanShottingContant.setFlag("0");
@@ -5594,7 +5596,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                             break;
                         } else if (targetWaypointIndex == mMissionPointBean.getPointIndex() && "8".equals(mMissionPointBean.getShoutingType())) {
                             mVoiceBeanShottingContant = mMissionPointBean.getVoiceBean();
-                            if(mVoiceBeanShottingContant == null) {
+                            if (mVoiceBeanShottingContant == null) {
                                 mVoiceBeanShottingContant = new WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean();
                             }
                             mVoiceBeanShottingContant.setFlag("1");
