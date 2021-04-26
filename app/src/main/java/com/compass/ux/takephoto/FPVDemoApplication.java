@@ -121,6 +121,7 @@ public class FPVDemoApplication extends Application {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
+                            Log.e(TAG,"Register Success");
                             Toast.makeText(getApplicationContext(), "Register Success", Toast.LENGTH_LONG).show();
                         }
                     });
@@ -138,7 +139,7 @@ public class FPVDemoApplication extends Application {
                     });
 
                 }
-                Log.e(TAG, djiError.toString());
+                Log.e(TAG, djiError.toString()+"-----");
             }
 
             @Override

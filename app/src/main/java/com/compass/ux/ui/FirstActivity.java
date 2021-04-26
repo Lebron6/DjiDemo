@@ -93,6 +93,7 @@ public class FirstActivity extends AppCompatActivity {
                 .onDenied(permissions -> {
                     // Storage permission are not allowed.
                     HAVE_Permission = false;
+                    showToast("Permission Miss");
                     finish();
                 })
                 .start();
