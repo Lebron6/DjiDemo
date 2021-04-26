@@ -680,7 +680,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
                 break;
             case R.id.btn_start_live_show:
-                startLiveShow(null);
+//                startLiveShow(null);
+//                restartLiveShow();
                 break;
             case R.id.btn_stop_live_show:
                 DJISDKManager.getInstance().getLiveStreamManager().stopStream();
@@ -778,7 +779,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     }
     private void restartLiveShow(Communication communication){
         int delayTime;
-        if (communication!=null){
+        if (communication!=null && communication.getPara() != null){
             String delay = communication.getPara().get("delay");
             if (TextUtils.isEmpty(delay)){
                 delayTime = 2000;
@@ -5471,6 +5472,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     private void loadMission(Communication communication) {
         if (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.READY_TO_UPLOAD) || waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.READY_TO_EXECUTE)) {
             XcFileLog.getInstace().i("飞机飞行流程", mLoadMissionCount + "开始加载起飞方法loadmission");
+            Log.d("飞机飞行流程", mLoadMissionCount + "开始加载起飞方法loadmission");
             waypointV2MissionOperator.loadMission(createWaypointMission(communication), new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
@@ -5508,6 +5510,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         } else if (mLoadMissionCount < 3) {
             mLoadMissionCount++;
             XcFileLog.getInstace().i("飞机飞行流程", mLoadMissionCount + "开始加载起飞方法loadmission");
+           Log.d("飞机飞行流程", mLoadMissionCount + "开始加载起飞方法loadmission");
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override
@@ -5578,8 +5581,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             public void onExecutionUpdate(WaypointV2MissionExecutionEvent waypointV2MissionExecutionEvent) {
                 if (waypointV2MissionExecutionEvent != null && waypointV2MissionExecutionEvent.getProgress() != null) {
                     targetWaypointIndex = waypointV2MissionExecutionEvent.getProgress().getTargetWaypointIndex();
-                    XcFileLog.getInstace().i("飞机飞行流程到达航点当前航线记录数据", "mMissionPointBean==" + (mMissionPointBean != null ? mMissionPointBean.toString() : "null")
-                            + "\n" + (mVoiceBeanShottingContant != null ? mVoiceBeanShottingContant.toString() : "null") + "\n" + "mUpdateActionToWebBeans ==" + (mUpdateActionToWebBeans != null ? mUpdateActionToWebBeans.toString() : "null"));
+                    XcFileLog.getInstace().i("飞机飞行流程到达航点当前航线记录数据", "当前航点" + targetWaypointIndex +"mMissionPointBean==" + (mMissionPointBean != null ? mMissionPointBean.toString() : "null")
+                            + "\n" + "mVoiceBeanShottingContant==" + (mVoiceBeanShottingContant != null ? mVoiceBeanShottingContant.toString() : "null") + "\n" + "mUpdateActionToWebBeans ==" + (mUpdateActionToWebBeans != null ? mUpdateActionToWebBeans.toString() : "null"));
                     Log.d("循环之前航点上传-EU",
                             waypointV2MissionExecutionEvent.getProgress().isWaypointReached() + "\n" + targetWaypointIndex
                                     + "\n" + "mMissionPointBean==" + (mMissionPointBean != null ? mMissionPointBean.toString() : "null")
@@ -5773,11 +5776,11 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             XcFileLog.getInstace().i("飞机飞行流程", "通过MissionControl获取waypointV2MissionOperator");
             Log.d("飞机飞行流程", "通过MissionControl获取waypointV2MissionOperator" + waypointV2MissionOperator);
         }
-        if (DJISDKManager.getInstance() != null && DJISDKManager.getInstance().getMissionControl() != null) {
+        /*if (DJISDKManager.getInstance() != null && DJISDKManager.getInstance().getMissionControl() != null) {
             waypointV2MissionOperator = DJISDKManager.getInstance().getMissionControl().getWaypointMissionV2Operator();
             XcFileLog.getInstace().i("飞机飞行流程", "通过DJISDKManager获取waypointV2MissionOperator");
             Log.d("飞机飞行流程", "通过DJISDKManager获取waypointV2MissionOperator" + waypointV2MissionOperator);
-        }
+        }*/
         if (waypointV2MissionOperator != null) {
             try {
                 waypointV2MissionOperator.addWaypointEventListener(waypointV2MissionOperatorListener);
@@ -6039,6 +6042,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                                         .pitch(Float.parseFloat(wayPointActionBean.getPitch() == null ? "0" : wayPointActionBean.getPitch()))
                                                         .roll(0)
 //                                                        .yaw(Float.parseFloat(wayPointActionBean.getYaw() == null ? "0" : wayPointActionBean.getYaw()))
+                                                        .yaw(0)
                                                         .time(2)
                                                         .build())
                                                 .build())
@@ -6181,6 +6185,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                     communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                                     NettyClient.getInstance().sendMessage(communication_upload_mission, null);
                                     XcFileLog.getInstace().i("飞机飞行流程", "上传失败" + djiWaypointV2Error.getDescription());
+                                }else {
+                                    Log.d("飞机飞行流程", "上传航点动作成功");
                                 }
                             }
                         });
