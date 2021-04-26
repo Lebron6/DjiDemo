@@ -5,6 +5,7 @@ import android.util.Log;
 import com.compass.ux.app.Constant;
 import com.compass.ux.netty_lib.constant.UrlConstant;
 import com.compass.ux.netty_lib.zhang.Communication;
+import com.compass.ux.xclog.XcFileLog;
 import com.google.gson.Gson;
 
 import io.netty.bootstrap.Bootstrap;
@@ -114,15 +115,18 @@ public class NettyClient {
 //        responseJson+= Constant.LINE_SEPARATOR;
         if (futureListener == null) {
             channel.writeAndFlush(vo.coverProtoMessage()).addListener(new FutureListener() {
-
                 @Override
                 public void success() {
+                    XcFileLog.getInstace().i("飞机飞行流程nettyClient sendMessage","发送成功--->"+vo.toString() );
+
 //                    Log.d(TAG, "发送成功--->"+vo.getMethod() );
                 }
 
                 @Override
                 public void error() {
                     Log.e(TAG, "发送失败--->");
+                    XcFileLog.getInstace().i("飞机飞行流程nettyClient sendMessage","发送失败--->" );
+
                 }
             });
         } else {

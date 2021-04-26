@@ -133,7 +133,7 @@ public class FPVDemoApplication extends Application {
 
                         @Override
                         public void run() {
-                            Toast.makeText(getApplicationContext(), "Register sdk fails, check network is available", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), djiError.toString() + "Register sdk fails, check network is available", Toast.LENGTH_LONG).show();
                         }
                     });
 

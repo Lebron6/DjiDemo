@@ -345,6 +345,7 @@ public class WayPointsV2Bean {
                         ", voice=" + voice +
                         '}';
             }
+
             public static class VoiceBean{
                 private String flag;
                 private String word;

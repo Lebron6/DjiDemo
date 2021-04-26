@@ -4,6 +4,8 @@ import android.os.Environment;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -59,6 +61,7 @@ public class LogWriter {
                     if(!mDir.exists()){
                         mDir.mkdirs();
                     }
+                    mFileName=new SimpleDateFormat("yyyyMMdd").format(new Date())+".txt";
                     File logFile = new File(mDir+"/"+mFileName);
                     if(!logFile.exists()){ // 文件不存在，创建文件
                         createFile(logFile);
