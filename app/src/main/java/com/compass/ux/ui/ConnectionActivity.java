@@ -777,7 +777,13 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         showToast("Stop Live Show");
     }
     private void restartLiveShow(Communication communication){
-       int delayTime = Integer.valueOf(communication.getPara().get("delay"))*1000;
+        int delayTime;
+        String delay = communication.getPara().get("delay");
+        if (TextUtils.isEmpty(delay)){
+            delayTime = 2000;
+        }else{
+            delayTime = (Integer.valueOf(delay))*1000;
+        }
         if (!isLiveStreamManagerOn()) {
             return;
         }
