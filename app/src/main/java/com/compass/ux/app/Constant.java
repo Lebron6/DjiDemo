@@ -110,6 +110,7 @@ public class Constant {
     public static final String SET_WATER_MARK_SETTINGS="setWatermarkSettings";
     public static final String CAMERA_RFS="cameraRFS";
     public static final String START_LIVE="startLive";
+    public static final String RESTART_LIVE="restartLive";
     public static final String STOP_LIVE="stopLive";
     public static final String RESTART_APP="restartApp";
     public static final String SET_RTK="setRTK";

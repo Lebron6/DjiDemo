@@ -690,82 +690,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         }
     }
 
-    private void testBaseStationRTK() {
-        mRTK.setRtkEnabled(true, new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                if (djiError == null) {
-                    Log.e("D-RTK:", "setRTK true");
-                } else {
-                    Log.e("D-RTK:", "setRTK false" + djiError.getDescription());
-                }
-            }
-        });
-        //设置信号源  移动站
-        mRTK.setReferenceStationSource(ReferenceStationSource.BASE_STATION, new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                if (djiError == null) {
-                    Log.e("D-RTK:", "setRTK true");
-                } else {
-                    Log.e("D-RTK:", "setReferenceStationSource false" + djiError.getDescription());
-                }
-            }
-        });
-        mRTK.startSearchBaseStation(new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                if (djiError == null) {
-                    Log.e("D-RTK::", "startSearchBaseStation true");
-                } else {
-                    Log.e("D-RTK:", "startSearchBaseStation false" + djiError.getDescription());
-                }
-            }
-        });
-        mRTK.setRtkBaseStationListCallback(new RTK.RTKBaseStationListCallback() {
-            @Override
-            public void onUpdate(RTKBaseStationInformation[] rtkBaseStationInformations) {
-                String submit = "";
-                if (rtkBaseStationInformations.length > 0) {
-                    for (int i = 0; i < rtkBaseStationInformations.length; i++) {
-                        submit += rtkBaseStationInformations[i].getBaseStationName() + "-" + rtkBaseStationInformations[i].getBaseStationID() + ",";
-                    }
-                    String finalSubmit = submit;
-                    Log.e("D-RTK:", "rtkBaseStationInformations" + submit);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            text_net_rtk_state.setText("BaseStationRTK:" + finalSubmit);
-
-                        }
-                    });
-                }
-            }
-        });
-        mRTK.connectToBaseStation(Long.parseLong("3057154368"), new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-//                    CommonDjiCallback(djiError, communication);
-                if (djiError != null) {
-                    Log.e("D-RTK:", "connectToBaseStation false" + djiError.getDescription());
-                } else {
-                    mRTK.setStateCallback(new RTKState.Callback() {
-                        @Override
-                        public void onUpdate(RTKState rtkState) {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    text_net_rtk_account_state.setText("RTK:" + rtkState.isRTKBeingUsed());
-
-                                }
-                            });
-                        }
-                    });
-                }
-            }
-        });
-    }
-
 
     private boolean isLiveStreamManagerOn() {
         if (DJISDKManager.getInstance().getLiveStreamManager() == null) {
@@ -813,8 +737,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         new Thread() {
             @Override
             public void run() {
-                Log.d("吕升", DJISDKManager.class.getClassLoader().getClass().getClassLoader() + "");
-                Log.d("吕升", DJISDKManager.getInstance().getClass().getClassLoader() + "");
+
                 DJISDKManager.getInstance().getLiveStreamManager().setLiveUrl(et_url.getText().toString().trim());
                 Log.d("et_url", et_url.getText().toString().trim());
 
@@ -846,7 +769,27 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             }
         }.start();
     }
+    private void stopLiveShow() {
+        if (!isLiveStreamManagerOn()) {
+            return;
+        }
+        DJISDKManager.getInstance().getLiveStreamManager().stopStream();
+        showToast("Stop Live Show");
+    }
+    private void restartLiveShow(Communication communication){
+        if (!isLiveStreamManagerOn()) {
+            return;
+        }
+        DJISDKManager.getInstance().getLiveStreamManager().stopStream();
+        XcFileLog.getInstace().i("liveStatus",DJISDKManager.getInstance().getLiveStreamManager().isStreaming()+"");
+        new Handler().postDelayed(new Runnable() {//测试延时两秒重启推流
+            @Override
+            public void run() {
+                startLiveShow(communication);
+            }
+        }, 2000);
 
+    }
     private void showToast(final String toastMsg) {
 
         Handler handler = new Handler(Looper.getMainLooper());
@@ -2179,9 +2122,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             }
         }
     }
-
-    int chargeRemainingInPercent0, chargeRemainingInPercent1;//电池电量是否发生改变
     float voltageOne, voltageTwo;//电池电压是否改变
+    int sendBatteryInfo2SocketTime=0;//控制电池信息向服务器发送的次数
 
     //获取电池信息
     private void initBattery() {
@@ -2201,7 +2143,11 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                 if (voltageOne != ((float) childBatteryAll / 12000)) {
                                     voltageOne = ((float) childBatteryAll / 12000);
                                     batteryStateBean.setVoltageOne(df.format(voltageOne));
-                                    submitBatteryInfo(batteryState, battery0);
+                                    sendBatteryInfo2SocketTime++;
+                                    if (sendBatteryInfo2SocketTime==9){
+                                        sendBatteryInfo2SocketTime=0;
+                                        submitBatteryInfo(batteryState, battery0);
+                                    }
                                 }
 
                             }
@@ -2210,10 +2156,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                             public void onFailure(DJIError djiError) {
                             }
                         });
-                        if (chargeRemainingInPercent0 != batteryState.getChargeRemainingInPercent()) {
-                            chargeRemainingInPercent0 = batteryState.getChargeRemainingInPercent();
-                            submitBatteryInfo(batteryState, battery0);
-                        }
+
                     }
                 });
                 if (batteries.size() > 1) {
@@ -2228,7 +2171,11 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                     if (voltageTwo != ((float) childBatteryAll / 12000)) {
                                         voltageTwo = ((float) childBatteryAll / 12000);
                                         batteryStateBean.setVoltageTwo(df.format(voltageTwo));
-                                        submitBatteryInfo(batteryState, battery1);
+                                        sendBatteryInfo2SocketTime++;
+                                        if (sendBatteryInfo2SocketTime==9){
+                                            sendBatteryInfo2SocketTime=0;
+                                            submitBatteryInfo(batteryState, battery1);
+                                        }
                                     }
                                 }
 
@@ -2236,10 +2183,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                 public void onFailure(DJIError djiError) {
                                 }
                             });
-                            if (chargeRemainingInPercent1 != batteryState.getChargeRemainingInPercent()) {
-                                chargeRemainingInPercent1 = batteryState.getChargeRemainingInPercent();
-                                submitBatteryInfo(batteryState, battery1);
-                            }
                         }
                     });
                 }
@@ -2652,8 +2595,11 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 break;
             //结束推流
             case Constant.STOP_LIVE:
-                DJISDKManager.getInstance().getLiveStreamManager().stopStream();
-                Toast.makeText(getApplicationContext(), "Stop Live Show", Toast.LENGTH_SHORT).show();
+               stopLiveShow();
+                break;
+                //重启推流
+            case Constant.RESTART_LIVE:
+               restartLiveShow(communication);
                 break;
             //重启app
             case Constant.RESTART_APP:
@@ -2864,6 +2810,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     //rtk实时状态
     private int isRTKBeingUsed = 0;
+    //控制rtk每秒向服务器发送的次数
+    private int sendRTKState2SocketTime = 0;
 
     //获取飞行状态
     private void getRTKUseState(Communication communication) {
@@ -4731,23 +4679,27 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         }
                     });
                 }
+
                 //监听RTK状态
                 mRTK.setStateCallback(new RTKState.Callback() {
                     @Override
                     public void onUpdate(RTKState rtkState) {
-                        isRTKBeingUsed = rtkState.isRTKBeingUsed() ? 1 : 0;
-                        infoBean.setRtkState(rtkState);
-                        if (communication_rtkState == null) {
-                            communication_rtkState = new Communication();
+                        sendRTKState2SocketTime++;
+                        if (sendRTKState2SocketTime==12){
+                            sendRTKState2SocketTime=0;
+                            isRTKBeingUsed = rtkState.isRTKBeingUsed() ? 1 : 0;
+                            infoBean.setRtkState(rtkState);
+                            if (communication_rtkState == null) {
+                                communication_rtkState = new Communication();
+                            }
+                            communication_rtkState.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                            communication_rtkState.setEquipmentId(MApplication.EQUIPMENT_ID);
+                            communication_rtkState.setMethod((Constant.RTKBean));
+                            communication_rtkState.setCode(200);
+                            setRtkBean.setInfo(infoBean);
+                            communication_rtkState.setResult(gson.toJson(setRtkBean, SettingValueBean.NetRTKBean.class));
+                            NettyClient.getInstance().sendMessage(communication_rtkState, null);
                         }
-                        communication_rtkState.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                        communication_rtkState.setEquipmentId(MApplication.EQUIPMENT_ID);
-                        communication_rtkState.setMethod((Constant.RTKBean));
-                        communication_rtkState.setCode(200);
-                        setRtkBean.setInfo(infoBean);
-                        communication_rtkState.setResult(gson.toJson(setRtkBean, SettingValueBean.NetRTKBean.class));
-                        NettyClient.getInstance().sendMessage(communication_rtkState, null);
-
                     }
                 });
             }
