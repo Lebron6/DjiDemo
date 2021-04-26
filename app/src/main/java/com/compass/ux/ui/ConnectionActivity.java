@@ -777,6 +777,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         showToast("Stop Live Show");
     }
     private void restartLiveShow(Communication communication){
+       int delayTime = Integer.valueOf(communication.getPara().get("delay"))*1000;
         if (!isLiveStreamManagerOn()) {
             return;
         }
@@ -787,7 +788,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             public void run() {
                 startLiveShow(communication);
             }
-        }, 2000);
+        }, delayTime);
 
     }
     private void showToast(final String toastMsg) {
@@ -5917,7 +5918,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 Log.d("测试悬停mWayPointActionV2", mWayPointActionV2 + "");
                 if (wayPointsV2Bean != null) {
                     myWayPointActionList = wayPointsV2Bean.getWayPoints();
-                } else {
+                } else {//这里拿到所有航点
                     myWayPointActionList = gson.fromJson(mWayPointActionV2, new TypeToken<List<WayPointsV2Bean.WayPointsBean>>() {
                     }.getType());
                 }
