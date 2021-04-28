@@ -157,9 +157,12 @@ public class WayPointsV2Bean {
          * longitude : 120.547518
          * flightPathMode :
          * headingMode :
+         * hasWaitingTime;
+         * hasVoice
          * wayPointAction : [{"actionType":"","yawAngle":"","direction":"","pitch":"","yaw":"","focalLength":"","waitingTime":""}]
          */
-
+        private String hasWaitingTime;
+        private boolean hasVoice;
         private String speed;
         private String altitude;
         private String latitude;
@@ -170,7 +173,38 @@ public class WayPointsV2Bean {
 
         private List<WayPointActionBean> wayPointAction;
 
+        @Override
+        public String toString() {
+            return "WayPointsBean{" +
+                    "hasWaitingTime=" + hasWaitingTime +
+                    ", hasVoice=" + hasVoice +
+                    ", speed='" + speed + '\'' +
+                    ", altitude='" + altitude + '\'' +
+                    ", latitude='" + latitude + '\'' +
+                    ", turnMode='" + turnMode + '\'' +
+                    ", longitude='" + longitude + '\'' +
+                    ", flightPathMode='" + flightPathMode + '\'' +
+                    ", headingMode='" + headingMode + '\'' +
+                    ", wayPointAction=" + wayPointAction +
+                    '}';
+        }
 
+
+        public String getHasWaitingTime() {
+            return hasWaitingTime;
+        }
+
+        public void setHasWaitingTime(String hasWaitingTime) {
+            this.hasWaitingTime = hasWaitingTime;
+        }
+
+        public boolean isHasVoice() {
+            return hasVoice;
+        }
+
+        public void setHasVoice(boolean hasVoice) {
+            this.hasVoice = hasVoice;
+        }
 
         public String getSpeed() {
             return speed;
@@ -234,20 +268,6 @@ public class WayPointsV2Bean {
 
         public void setWayPointAction(List<WayPointActionBean> wayPointAction) {
             this.wayPointAction = wayPointAction;
-        }
-
-        @Override
-        public String toString() {
-            return "WayPointsBean{" +
-                    "speed='" + speed + '\'' +
-                    ", altitude='" + altitude + '\'' +
-                    ", latitude='" + latitude + '\'' +
-                    ", turnMode='" + turnMode + '\'' +
-                    ", longitude='" + longitude + '\'' +
-                    ", flightPathMode='" + flightPathMode + '\'' +
-                    ", headingMode='" + headingMode + '\'' +
-                    ", wayPointAction=" + wayPointAction +
-                    '}';
         }
 
         public static class WayPointActionBean {

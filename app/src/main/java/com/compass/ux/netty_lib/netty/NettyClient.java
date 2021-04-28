@@ -118,7 +118,7 @@ public class NettyClient {
                 @Override
                 public void success() {
                     XcFileLog.getInstace().i("飞机飞行流程nettyClient sendMessage","发送成功--->"+vo.toString() );
-
+//                    Log.d("飞机飞行流程nettyClient sendMessage","发送成功--->"+vo.toString() );
 //                    Log.d(TAG, "发送成功--->"+vo.getMethod() );
                 }
 
@@ -126,6 +126,7 @@ public class NettyClient {
                 public void error() {
                     Log.e(TAG, "发送失败--->");
                     XcFileLog.getInstace().i("飞机飞行流程nettyClient sendMessage","发送失败--->" );
+                    Log.d("飞机飞行流程nettyClient sendMessage","发送失败--->" );
 
                 }
             });

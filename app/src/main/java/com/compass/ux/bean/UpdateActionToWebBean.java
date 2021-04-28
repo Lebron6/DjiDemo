@@ -7,6 +7,7 @@ public class UpdateActionToWebBean {
     private List<String> actionType;
     private List<String> actionIndex;
     private boolean isOld;
+    private String pitch;
     private WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean voice;
 
     public WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean getVoice() {
@@ -15,6 +16,27 @@ public class UpdateActionToWebBean {
 
     public void setVoice(WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean voice) {
         this.voice = voice;
+    }
+
+    public String getPitch() {
+        return pitch;
+    }
+
+    @Override
+    public String toString() {
+        return "UpdateActionToWebBean{" +
+                "pointIndex=" + pointIndex +
+                ", actionType=" + actionType +
+                ", actionIndex=" + actionIndex +
+                ", isOld=" + isOld +
+                ", pitch='" + pitch + '\'' +
+                ", voice=" + voice +
+                ", waitTime='" + waitTime + '\'' +
+                '}';
+    }
+
+    public void setPitch(String pitch) {
+        this.pitch = pitch;
     }
 
     public boolean isOld() {
@@ -59,14 +81,4 @@ public class UpdateActionToWebBean {
         this.actionIndex = actionIndex;
     }
 
-    @Override
-    public String toString() {
-        return "UpdateActionToWebBean{" +
-                "pointIndex=" + pointIndex +
-                ", actionType=" + actionType +
-                ", actionIndex=" + actionIndex +
-                ", isOld=" + isOld +
-                ", waitTime='" + waitTime + '\'' +
-                '}';
-    }
 }
