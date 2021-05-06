@@ -5855,6 +5855,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 @Override
                 public void onSuccess(Integer integer) {
                     Log.d("飞机飞行流程焦距上传-EU", integer + "");
+                    XcFileLog.getInstace().i("飞机飞行流程焦距上传-EU", integer + "");
                     missionUpdateBean.setHybridZoom(getSmallZoomValue(integer));
                 }
 
@@ -5876,6 +5877,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 @Override
                 public void onSuccess(SettingsDefinitions.ThermalDigitalZoomFactor thermalDigitalZoomFactor) {
                     Log.d("飞机飞行流程红外焦距上传-EU", thermalDigitalZoomFactor.value() + "");
+                    XcFileLog.getInstace().i("飞机飞行流程红外焦距上传-EU", thermalDigitalZoomFactor.value() + "");
                     missionUpdateBean.setThermalDigitalZoom(thermalDigitalZoomFactor.value() + "");
                 }
 
