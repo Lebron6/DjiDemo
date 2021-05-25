@@ -1,4 +1,4 @@
-package com.compass.ux.ui;
+package com.compass.ux.app;
 
 import androidx.annotation.NonNull;
 
@@ -15,7 +15,6 @@ import dji.common.camera.SettingsDefinitions;
 import dji.common.camera.StorageState;
 import dji.common.camera.WatermarkSettings;
 import dji.common.error.DJIError;
-import dji.common.error.DJISDKError;
 import dji.common.error.DJIWaypointV2Error;
 import dji.common.flightcontroller.ConnectionFailSafeBehavior;
 import dji.common.flightcontroller.FlightControllerState;
@@ -75,8 +74,6 @@ import dji.common.mission.waypointv2.WaypointV2MissionTypes;
 import dji.common.mission.waypointv2.WaypointV2MissionUploadEvent;
 import dji.common.model.LocationCoordinate2D;
 import dji.common.product.Model;
-import dji.common.realname.AircraftBindingState;
-import dji.common.realname.AppActivationState;
 import dji.common.remotecontroller.GPSData;
 import dji.common.useraccount.UserAccountState;
 import dji.common.util.CommonCallbacks;
@@ -86,10 +83,8 @@ import dji.keysdk.FlightControllerKey;
 import dji.keysdk.GimbalKey;
 import dji.keysdk.KeyManager;
 import dji.keysdk.callback.GetCallback;
-import dji.log.DJILog;
 import dji.sdk.airlink.OcuSyncLink;
 import dji.sdk.airlink.WiFiLink;
-import dji.sdk.base.BaseComponent;
 import dji.sdk.base.BaseProduct;
 import dji.sdk.base.DJIDiagnostics;
 import dji.sdk.battery.Battery;
@@ -111,9 +106,7 @@ import dji.sdk.mission.waypoint.WaypointV2MissionOperatorListener;
 import dji.sdk.network.RTKNetworkServiceProvider;
 import dji.sdk.payload.Payload;
 import dji.sdk.products.Aircraft;
-import dji.sdk.realname.AppActivationManager;
 import dji.sdk.remotecontroller.RemoteController;
-import dji.sdk.sdkmanager.DJISDKInitEvent;
 import dji.sdk.sdkmanager.DJISDKManager;
 import dji.sdk.sdkmanager.LiveStreamManager;
 import dji.sdk.useraccount.UserAccountManager;
@@ -128,7 +121,6 @@ import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -148,10 +140,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.amap.api.location.AMapLocationClient;
 import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.Marker;
-import com.compass.ux.app.Constant;
-import com.compass.ux.app.ApronApp;
 import com.compass.ux.R;
 import com.compass.ux.bean.FlightControllerBean;
 import com.compass.ux.bean.LaserMeasureInformBean;
@@ -184,8 +175,6 @@ import com.dji.mapkit.core.maps.DJIMap;
 import com.dji.mapkit.core.models.DJILatLng;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.taobao.sophix.SophixManager;
-import com.tencent.bugly.crashreport.CrashReport;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -202,7 +191,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static dji.common.camera.CameraVideoStreamSource.DEFAULT;
 import static dji.common.camera.CameraVideoStreamSource.INFRARED_THERMAL;
@@ -237,13 +225,13 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     private EditText et_zoom;
     private TabNavitationLayout tab_change;
     private RelativeLayout layout_sort, layout_air_info;
-    private TextView tv_zoom,tv_live_url, tv_account_state,tv_bind_status, tv_appActivation_status, tv_horizontal_speed, tv_control_distance, tv_distance, tv_heigth, tv_vertical_speed;
+    private TextView tv_zoom, tv_horizontal_speed, tv_control_distance, tv_distance, tv_heigth, tv_vertical_speed;
     private TextView tv_txt_1, tv_txt_2, tv_txt_3, tv_txt_4, tv_txt_5, tv_txt_6, tv_txt_7,
             tv_txt_8, tv_txt_9, tv_txt_10, tv_txt_11, tv_txt_12, tv_txt_13, tv_txt_14, tv_txt_15, tv_txt_16, tv_txt_17;
     private MapWidget mapWidget;
-    private AppActivationManager appActivationManager;
-    private AppActivationState.AppActivationStateListener activationStateListener;
-    private AircraftBindingState.AircraftBindingStateListener bindingStateListener;
+    //声明AMapLocationClient类对象
+    public AMapLocationClient mLocationClient = null;
+
 
     private int deviceWidth;
     private int deviceHeight;
@@ -319,6 +307,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     Communication communication_download_pic = null;
     Communication communication_onExecutionFinish = null;
     Communication communication_BS_info;
+    Communication communication_upload_mission;
     SettingValueBean.NetRTKBean setRtkBean = new SettingValueBean.NetRTKBean();//监听
     SettingValueBean.BatteryStateBean batteryStateBean = new SettingValueBean.BatteryStateBean();//监听
     SettingValueBean.NetRTKBean.Info infoBean = new SettingValueBean.NetRTKBean.Info();
@@ -412,11 +401,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //bugly
-        CrashReport.initCrashReport(getApplicationContext(), "578c442b19", true);
+
         setContentView(R.layout.activity_connection);
-        mHandler = new Handler(Looper.getMainLooper());
-        startSDKRegistration();
+
         WindowManager windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
         final Display display = windowManager.getDefaultDisplay();
         Point outPoint = new Point();
@@ -438,7 +425,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         });
         mapWidget.onCreate(savedInstanceState);
 
-
+        mHandler = new Handler(Looper.getMainLooper());
         initAllKeys();
         initUI();
         initCustomLoggers();
@@ -654,12 +641,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         tab_change = findViewById(R.id.tab_change);
         layout_sort = findViewById(R.id.layout_sort);
         layout_air_info = findViewById(R.id.layout_air_info);
-        tv_appActivation_status = findViewById(R.id.tv_appActivation_status);
-        tv_bind_status = findViewById(R.id.tv_bind_status);
-        tv_live_url = findViewById(R.id.tv_live_url);
-        tv_account_state = findViewById(R.id.tv_account_state);
-//        tv_account_state.setText("测试热更新");
-
         tv_zoom = findViewById(R.id.tv_zoom);
         tv_horizontal_speed = findViewById(R.id.tv_horizontal_speed);
         tv_heigth = findViewById(R.id.tv_heigth);
@@ -704,19 +685,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         }
                         break;
                 }
-            }
-        });
-        tv_bind_status.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                loginAccount();
-            }
-        });
-        tv_appActivation_status.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showToast("注销");
-                loginOut();
             }
         });
 
@@ -853,7 +821,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             mOnLiveChangeListenner = new LiveStreamManager.OnLiveChangeListener() {
                 @Override
                 public void onStatusChanged(int i) {
-                    XcFileLog.getInstace().i("start_live onStatusChanged:",  "---" +i+"---");
+                    XcFileLog.getInstace().i("飞机飞行流程监听推流状态改变", "status changed : " + i);
+                    Log.d("飞机飞行流程监听推流状态改变", "status changed : " + i);
                 }
             };
             DJISDKManager.getInstance().getLiveStreamManager().registerListener(mOnLiveChangeListenner);
@@ -894,7 +863,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                 "\n isLiveAudioEnabled:" + DJISDKManager.getInstance().getLiveStreamManager().isLiveAudioEnabled() +
                                 "\n isStreaming:" + DJISDKManager.getInstance().getLiveStreamManager().isStreaming() +
                                 "\n VideoEncodingEnabled:" + DJISDKManager.getInstance().getLiveStreamManager().isVideoEncodingEnabled();
-//                        Toast.makeText(getApplicationContext(), sss, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), sss, Toast.LENGTH_SHORT).show();
                         if (communication != null) {
                             communication.setResult(result + "");
                             communication.setCode(200);
@@ -962,60 +931,25 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             initFlightController();
             initRemoteController();
             initCamera();
+//            initGimbal();
+//            addWaypointMissionListener();//添加航点的监听
             initErrorLog();//初始化错误日志
             initOcuSyncLink();
             initPreviewer();
             startLiveShow(null);//开始推流
             initBattery();
-            initDjiAccount();
+
+
+            Log.d("广播航点-EU", "广播");
+            if (isAppInterrupt && mWayPointsV2BeanInterrupt != null) {
+                Log.d("飞机飞行流程获取回复航线数据", mWayPointsV2BeanInterrupt.toString());
+                XcFileLog.getInstace().i("飞机飞行流程获取回复航线数据gson格式化后", mWayPointsV2BeanInterrupt != null ? mWayPointsV2BeanInterrupt.toString() : "空的");
+                if (mWayPointsV2BeanInterrupt != null) {
+                    setWayV2UpListener(mWayPointsV2BeanInterrupt, null);
+                }
+            }
         }
     };
-
-    private void initDjiAccount() {
-        tv_account_state.setText(UserAccountManager.getInstance().getUserAccountState().name()+"");
-        setUpListener();
-        appActivationManager = DJISDKManager.getInstance().getAppActivationManager();
-
-        if (appActivationManager != null) {
-            appActivationManager.addAppActivationStateListener(activationStateListener);
-            appActivationManager.addAircraftBindingStateListener(bindingStateListener);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    tv_appActivation_status.setText("" + appActivationManager.getAppActivationState());
-                    tv_bind_status.setText("" + appActivationManager.getAircraftBindingState());
-                }
-            });
-        }
-    }
-
-    private void setUpListener() {
-        activationStateListener = new AppActivationState.AppActivationStateListener() {
-            @Override
-            public void onUpdate(final AppActivationState appActivationState) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        tv_appActivation_status.setText(appActivationState + "");
-                    }
-                });
-
-            }
-        };
-
-        bindingStateListener = new AircraftBindingState.AircraftBindingStateListener() {
-
-            @Override
-            public void onUpdate(final AircraftBindingState bindingState) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        tv_bind_status.setText(bindingState + "");
-                    }
-                });
-            }
-        };
-    }
 
     //遥控器
     private void initRemoteController() {
@@ -1025,21 +959,21 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             return;
         } else {
             mRemoteController = aircraft.getRemoteController();
-//            mRemoteController.setGPSDataCallback(new GPSData.Callback() {
-//                @Override
-//                public void onUpdate(GPSData gpsData) {
-//                    runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            if (mFlightControllerState != null) {
-//                                double length = LocationUtils.getDistance(gpsData.getLocation().getLongitude() + "", gpsData.getLocation().getLatitude() + ""
-//                                        , mFlightControllerState.getAircraftLocation().getLongitude() + "", mFlightControllerState.getAircraftLocation().getLatitude() + "");
-//                                tv_control_distance.setText(length + "(m)");
-//                            }
-//                        }
-//                    });
-//                }
-//            });
+            mRemoteController.setGPSDataCallback(new GPSData.Callback() {
+                @Override
+                public void onUpdate(GPSData gpsData) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (mFlightControllerState != null) {
+                                double length = LocationUtils.getDistance(gpsData.getLocation().getLongitude() + "", gpsData.getLocation().getLatitude() + ""
+                                        , mFlightControllerState.getAircraftLocation().getLongitude() + "", mFlightControllerState.getAircraftLocation().getLatitude() + "");
+                                tv_control_distance.setText(length + "(m)");
+                            }
+                        }
+                    });
+                }
+            });
         }
     }
 
@@ -1184,7 +1118,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     @Override
                     public void onSuccess(final UserAccountState userAccountState) {
                         Log.e(TAG, "Login Success");
-                        tv_account_state.setText(userAccountState.name()+"");
                     }
 
                     @Override
@@ -1196,31 +1129,12 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     }
 
     private void loginOut() {
-        UserAccountManager.getInstance().logoutOfDJIUserAccount(new CommonCallbacks.CompletionCallback() {
+        UserAccountManager.getInstance().loginOut(new CommonCallbacks.CompletionCallback() {
             @Override
-            public void onResult(DJIError error) {
-                if (null == error) {
-                    showToast("Logout Success");
-                    tv_account_state.setText(UserAccountManager.getInstance().getUserAccountState().name()+"");
+            public void onResult(DJIError djiError) {
 
-                } else {
-                    showToast("Logout Error:"
-                            + error.getDescription());
-                }
             }
         });
-//        UserAccountManager.getInstance().loginOut(new CommonCallbacks.CompletionCallback() {
-//            @Override
-//            public void onResult(DJIError djiError) {
-//                runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        showToast(djiError==null?"success":djiError.getDescription());
-//
-//                    }
-//                });
-//            }
-//        });
     }
 
     DecimalFormat df1 = new DecimalFormat("#.00");
@@ -1537,6 +1451,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                 communication_flightController.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                                 communication_flightController.setEquipmentId(ApronApp.EQUIPMENT_ID);
                                 communication_flightController.setMethod((Constant.flightController));
+                                XcFileLog.getInstace().i("飞机飞行流程获取的飞机控制数据", gson.toJson(flightControllerBean, FlightControllerBean.class));
                                 communication_flightController.setResult(gson.toJson(flightControllerBean, FlightControllerBean.class));
 //                        Log.d("MMMMM",communication_flightController.toString());
                                 NettyClient.getInstance().sendMessage(communication_flightController, null);
@@ -2129,6 +2044,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 camera.getLens(2).getThermalDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ThermalDigitalZoomFactor>() {
                     @Override
                     public void onSuccess(SettingsDefinitions.ThermalDigitalZoomFactor thermalDigitalZoomFactor) {
+                        Log.d("飞机飞行流程初始化数据红外变焦焦距", thermalDigitalZoomFactor.value() + "");
                         webInitializationBean.setThermalDigitalZoom(thermalDigitalZoomFactor.value() + "");
                     }
 
@@ -2171,7 +2087,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 camera.getLens(0).getHybridZoomFocalLength(new CommonCallbacks.CompletionCallbackWith<Integer>() {
                     @Override
                     public void onSuccess(Integer integer) {
+                        Log.d("飞机飞行流程初始化数据变焦焦距", integer + "");
                         webInitializationBean.setHybridZoom(getSmallZoomValue(integer));
+//                        tv_zoom.setText("变焦   " + integer + "x");
 
                     }
 
@@ -2472,37 +2390,40 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     int currentGimbalAngle;
 
     private void initGimbal() {
-        try {
-            gimbal = ((Aircraft) ApronApp.getProductInstance()).getGimbal();
-            gimbal.getControllerSpeedCoefficient(PITCH, new CommonCallbacks.CompletionCallbackWith<Integer>() {
-                @Override
-                public void onSuccess(Integer integer) {
-                    gimbal_pitch_speed = integer + "";
-                }
+//        try {
+        gimbal = ((Aircraft) ApronApp.getProductInstance()).getGimbal();
+        gimbal.getControllerSpeedCoefficient(PITCH, new CommonCallbacks.CompletionCallbackWith<Integer>() {
+            @Override
+            public void onSuccess(Integer integer) {
+                gimbal_pitch_speed = integer + "";
+            }
 
-                @Override
-                public void onFailure(DJIError djiError) {
+            @Override
+            public void onFailure(DJIError djiError) {
 
-                }
-            });
-            gimbal.getControllerSpeedCoefficient(YAW, new CommonCallbacks.CompletionCallbackWith<Integer>() {
-                @Override
-                public void onSuccess(Integer integer) {
-                    gimbal_yaw_speed = integer + "";
-                }
+            }
+        });
+        gimbal.getControllerSpeedCoefficient(YAW, new CommonCallbacks.CompletionCallbackWith<Integer>() {
+            @Override
+            public void onSuccess(Integer integer) {
+                gimbal_yaw_speed = integer + "";
+            }
 
-                @Override
-                public void onFailure(DJIError djiError) {
+            @Override
+            public void onFailure(DJIError djiError) {
 
-                }
-            });
+            }
+        });
 //            gimbal.getYawRelativeToAircraftHeading
-            //监听左右和上下云台的度数
-            gimbal.setStateCallback(new GimbalState.Callback() {
-                @Override
-                public void onUpdate(GimbalState gimbalState) {//左右y 上下p
-                    Log.e("获取云台角度", (int) gimbalState.getAttitudeInDegrees().getPitch() + "");
-                    if (currentGimbalAngle != (int) gimbalState.getAttitudeInDegrees().getPitch() || currentGimbalAngle == 0) {
+        //监听左右和上下云台的度数
+        gimbal.setStateCallback(new GimbalState.Callback() {
+            @Override
+            public void onUpdate(GimbalState gimbalState) {//左右y 上下p
+                if (gimbalState != null && gimbalState.getAttitudeInDegrees() != null) {
+                    webInitializationBean.setHorizontalAngle(gimbalState.getAttitudeInDegrees().getYaw() + "");
+                    webInitializationBean.setPitchAngle(gimbalState.getAttitudeInDegrees().getPitch() + "");
+                    gimbalStatePitch = gimbalState.getAttitudeInDegrees().getPitch() + "";
+                    if (currentGimbalAngle != (int) gimbalState.getAttitudeInDegrees().getPitch()) {
                         currentGimbalAngle = (int) gimbalState.getAttitudeInDegrees().getPitch();
                         runOnUiThread(new Runnable() {
                             @Override
@@ -2511,71 +2432,64 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                             }
                         });
                     }
-                    if (gimbalState != null && gimbalState.getAttitudeInDegrees() != null) {
-                        webInitializationBean.setHorizontalAngle(gimbalState.getAttitudeInDegrees().getYaw() + "");
-                        webInitializationBean.setPitchAngle(gimbalState.getAttitudeInDegrees().getPitch() + "");
-                        gimbalStatePitch = gimbalState.getAttitudeInDegrees().getPitch() + "";
-
-
-                    }
 
                 }
-            });
-            //云台俯仰限位扩展
-            gimbal.getPitchRangeExtensionEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
-                @Override
-                public void onSuccess(Boolean aBoolean) {
-                    pitchRangeExtension = aBoolean;
-                }
 
-                @Override
-                public void onFailure(DJIError djiError) {
+            }
+        });
+        //云台俯仰限位扩展
+        gimbal.getPitchRangeExtensionEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+            @Override
+            public void onSuccess(Boolean aBoolean) {
+                pitchRangeExtension = aBoolean;
+            }
 
-                }
-            });
+            @Override
+            public void onFailure(DJIError djiError) {
+
+            }
+        });
 
 
-            gimbal.getControllerSmoothingFactor(PITCH, new CommonCallbacks.CompletionCallbackWith<Integer>() {
-                @Override
-                public void onSuccess(Integer integer) {
-                    pitch_CSF = integer.toString();
-                    Log.e("初始云台角度:", integer + "");
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
+        gimbal.getControllerSmoothingFactor(PITCH, new CommonCallbacks.CompletionCallbackWith<Integer>() {
+            @Override
+            public void onSuccess(Integer integer) {
+                pitch_CSF = integer.toString();
+                Log.e("初始云台角度:", integer + "");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
 //                        changeGimbalAngle(integer);
-                        }
-                    });
-                }
+                    }
+                });
+            }
 
-                @Override
-                public void onFailure(DJIError djiError) {
+            @Override
+            public void onFailure(DJIError djiError) {
 
-                }
-            });
+            }
+        });
 
-            gimbal.getControllerSmoothingFactor(YAW, new CommonCallbacks.CompletionCallbackWith<Integer>() {
-                @Override
-                public void onSuccess(Integer integer) {
-                    yaw_CSF = integer.toString();
-                    Log.e("初始云台角度:", integer + "-----");
-                }
+        gimbal.getControllerSmoothingFactor(YAW, new CommonCallbacks.CompletionCallbackWith<Integer>() {
+            @Override
+            public void onSuccess(Integer integer) {
+                yaw_CSF = integer.toString();
+                Log.e("初始云台角度:", integer + "-----");
+            }
 
-                @Override
-                public void onFailure(DJIError djiError) {
+            @Override
+            public void onFailure(DJIError djiError) {
 
-                }
-            });
-
-
-        } catch (Exception e) {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            Log.d("初始化云台错误", sw.toString());
-        }
+            }
+        });
     }
 
+    //        } catch (Exception e) {
+//            StringWriter sw = new StringWriter();
+//            PrintWriter pw = new PrintWriter(sw);
+//            e.printStackTrace(pw);
+//            Log.d("初始化云台错误", sw.toString());
+//        }
     int test = 0;
 
     boolean isAppInterrupt = false;
@@ -2588,12 +2502,13 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             case Constant.LIVE_PATH://后台拿到的推流地址
 
                 liveShowUrl = communication.getPara().get("desRtmpUrl");
-                et_url.setText(liveShowUrl);
-                tv_live_url.setText(liveShowUrl);
-                Log.d("desRtmpUrl", liveShowUrl);
+
                 String route = communication.getPara().get("route");
                 if (route == null) {
+                    Log.d("飞机飞行流程获取回复航线数据", "空的");
+                    XcFileLog.getInstace().i("飞机飞行流程获取回复航线数据", "route为空的");
                 } else {
+                    Log.d("飞机飞行流程获取回复航线数据gson格式化前", route);
                     mWayPointsV2BeanInterrupt = gson.fromJson(route, WayPointsV2Bean.class);
                     isAppInterrupt = true;
                 }
@@ -2674,6 +2589,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 break;
             //航线自动飞行开始V2
             case Constant.WAYPOINT_FLY_START_V2:
+                currentStartMission = 0;
                 startWaypointV2(communication);
                 break;
             //航线自动飞行停止
@@ -2798,6 +2714,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 communication.setResult(gson.toJson(webInitializationBean, WebInitializationBean.class));
                 communication.setCode(200);
                 communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                Log.d("飞机飞行流程", "获取初始值" + communication.toString());
                 Toast.makeText(ConnectionActivity.this, "", Toast.LENGTH_SHORT).show();
                 NettyClient.getInstance().sendMessage(communication, null);
                 break;
@@ -4285,33 +4202,26 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             }
         });
     }
-private void sendCallBackMessage2Server(String msg,Communication communication){
-    communication.setResult(msg);
-    communication.setCode(-1);
-    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-    NettyClient.getInstance().sendMessage(communication, null);
-}
+
 
     //设置是否启用最大半径限制(传0没有 传1有然后就是设置值)
     private void setMaxFlightRadiusLimit(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
         String value = communication.getPara().get(Constant.VALUE);
-        if (TextUtils.isEmpty(type)||TextUtils.isEmpty(value)){
-            sendCallBackMessage2Server("设置最大飞行半径参数有误",communication);
-        }
-            if (mFlightController != null) {
+        if (mFlightController != null) {
             mFlightController.setMaxFlightRadiusLimitationEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError == null) {
                         maxFlightRadiusLimitationEnabled = type.equals("1") ? true : false;
                         if (maxFlightRadiusLimitationEnabled && !TextUtils.isEmpty(value)) {
+
                             mFlightController.setMaxFlightRadius(Integer.parseInt(value), new CommonCallbacks.CompletionCallback() {
                                 @Override
                                 public void onResult(DJIError djiError) {
                                     if (djiError == null) {
                                         maxFlightRadius = value;
-                                        XcFileLog.getInstace().i("setMaxFlightRadiusLimit:",  maxFlightRadius);
+                                        XcFileLog.getInstace().i("setMaxFlightRadiusLimit：",  maxFlightRadius);
                                     }
                                     CommonDjiCallback(djiError, communication);
                                 }
@@ -5417,7 +5327,7 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
                     String currentState = getWaypointMissionOperator().getCurrentState().toString();
                     if (error == null) {
                         //这里不返回给后台 改到监听回调里
-//                        communication_upload_mission = communication;
+                        communication_upload_mission = communication;
                     } else {
                         getWaypointMissionOperator().retryUploadMission(null);
                         communication.setResult(error.getDescription() + "currentState=" + currentState);
@@ -5447,6 +5357,8 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
     //开始航点自动飞行
     private void startWaypointMission(Communication communication) {
         String currentState = getWaypointMissionOperator().getCurrentState().toString();
+        Log.d("飞机飞行流程", currentState);
+        XcFileLog.getInstace().i("飞机飞行流程", currentState);
         getWaypointMissionOperator().startMission(new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError error) {
@@ -5455,6 +5367,7 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
                     startWaypointMission(communication);
                 } else if (currentStartMission >= 5) {
                     Log.d("飞机飞行流程", "startWaypointMission报错");
+                    XcFileLog.getInstace().i("飞机飞行流程", "startWaypointMission报错");
                     communication.setResult("startMission报错:" + error.getDescription() + "currentState:" + currentState);
                     communication.setCode(-1);
                     communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
@@ -5552,7 +5465,7 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
                         Log.d("currentState", currentState);
                         if (error == null) {
                             //开始恢复航线飞行
-//                            communication_upload_mission = communication;
+                            communication_upload_mission = communication;
                         } else {
                             getWaypointMissionOperator().retryUploadMission(null);
                             communication.setResult("uploadMission报错" + error.getDescription() + "currentState=" + currentState);
@@ -5693,84 +5606,125 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
         }
     }
 
-    String speed;//setMaxFlightSpeed && setAutoFlightSpeed
-    String finishedAction;
-    List<WayPointsV2Bean.WayPointsBean> wayPointsBeans;//航点
+    Communication mUpLoadActionCommunication;
 
     //航线规划v2
     private void waypoint_plan_V2(Communication communication) {
-        XcFileLog.getInstace().i("waypoint_plan_V2 way_points：", communication.getPara().get(Constant.WAY_POINTS));
-        wayPointsBeans = gson.fromJson(communication.getPara().get(Constant.WAY_POINTS), new TypeToken<List<WayPointsV2Bean.WayPointsBean>>() {
-        }.getType());
-        finishedAction = communication.getPara().get(Constant.FINISHED_ACTION);
-        speed = communication.getPara().get(Constant.SPEED);
-
-        if (ApronApp.getAircraftInstance() != null) {
-            if (ModuleVerificationUtil.isFlightControllerAvailable()) {
-                if (waypointV2MissionOperator == null) {
-                    waypointV2MissionOperator = MissionControl.getInstance().getWaypointMissionV2Operator();
-                }
-                setWayV2UpListener(communication);
-                loadMission(communication);
-            } else {
-                XcFileLog.getInstace().i("waypoint_plan_V2：", "The FlightController is unavailable");
-            }
-        } else {
-            XcFileLog.getInstace().i("waypoint_plan_V2：", "The Aircraft is disconnected");
-        }
+        MissionControl.getInstance().removeAllListeners();
+        waypointV2MissionOperator = MissionControl.getInstance().getWaypointMissionV2Operator();
+        Log.d("飞机飞行流程", "获取数据" + communication.getPara().get(Constant.WAY_POINTS));
+        XcFileLog.getInstace().i("飞机飞行流程", "获取数据" + communication.getPara().get(Constant.WAY_POINTS));
+        this.mUpLoadActionCommunication = communication;
+        communication_upload_mission = communication;
+        setWayV2UpListener(null, communication);
+        Log.d("飞机飞行流程", "开始加载起飞方法loadmission");
+        XcFileLog.getInstace().i("飞机飞行流程", "开始加载起飞方法loadmission");
+        //loadMission
+        mLoadMissionCount = 0;
+        loadMission(communication);
     }
 
+    int mLoadMissionCount;
+
     private void loadMission(Communication communication) {
+
         WaypointV2MissionState state = null;
         int i = 0;
         while (++i < 15) {
             state = waypointV2MissionOperator.getCurrentState();
+
             if (state.equals(WaypointV2MissionState.READY_TO_UPLOAD) || state.equals(WaypointV2MissionState.READY_TO_EXECUTE)) {
                 break;
             }
-            XcFileLog.getInstace().i("waypoint_plan_V2 航线开始规划", "循环回调，当前状态为：" + state.name() + "  " + state);
+            XcFileLog.getInstace().i("航线规划", "循环回调，当前状态为：" + state);
+
             try {
                 TimeUnit.SECONDS.sleep(1);
             } catch (Exception e) {
             }
+
         }
         if (i == 15) {
-            XcFileLog.getInstace().i("waypoint_plan_V2 航线开始规划", "等待了15秒，state 不为 READY_TO_UPLOAD 或 READY_TO_EXECUTE , 当前状态为 ：" + state);
+            XcFileLog.getInstace().i("航线规划", "等待了15秒，state 不为 READY_TO_UPLOAD 或 READY_TO_EXECUTE , 当前状态为 ：" + state);
         } else {
-            XcFileLog.getInstace().i("waypoint_plan_V2 航线开始规划", "第" + i + "秒，获取到state正常状态成功，状态为" + state);
+            XcFileLog.getInstace().i("航线规划", "第" + i + "秒，获取到state正常状态成功，状态为" + state);
         }
+
+
         if (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.READY_TO_UPLOAD) || waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.READY_TO_EXECUTE)) {
-            waypointV2MissionOperator.loadMission(createWaypointMission(), new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
+            XcFileLog.getInstace().i("飞机飞行流程", mLoadMissionCount + "开始加载起飞方法loadmission");
+            Log.d("飞机飞行流程", mLoadMissionCount + "开始加载起飞方法loadmission");
+            waypointV2MissionOperator.loadMission(createWaypointMission(communication), new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
+                    XcFileLog.getInstace().i("航线规划", "loadMission回调，当前状态为：" + waypointV2MissionOperator.getCurrentState());
                     if (djiWaypointV2Error == null) {
-                        upLoadMission(communication);
+                        Toast.makeText(ConnectionActivity.this, "Mission is loaded successfully", Toast.LENGTH_SHORT).show();
+                        waypointV2MissionOperator.uploadMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
+                            @Override
+                            public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
+                                XcFileLog.getInstace().i("航线规划", "uploadMission回调，当前状态为：" + waypointV2MissionOperator.getCurrentState());
+                                if (djiWaypointV2Error != null) {
+                                    Log.d("飞机飞行流程", "开始加载起飞方法loadmissio2失败" + djiWaypointV2Error.getDescription());
+                                    XcFileLog.getInstace().i("飞机飞行流程", "开始加载起飞方法loadmissio2失败" + djiWaypointV2Error.getDescription());
+
+                                    Toast.makeText(ConnectionActivity.this, djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
+                                    communication_upload_mission.setResult(djiWaypointV2Error.getDescription());
+                                    communication_upload_mission.setCode(-1);
+                                    communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                    NettyClient.getInstance().sendMessage(communication_upload_mission, null);
+                                } else {
+                                    XcFileLog.getInstace().i("飞机飞行流程", "开始加载起飞方法loadmissio2成功");
+                                }
+                            }
+                        });
+                    } else {
+                        Log.d("飞机飞行流程", "开始加载起飞方法loadmissio1失败" + djiWaypointV2Error.getDescription());
+                        Toast.makeText(ConnectionActivity.this, djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
+                        XcFileLog.getInstace().i("飞机飞行流程", "开始加载起飞方法loadmissio1失败" + djiWaypointV2Error.getDescription());
+                        communication_upload_mission.setResult(djiWaypointV2Error.getDescription());
+                        communication_upload_mission.setCode(-1);
+                        communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication_upload_mission, null);
                     }
-                    XcFileLog.getInstace().i("waypoint_plan_V2 loadMission:", djiWaypointV2Error == null ? "Success" : djiWaypointV2Error.getDescription());
-                    CommonDjiCallback(djiWaypointV2Error, communication);
                 }
             });
+        } else if (mLoadMissionCount < 3) {
+            mLoadMissionCount++;
+            XcFileLog.getInstace().i("飞机飞行流程", mLoadMissionCount + "开始加载起飞方法loadmission");
+            Log.d("飞机飞行流程", mLoadMissionCount + "开始加载起飞方法loadmission");
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    /**
+                     *要执行的操作
+                     */
+                    loadMission(communication);
+                }
+            }, 3000);//3秒后执行Runnable中的run方法
+        } else {
+            XcFileLog.getInstace().i("飞机飞行流程", "The mission can be loaded only when the operator state is READY_TO_UPLOAD or READY_TO_EXECUTE");
+            Toast.makeText(ConnectionActivity.this, "The mission can be loaded only when the operator state is READY_TO_UPLOAD or READY_TO_EXECUTE", Toast.LENGTH_SHORT).show();
+            communication_upload_mission.setResult("The mission can be loaded only when the operator state is READY_TO_UPLOAD or READY_TO_EXECUTE");
+            communication_upload_mission.setCode(-1);
+            communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+            NettyClient.getInstance().sendMessage(communication_upload_mission, null);
         }
-    }
-
-    private void upLoadMission(Communication communication) {
-        waypointV2MissionOperator.uploadMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
-            @Override
-            public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
-                CommonDjiCallback(djiWaypointV2Error, communication);
-                XcFileLog.getInstace().i("waypoint_plan_V2 upLoadMission:", djiWaypointV2Error == null ? "Success" : djiWaypointV2Error.getDescription());
-            }
-        });
     }
 
     int currentPoint;
 
-    //为悬停时候添加判断的集合
-    //更新航点动作的时候需要上传web所需工具集合
-    List<UpdateActionToWebBean> mUpdateActionToWebBeans = new ArrayList<>();
-    List<MissionPointBean> mMissionPointBeans = new ArrayList<>();
-
-    private void setWayV2UpListener(Communication communication) {
+    /**
+     * @param wayPointsV2Bean 为空的时候代表第一次正常飞行，不为空代表闪退之后数据处理需要的流程
+     * @param communication   跟第一个参数相反
+     */
+    private void setWayV2UpListener(WayPointsV2Bean wayPointsV2Bean, Communication communication) {
+        if (wayPointsV2Bean != null) {
+            //恢复航线重新部署数据
+            XcFileLog.getInstace().i("飞机飞行流程航线因为闪退重新部署", "wayPointsV2Bean ==" + wayPointsV2Bean.toString());
+            uploadWaypointAction(wayPointsV2Bean, null);
+        }
         waypointV2MissionOperatorListener = new WaypointV2MissionOperatorListener() {
             @Override
             public void onDownloadUpdate(WaypointV2MissionDownloadEvent waypointV2MissionDownloadEvent) {
@@ -5778,20 +5732,43 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
 
             @Override
             public void onUploadUpdate(WaypointV2MissionUploadEvent waypointV2MissionUploadEvent) {
-                if (waypointV2MissionUploadEvent.getError() != null) {
-                    XcFileLog.getInstace().i("waypoint_plan_V2 onUploadUpdate error:", waypointV2MissionUploadEvent.getError().getDescription());
-                    communication.setResult(waypointV2MissionUploadEvent.getError().getDescription());
-                    communication.setCode(-1);
-                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
-                    NettyClient.getInstance().sendMessage(communication, null);
-                }
-            }
+                if (waypointV2MissionUploadEvent != null && waypointV2MissionUploadEvent.getError() != null) {
+                    XcFileLog.getInstace().i("飞机飞行流程开始加载起飞方法loadmissio1失败", waypointV2MissionUploadEvent.getError().getDescription());
 
+                    Log.d("飞机飞行流程", "开始加载起飞方法loadmissio1失败" + waypointV2MissionUploadEvent.getError().getDescription());
+                    Toast.makeText(ConnectionActivity.this, waypointV2MissionUploadEvent.getError().getDescription(), Toast.LENGTH_SHORT).show();
+                    communication_upload_mission.setResult(waypointV2MissionUploadEvent.getError().getDescription());
+                    communication_upload_mission.setCode(-1);
+                    communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                    NettyClient.getInstance().sendMessage(communication_upload_mission, null);
+                }
+
+                Log.d("wayPointV2Upload", "PreviousState=" + waypointV2MissionUploadEvent.getPreviousState()
+                        + "\nCurrentState=" + waypointV2MissionUploadEvent.getCurrentState());
+                /*if (waypointV2MissionUploadEvent.getPreviousState() == WaypointV2MissionState.UPLOADING
+                        && waypointV2MissionUploadEvent.getCurrentState() == WaypointV2MissionState.READY_TO_EXECUTE) {
+                    Log.d("航点-EU", "上传航线成功");
+                    Log.d("飞机飞行流程", "上传航线成功");
+                    communication_upload_mission.setEquipmentId(MApplication.EQUIPMENT_ID);
+                    communication_upload_mission.setResult("Mission is uploaded successfully");
+                    communication_upload_mission.setCode(200);
+                    communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                    NettyClient.getInstance().sendMessage(communication_upload_mission, null);
+                    Log.d("飞机飞行流程", "上传航点动作成功");
+
+                }*/
+            }
 
             @Override
             public void onExecutionUpdate(WaypointV2MissionExecutionEvent waypointV2MissionExecutionEvent) {
                 if (waypointV2MissionExecutionEvent != null && waypointV2MissionExecutionEvent.getProgress() != null) {
                     targetWaypointIndex = waypointV2MissionExecutionEvent.getProgress().getTargetWaypointIndex();
+                    XcFileLog.getInstace().i("飞机飞行流程到达航点当前航线记录数据", "当前航点" + targetWaypointIndex + "mMissionPointBean==" + (mMissionPointBean != null ? mMissionPointBean.toString() : "null")
+                            + "\n" + "mVoiceBeanShottingContant==" + (mVoiceBeanShottingContant != null ? mVoiceBeanShottingContant.toString() : "null") + "\n" + "mUpdateActionToWebBeans ==" + (mUpdateActionToWebBeans != null ? mUpdateActionToWebBeans.toString() : "null"));
+                    Log.d("循环之前航点上传-EU",
+                            waypointV2MissionExecutionEvent.getProgress().isWaypointReached() + "\n" + targetWaypointIndex
+                                    + "\n" + "mMissionPointBean==" + (mMissionPointBean != null ? mMissionPointBean.toString() : "null")
+                                    + "\n" + (mVoiceBeanShottingContant != null ? mVoiceBeanShottingContant.toString() : "null") + "\n" + "mUpdateActionToWebBeans ==" + (mUpdateActionToWebBeans != null ? mUpdateActionToWebBeans.toString() : "null"));
                     for (int i = 0; i < mMissionPointBeans.size(); i++) {
                         mMissionPointBean = mMissionPointBeans.get(i);
                         if (targetWaypointIndex == mMissionPointBean.getPointIndex() && "9".equals(mMissionPointBean.getShoutingType())) {
@@ -5802,6 +5779,7 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
                             mVoiceBeanShottingContant.setFlag("0");
                             missionSendStop(PagerUtils.getInstance().TTSSTOPINS, mMissionPointBean);
                             mMissionPointBeans.remove(i);
+                            Log.d("飞机飞行流程", "当前航点" + targetWaypointIndex + mMissionPointBeans.toString() + "\n" + mMissionPointBean != null ? mMissionPointBean.toString() : "Null");
                             break;
                         } else if (targetWaypointIndex == mMissionPointBean.getPointIndex() && "8".equals(mMissionPointBean.getShoutingType())) {
                             mVoiceBeanShottingContant = mMissionPointBean.getVoiceBean();
@@ -5811,6 +5789,7 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
                             mVoiceBeanShottingContant.setFlag("1");
                             wayPointSendTTS2Payload(mMissionPointBean.getVoiceBean());
                             mMissionPointBeans.remove(i);
+                            Log.d("飞机飞行流程", "当前航点" + targetWaypointIndex + mMissionPointBeans.toString() + "\n" + mMissionPointBean != null ? mMissionPointBean.toString() : "Null");
                             break;
                         } else if (targetWaypointIndex == mMissionPointBean.getPointIndex() && i == mMissionPointBeans.size() - 1) {
                             send(PagerUtils.getInstance().TTSSTOPINS);
@@ -5824,6 +5803,7 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
                             communication_onExecutionFinish.setMethod(Constant.MISSIONWAYPOINT);
                             NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
                             mMissionPointBeans.remove(i);
+                            Log.d("飞机飞行流程", "当前航点" + targetWaypointIndex + mMissionPointBeans.toString() + "\n" + mMissionPointBean != null ? mMissionPointBean.toString() : "Null");
                             break;
                         } else if (targetWaypointIndex == mMissionPointBean.getPointIndex()) {
                             if (communication_onExecutionFinish == null) {
@@ -5836,15 +5816,18 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
                             communication_onExecutionFinish.setMethod(Constant.MISSIONWAYPOINT);
                             NettyClient.getInstance().sendMessage(communication_onExecutionFinish, null);
                             mMissionPointBeans.remove(i);
+                            Log.d("飞机飞行流程", "当前航点" + targetWaypointIndex + mMissionPointBeans.toString() + "\n" + mMissionPointBean != null ? mMissionPointBean.toString() : "Null");
                             break;
                         }
                     }
                     for (int i = 0; i < mUpdateActionToWebBeans.size() && waypointV2MissionExecutionEvent.getProgress().isWaypointReached(); i++) {
                         int intIndex = mUpdateActionToWebBeans.get(i).getPointIndex();
                         currentPoint = targetWaypointIndex;
+                        Log.d("当前到达的航点上传-EU", intIndex + "\n" + targetWaypointIndex + "" + waypointV2MissionExecutionEvent.getProgress().isWaypointReached() + System.currentTimeMillis());
                         XcFileLog.getInstace().i("当前到达的航点上传-EU", intIndex + "\n" + targetWaypointIndex + "" + waypointV2MissionExecutionEvent.getProgress().isWaypointReached() + System.currentTimeMillis());
                         //如果航点动作里面有变焦则将当前模式变为变焦模式
                         if (intIndex == targetWaypointIndex && mUpdateActionToWebBeans.get(i) != null && mUpdateActionToWebBeans.get(i).getActionIndex() != null && mUpdateActionToWebBeans.get(i).getActionType().contains("4")) {
+                            Log.d("切换变焦动作上传-EU", "onExecutionUpdate");
                             change_lens(null, "2");
                         }
                         if (intIndex == targetWaypointIndex && mUpdateActionToWebBeans.get(i) != null && mUpdateActionToWebBeans.get(i).getActionIndex() != null && mUpdateActionToWebBeans.get(i).getActionType().contains("0")) {
@@ -5866,7 +5849,7 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
 
             @Override
             public void onExecutionStart() {
-                Log.d("waypoint_plan_V2:", "onExecutionStart");
+                Log.d("飞机飞行流程", "onExecutionStart");
             }
 
             @Override
@@ -5879,7 +5862,8 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
                  * 航点结束时停止喊话
                  */
                 send(PagerUtils.getInstance().TTSSTOPINS);
-                XcFileLog.getInstace().i("waypoint_plan_V2", "onExecutionFinish");
+                XcFileLog.getInstace().i("飞机飞行流程结束", "发送关闭喊话器结束");
+                Log.d("飞机飞行流程", "飞机航线完成");
                 communication_onExecutionFinish.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                 communication_onExecutionFinish.setEquipmentId(ApronApp.EQUIPMENT_ID);
                 communication_onExecutionFinish.setMethod((Constant.ON_EXECUTION_FINISH));
@@ -5889,6 +5873,7 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
 
             @Override
             public void onExecutionStopped() {
+                Log.d("飞机飞行流程", "onExecutionStopped");
             }
         };
 
@@ -5900,13 +5885,33 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
 
                     @Override
                     public void onUploadUpdate(ActionUploadEvent actionUploadEvent) {
+                        XcFileLog.getInstace().i("航点动作状态监听",
+                                "PreviousState:" + actionUploadEvent.getPreviousState() +
+                                        "CurrentState:" + actionUploadEvent.getCurrentState());
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                text_net_rtk_state.setText("PreviousState:" + actionUploadEvent.getPreviousState());
+                                text_net_rtk_account_state.setText("CurrentState:" + actionUploadEvent.getCurrentState());
+                            }
+                        });
                         if (actionUploadEvent.getCurrentState().equals(ActionState.READY_TO_UPLOAD)) {
-                            uploadWaypointAction(communication);
+                            if (wayPointsV2Bean != null) {
+
+                            } else {
+                                XcFileLog.getInstace().i("飞机飞行流程航线正常流程", "第一次正常上传航线走的方法");
+                                //正常流程部署数据
+                                uploadWaypointAction(null, communication);
+                            }
                         }
                         //上传航线成功
                         if (actionUploadEvent.getPreviousState() == ActionState.UPLOADING
                                 && actionUploadEvent.getCurrentState() == ActionState.READY_TO_EXECUTE) {
-                            canStartMission = true;
+                            communication_upload_mission.setResult("Mission is uploaded successfully");
+                            communication_upload_mission.setCode(200);
+                            communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                            NettyClient.getInstance().sendMessage(communication_upload_mission, null);
+                            XcFileLog.getInstace().i("飞机飞行流程", "上传航点动作成功有航点动作");
                         }
                     }
 
@@ -5924,23 +5929,27 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
 
                     @Override
                     public void onExecutionFinish(int i, DJIWaypointV2Error djiWaypointV2Error) {
+                        Log.d("飞机飞行流程", "onExecutionFinish" + i);
                         XcFileLog.getInstace().i("飞机飞行流程", "onExecutionFinish" + i + "\n" + "mUpdateActionToWebBeans==" + (mUpdateActionToWebBeans != null ? mUpdateActionToWebBeans.toString() : "null"));
+                        Log.d("飞机飞行流程", "mUpdateActionToWebBeans==" + (mUpdateActionToWebBeans != null ? mUpdateActionToWebBeans.toString() : "null"));
                         for (int j = 0; j < mUpdateActionToWebBeans.size(); j++) {
+                            Log.d("1完成航点动作上传-EU", "onExecutionFinish" + mUpdateActionToWebBeans.get(j).toString());
                             int pointIndex = mUpdateActionToWebBeans.get(j).getPointIndex();
                             List<String> actionIndexList = mUpdateActionToWebBeans.get(j).getActionIndex();
                             if (currentPoint == pointIndex && actionIndexList != null) {
                                 for (int k = 0; k < actionIndexList.size(); k++) {
                                     int actionIndex = Integer.parseInt(actionIndexList.get(k));
-//                                    XcFileLog.getInstace().i("飞机飞行流程", "当前到达的航点并执行的动作" + "currentPoint==" + currentPoint
-//                                            + "mUpdateActionToWebBeans" + mUpdateActionToWebBeans.get(j).toString());
+                                    XcFileLog.getInstace().i("飞机飞行流程", "当前到达的航点并执行的动作" + "currentPoint==" + currentPoint
+                                            + "mUpdateActionToWebBeans" + mUpdateActionToWebBeans.get(j).toString());
                                     if (i == actionIndex && waypointV2ActionList != null && waypointV2ActionList.size() > actionIndex && waypointV2ActionList.get(actionIndex - 1) != null
                                             && waypointV2ActionList.get(actionIndex - 1).getActuator() != null && waypointV2ActionList.get(actionIndex - 1).getActuator().getGimbalActuatorParam() != null) {
-//                                        Log.d("飞机飞行流程", "当前航点动作的数据" + waypointV2ActionList.get(actionIndex - 1).getActuator().getGimbalActuatorParam().getRotation().getPitch()
-//                                                + "\n" + "TriggerType.name===" + waypointV2ActionList.get(actionIndex - 1).getTrigger().getTriggerType().name());
-//                                        XcFileLog.getInstace().i("飞机飞行流程", "当前航点动作的数据" + waypointV2ActionList.get(actionIndex - 1).getActuator().getGimbalActuatorParam().getRotation().getPitch()
-//                                                + "\n" + "TriggerType.name===" + waypointV2ActionList.get(actionIndex - 1).getTrigger().getTriggerType().name());
+                                        Log.d("飞机飞行流程", "当前航点动作的数据" + waypointV2ActionList.get(actionIndex - 1).getActuator().getGimbalActuatorParam().getRotation().getPitch()
+                                                + "\n" + "TriggerType.name===" + waypointV2ActionList.get(actionIndex - 1).getTrigger().getTriggerType().name());
+                                        XcFileLog.getInstace().i("飞机飞行流程", "当前航点动作的数据" + waypointV2ActionList.get(actionIndex - 1).getActuator().getGimbalActuatorParam().getRotation().getPitch()
+                                                + "\n" + "TriggerType.name===" + waypointV2ActionList.get(actionIndex - 1).getTrigger().getTriggerType().name());
                                     }
                                     if (i == actionIndex && k == actionIndexList.size() - 2) {
+                                        Log.d("完成航点动作上传-EU", "onExecutionFinish" + i);
                                         //当前航点中航点动作已经执行完毕只剩下悬停时间结束之后可以继续飞行
                                         getMissionUpdateData(Constant.MISSION_UPDATE_MODE, communication);
                                     }
@@ -5948,7 +5957,7 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
                                     if (i == actionIndex && k == actionIndexList.size() - 1) {
                                         //张闯要求屏蔽
 //                                        change_lens(null, "1");
-//                                        Log.d("切换广角动作上传-EU", "onExecutionFinish" + i + j);
+                                        Log.d("切换广角动作上传-EU", "onExecutionFinish" + i + j);
                                         mUpdateActionToWebBeans.remove(j);
                                         return;
                                     }
@@ -5958,11 +5967,31 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
                     }
                 };
 
-
-        if (waypointV2MissionOperator != null) {
-            waypointV2MissionOperator.addWaypointEventListener(waypointV2MissionOperatorListener);
-            waypointV2MissionOperator.addActionListener(waypointV2ActionListener);
+        if (wayPointsV2Bean != null && MissionControl.getInstance() != null) {
+            waypointV2MissionOperator = MissionControl.getInstance().getWaypointMissionV2Operator();
+            XcFileLog.getInstace().i("飞机飞行流程", "通过MissionControl获取waypointV2MissionOperator");
+            Log.d("飞机飞行流程", "通过MissionControl获取waypointV2MissionOperator" + waypointV2MissionOperator);
         }
+        /*if (DJISDKManager.getInstance() != null && DJISDKManager.getInstance().getMissionControl() != null) {
+            waypointV2MissionOperator = DJISDKManager.getInstance().getMissionControl().getWaypointMissionV2Operator();
+            XcFileLog.getInstace().i("飞机飞行流程", "通过DJISDKManager获取waypointV2MissionOperator");
+            Log.d("飞机飞行流程", "通过DJISDKManager获取waypointV2MissionOperator" + waypointV2MissionOperator);
+        }*/
+        if (waypointV2MissionOperator != null) {
+            try {
+                waypointV2MissionOperator.addWaypointEventListener(waypointV2MissionOperatorListener);
+                waypointV2MissionOperator.addActionListener(waypointV2ActionListener);
+            } catch (Exception e) {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                e.printStackTrace(pw);
+                XcFileLog.getInstace().i("飞机飞行流程添加航线监听错误原因", sw.toString());
+                Log.d("飞机飞行流程添加航线监听错误原因", sw.toString());
+
+            }
+
+        }
+        XcFileLog.getInstace().i("飞机飞行流程添加航线监听waypointV2MissionOperator==", waypointV2MissionOperator == null ? "null" : "不为空");
     }
 
     private void missionSendStop(byte[] bytes, MissionPointBean missionPointBean) {
@@ -5978,6 +6007,7 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
                     communication_onExecutionFinish.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                     communication_onExecutionFinish.setMethod(Constant.MISSIONWAYPOINT);
                     if (djiError != null) {
+                        showToast("Error:" + djiError.getErrorCode());
                         communication_onExecutionFinish.setCode(-1);
                         communication_onExecutionFinish.setResult("{\"result\":\"" + djiError.getDescription() + "\"}");
                         Log.d("飞机飞行流程", "航线喊话停止传给接口的值" + djiError.getDescription());
@@ -6006,8 +6036,8 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
             camera.getLens(0).getHybridZoomFocalLength(new CommonCallbacks.CompletionCallbackWith<Integer>() {
                 @Override
                 public void onSuccess(Integer integer) {
-//                    Log.d("飞机飞行流程焦距上传-EU", integer + "");
-//                    XcFileLog.getInstace().i("飞机飞行流程焦距上传-EU", integer + "");
+                    Log.d("飞机飞行流程焦距上传-EU", integer + "");
+                    XcFileLog.getInstace().i("飞机飞行流程焦距上传-EU", integer + "");
                     missionUpdateBean.setHybridZoom(getSmallZoomValue(integer));
                 }
 
@@ -6028,8 +6058,8 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
             camera.getLens(2).getThermalDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ThermalDigitalZoomFactor>() {
                 @Override
                 public void onSuccess(SettingsDefinitions.ThermalDigitalZoomFactor thermalDigitalZoomFactor) {
-//                    Log.d("飞机飞行流程红外焦距上传-EU", thermalDigitalZoomFactor.value() + "");
-//                    XcFileLog.getInstace().i("飞机飞行流程红外焦距上传-EU", thermalDigitalZoomFactor.value() + "");
+                    Log.d("飞机飞行流程红外焦距上传-EU", thermalDigitalZoomFactor.value() + "");
+                    XcFileLog.getInstace().i("飞机飞行流程红外焦距上传-EU", thermalDigitalZoomFactor.value() + "");
                     missionUpdateBean.setThermalDigitalZoom(thermalDigitalZoomFactor.value() + "");
                 }
 
@@ -6046,15 +6076,15 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
                     if (cameraVideoStreamSource != null) {
                         mCameraVideoStreamSource = cameraVideoStreamSource.value() + "";
                         missionUpdateBean.setCurrentLens(cameraVideoStreamSource.value() + "");
-//                        Log.d("模式上传-EU", cameraVideoStreamSource.value() + "");
-//                        Log.d("变焦完成数据上传-EU", gson.toJson(missionUpdateBean, WebInitializationBean.class));
+                        Log.d("模式上传-EU", cameraVideoStreamSource.value() + "");
+                        Log.d("变焦完成数据上传-EU", gson.toJson(missionUpdateBean, WebInitializationBean.class));
                         if (method == null) {
-//                            Log.d("飞机飞行流程", cameraVideoStreamSource.value() + "");
+                            Log.d("飞机飞行流程", cameraVideoStreamSource.value() + "");
                             finalMissionUpdateComm.setResult(gson.toJson(missionUpdateBean, WebInitializationBean.class));
                             finalMissionUpdateComm.setCode(200);
                             finalMissionUpdateComm.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
                             NettyClient.getInstance().sendMessage(finalMissionUpdateComm, null);
-//                            Log.d("飞机飞行流程", finalMissionUpdateComm.toString() + gson.toJson(missionUpdateBean, WebInitializationBean.class) + "");
+                            Log.d("飞机飞行流程", finalMissionUpdateComm.toString() + gson.toJson(missionUpdateBean, WebInitializationBean.class) + "");
 
                         } else {
                             finalMissionUpdateComm.setResult(gson.toJson(missionUpdateBean, WebInitializationBean.class));
@@ -6080,88 +6110,248 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
 
     }
 
-    //上传航点动作
-    private void uploadWaypointAction(Communication communication) {
+    //为悬停时候添加判断的集合
+    //更新航点动作的时候需要上传web所需工具集合
+    List<UpdateActionToWebBean> mUpdateActionToWebBeans = new ArrayList<>();
+    List<MissionPointBean> mMissionPointBeans = new ArrayList<>();
 
-        int actionID = 0;
-        if (waypointV2ActionList != null) {
-            waypointV2ActionList.clear();
+    private void uploadWaypointAction(WayPointsV2Bean wayPointsV2Bean, Communication communication) {
+        XcFileLog.getInstace().i("飞机飞行流程上传航线", "wayPointsV2Bean==" + (wayPointsV2Bean != null ? wayPointsV2Bean.toString() : "null") + "\n" + "communication=" + (communication != null ? communication.toString() : "null"));
+        WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean voiceBeanShottingContant = null;
+//        Toast.makeText(this, "获取netty推过来的数据" + new Gson().toJson(communication), Toast.LENGTH_SHORT).show();
+        if (this.mUpLoadActionCommunication != null && this.mUpLoadActionCommunication.getPara() != null) {
+            mWayPointActionV2 = this.mUpLoadActionCommunication.getPara().get(Constant.WAY_POINTS);
         }
-        for (int i = 0; i < wayPointsBeans.size(); i++) {//遍历所有航点
-            WayPointsV2Bean.WayPointsBean wayPointsBean = wayPointsBeans.get(i);
-            boolean hasWaitTime = false;
-            List<WayPointsV2Bean.WayPointsBean.WayPointActionBean> wayPointActionBeans = wayPointsBean.getWayPointAction();
-            //客户端处理悬停动作放在该航点所有航点动作的首位
-            for (int k = 0; k < wayPointActionBeans.size(); k++) {
-                WayPointsV2Bean.WayPointsBean.WayPointActionBean wayPointActionBean = wayPointActionBeans.get(k);
-                if ("0".equals(wayPointActionBean.getActionType())) {
-                    wayPointActionBeans.remove(k);
-                    wayPointActionBeans.add(0, wayPointActionBean);
-                    hasWaitTime = true;
-                    break;
+        Log.d("飞机飞行流程上传航点动作-EU", "仅仅测试" + mWayPointActionV2);
+        List<WayPointsV2Bean.WayPointsBean> myWayPointActionList;
+        if (!TextUtils.isEmpty(mWayPointActionV2) || wayPointsV2Bean != null) {
+            try {
+                Log.d("获取的航点信息", mWayPointActionV2);
+                Log.d("测试悬停mWayPointActionV2", mWayPointActionV2 + "");
+                if (wayPointsV2Bean != null) {
+                    myWayPointActionList = wayPointsV2Bean.getWayPoints();
+                } else {//这里拿到所有航点
+                    myWayPointActionList = gson.fromJson(mWayPointActionV2, new TypeToken<List<WayPointsV2Bean.WayPointsBean>>() {
+                    }.getType());
                 }
+            } catch (Exception e) {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                e.printStackTrace(pw);
+                Toast.makeText(ConnectionActivity.this, sw.toString(), Toast.LENGTH_LONG).show();
+                return;
             }
-
-            //如果没有悬停且航点动作事件超过1个的时候默认设置一个执行航点动作的时间
-            if (hasWaitTime == false && wayPointActionBeans != null && wayPointActionBeans.size() > 1) {
-                WayPointsV2Bean.WayPointsBean.WayPointActionBean creatStopAction = new WayPointsV2Bean.WayPointsBean.WayPointActionBean();
-                creatStopAction.setActionType("0");
-                creatStopAction.setWaitingTime(wayPointActionBeans.size() + "");
-                wayPointActionBeans.add(0, creatStopAction);
+            int actionId = 0;
+            if (waypointV2ActionList != null) {
+                waypointV2ActionList.clear();
             }
-            //创建一个航点以及航点动作的bean类
-            UpdateActionToWebBean updateActionToWebBean = new UpdateActionToWebBean();//暂时没看懂这里
-            MissionPointBean missionPointBean = new MissionPointBean();
-            missionPointBean.setPointIndex(i + 1);
-            updateActionToWebBean.setPointIndex(i + 1);
-            //创建一个航点动作的集合
-            List<String> actionTypeList = new ArrayList<>();
-            List<String> actionIndexList = new ArrayList<>();
-
-            WaypointTrigger waypointActionTrigger = null;
-            WaypointActuator waypointActionActuator = null;
-
-            for (int j = 0; j < wayPointActionBeans.size(); j++) {//遍历航点内所有动作
-                WayPointsV2Bean.WayPointsBean.WayPointActionBean wayPointAction = wayPointActionBeans.get(j);
-
-                if (!"8".equals(wayPointAction.getActionType()) && !"9".equals(wayPointAction.getActionType())) {
-                    actionID += 1;
-                    //DJI提供的悬停方法，设置两个航点动作。
-//                1. ReachPoint+stopFly
-//                2. Associate+startFly
-//                Associate的waitingTime设置可以定义悬停多少秒，然后关联前面的ReachPoint动作
-                    if (j == 0) {
-                        waypointActionTrigger = new WaypointTrigger.Builder()
-                                .setTriggerType(ActionTypes.ActionTriggerType.REACH_POINT)
-                                .setReachPointParam(new WaypointReachPointTriggerParam.Builder()
-                                        .setStartIndex(i)
-                                        .setAutoTerminateCount(i)//暂时设置i,后续可能变更
-                                        .build())
-                                .build();
-                    } else {//其余航点动作默认触发机制为ASSOCIATE，跟随前一个actionID
-                        waypointActionTrigger = new WaypointTrigger.Builder()
-                                .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
-                                .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
-                                        .setAssociateActionID(actionID - 1)
-                                        .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
-                                        .setWaitingTime(Float.parseFloat(wayPointAction.getWaitingTime() == null ? "0" : wayPointAction.getWaitingTime()))
-                                        .build())
-                                .build();
+            if (mUpdateActionToWebBeans != null) {
+                mUpdateActionToWebBeans.clear();
+            }
+            try {
+                for (int i = 0; i < myWayPointActionList.size(); i++) {
+                    WayPointsV2Bean.WayPointsBean wayPointsBean = myWayPointActionList.get(i);
+                    String hasWaitTime = "0";
+                    List<WayPointsV2Bean.WayPointsBean.WayPointActionBean> wayPointActionBeanList = wayPointsBean.getWayPointAction();
+                    for (int i1 = 0; i1 < wayPointActionBeanList.size(); i1++) {
+                        WayPointsV2Bean.WayPointsBean.WayPointActionBean wayPointActionBean = wayPointActionBeanList.get(i1);
+                        if ("0".equals(wayPointActionBean.getActionType())) {
+                            wayPointActionBeanList.remove(i1);
+                            wayPointActionBeanList.add(0, wayPointActionBean);
+                            hasWaitTime = "1";
+                            break;
+                        }
                     }
-                    switch (wayPointAction.getActionType()) {
-                        case "0"://悬停
-                            waypointActionActuator = new WaypointActuator.Builder()
-                                    .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
-                                    .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
-                                            .setAircraftControlType(ActionTypes.AircraftControlType.START_STOP_FLY)
-                                            .setFlyControlParam(new WaypointAircraftControlStartStopFlyParam.Builder()
-                                                    .setStartFly(false)
-                                                    .build())
+                    //如果没有悬停且航点动作事件超过1个的时候默认设置一个执行航点动作的时间
+                    if ("0".equals(hasWaitTime) && wayPointsBean.getWayPointAction() != null && wayPointActionBeanList.size() > 1) {
+                        WayPointsV2Bean.WayPointsBean.WayPointActionBean wayPointActionBean = new WayPointsV2Bean.WayPointsBean.WayPointActionBean();
+                        wayPointActionBean.setActionType("0");
+                        wayPointActionBean.setWaitingTime(wayPointActionBeanList.size() + "");
+                        wayPointActionBeanList.add(0, wayPointActionBean);
+                    }
+                    //创建一个航点以及航点动作的bean类
+                    UpdateActionToWebBean updateActionToWebBean = new UpdateActionToWebBean();
+                    MissionPointBean missionPointBean = new MissionPointBean();
+                    missionPointBean.setPointIndex(i + 1);
+                    updateActionToWebBean.setPointIndex(i + 1);
+                    //创建一个航点动作的集合
+                    List<String> actionTypeList = new ArrayList<>();
+                    List<String> actionIndexList = new ArrayList<>();
+                    WaypointTrigger waypointAction0Trigger = null;
+                    WaypointActuator waypointAction0Actuator = null;
+                    boolean isFirstAction = true;
+                    for (int j = 0; j < wayPointActionBeanList.size(); j++) {
+                        WayPointsV2Bean.WayPointsBean.WayPointActionBean wayPointActionBean = wayPointsBean.getWayPointAction().get(j);
+                        if (!"8".equals(wayPointActionBean.getActionType()) && !"9".equals(wayPointActionBean.getActionType())) {
+                            actionId += 1;
+//                        Toast.makeText(ConnectionActivity.this, "每一个组合设置Index" + i, Toast.LENGTH_SHORT).show();
+                            if (isFirstAction) {
+                                isFirstAction = false;
+                                waypointAction0Trigger = new WaypointTrigger.Builder()
+                                        .setTriggerType(ActionTypes.ActionTriggerType.REACH_POINT)
+                                        .setReachPointParam(new WaypointReachPointTriggerParam.Builder()
+                                                .setStartIndex(i)
+                                                .setAutoTerminateCount(i)
+                                                .build())
+                                        .build();
+                            } else {
+                                waypointAction0Trigger = new WaypointTrigger.Builder()
+                                        .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
+                                        .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
+                                                .setAssociateActionID(actionId - 1)
+                                                .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
+                                                .setWaitingTime(Float.parseFloat(wayPointActionBean.getWaitingTime() == null ? "0" : wayPointActionBean.getWaitingTime()))
+                                                .build())
+                                        .build();
+                            }
+                        }
+                        switch (wayPointActionBean.getActionType()) {
+                            case "0"://悬停
+                                actionTypeList.add("0");
+                                actionIndexList.add(actionId + "");
+                                updateActionToWebBean.setWaitTime(wayPointsBean.getWayPointAction().get(0).getWaitingTime());
+//                                xTIntList.add((i + 1) + "--" + wayPointsV2Bean.getWayPointAction().get(0).getWaitingTime());
+                                waypointAction0Actuator = new WaypointActuator.Builder()
+                                        .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
+                                        .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
+                                                .setAircraftControlType(ActionTypes.AircraftControlType.START_STOP_FLY)
+                                                .setFlyControlParam(new WaypointAircraftControlStartStopFlyParam.Builder()
+                                                        .setStartFly(false)
+                                                        .build())
+                                                .build())
+                                        .build();
+                                break;
+                            case "1"://继续飞行
+                                waypointAction0Actuator = new WaypointActuator.Builder()
+                                        .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
+                                        .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
+                                                .setAircraftControlType(ActionTypes.AircraftControlType.START_STOP_FLY)
+                                                .setFlyControlParam(new WaypointAircraftControlStartStopFlyParam.Builder()
+                                                        .setStartFly(true)
+                                                        .build())
+                                                .build())
+                                        .build();
+                                break;
+                            case "2"://旋转
+                                actionTypeList.add("2");
+                                actionIndexList.add(actionId + "");
+                                waypointAction0Actuator = new WaypointActuator.Builder()
+                                        .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
+                                        .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
+                                                .setAircraftControlType(ActionTypes.AircraftControlType.ROTATE_YAW)
+                                                .setRotateYawParam(new WaypointAircraftControlRotateYawParam.Builder()
+                                                        .setYawAngle(Float.parseFloat(wayPointActionBean.getYawAngle()))
+                                                        .setDirection(WaypointV2MissionTypes.WaypointV2TurnMode.find(Integer.parseInt(wayPointActionBean.getDirection())))
+//                                            .setRelative()
+                                                        .build())
+                                                .build())
+                                        .build();
+                                break;
+                            case "3"://云台
+                                actionTypeList.add("3");
+                                actionIndexList.add(actionId + "");
+                                updateActionToWebBean.setPitch(wayPointActionBean.getPitch() == null ? "0" : wayPointActionBean.getPitch());
+                                waypointAction0Actuator = new WaypointActuator.Builder()
+                                        .setActuatorType(ActionTypes.ActionActuatorType.GIMBAL)
+                                        .setGimbalActuatorParam(new WaypointGimbalActuatorParam.Builder()
+                                                .operationType(ActionTypes.GimbalOperationType.ROTATE_GIMBAL)
+                                                .rotation(new Rotation.Builder()
+                                                        .mode(RotationMode.ABSOLUTE_ANGLE)
+                                                        .pitch(Float.parseFloat(wayPointActionBean.getPitch() == null ? "0" : wayPointActionBean.getPitch()))
+                                                        .roll(0)
+//                                                        .yaw(Float.parseFloat(wayPointActionBean.getYaw() == null ? "0" : wayPointActionBean.getYaw()))
+//                                                        .yaw(0)
+                                                        .time(2)
+                                                        .build())
+                                                .build())
+                                        .build();
+                                break;
+                            case "4"://变焦
+                                actionTypeList.add("4");
+                                actionIndexList.add(actionId + "");
+                                //修改变焦数据为从前端拿2-200自己计算然后放入官方的sdk
+                                waypointAction0Actuator = new WaypointActuator.Builder()
+                                        .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
+                                        .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
+                                                .setCameraOperationType(ActionTypes.CameraOperationType.ZOOM)
+                                                .setZoomParam(new WaypointCameraZoomParam.Builder()
+                                                        .setFocalLength(getbigZoomValue(wayPointActionBean.getFocalLength()))
+                                                        .build())
+                                                .build())
+                                        .build();
+                                break;
+                            case "5"://拍照
+                                actionTypeList.add("5");
+                                actionIndexList.add(actionId + "");
+                                waypointAction0Actuator = new WaypointActuator.Builder()
+                                        .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
+                                        .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
+                                                .setCameraOperationType(ActionTypes.CameraOperationType.SHOOT_SINGLE_PHOTO)
+                                                .build())
+                                        .build();
+                                break;
+                            case "6"://开始录像
+                                actionTypeList.add("6");
+                                actionIndexList.add(actionId + "");
+                                waypointAction0Actuator = new WaypointActuator.Builder()
+                                        .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
+                                        .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
+                                                .setCameraOperationType(ActionTypes.CameraOperationType.START_RECORD_VIDEO)
+                                                .build())
+                                        .build();
+                                break;
+                            case "7"://结束录像
+                                waypointAction0Actuator = new WaypointActuator.Builder()
+                                        .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
+                                        .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
+                                                .setCameraOperationType(ActionTypes.CameraOperationType.STOP_RECORD_VIDEO)
+                                                .build())
+                                        .build();
+                                break;
+                            case "8"://开始喊话
+                                missionPointBean.setShoutingType("8");
+                                voiceBeanShottingContant = wayPointActionBean.getVoice();
+                                voiceBeanShottingContant.setFlag("1");
+                                missionPointBean.setVoiceBean(voiceBeanShottingContant);
+                                break;
+                            case "9"://结束喊话
+                                if (voiceBeanShottingContant != null) {
+                                    voiceBeanShottingContant.setFlag("0");
+                                    missionPointBean.setVoiceBean(voiceBeanShottingContant);
+                                } else {
+                                    voiceBeanShottingContant = new WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean();
+                                    voiceBeanShottingContant.setFlag("0");
+                                    missionPointBean.setVoiceBean(voiceBeanShottingContant);
+                                }
+                                missionPointBean.setShoutingType("9");
+                                break;
+                        }
+                        if ("8".equals(wayPointActionBean.getActionType()) || "9".equals(wayPointActionBean.getActionType())) {
+
+                        } else {
+                            WaypointV2Action waypointAction0 = new WaypointV2Action.Builder()
+                                    .setActionID(actionId)//0会报错sdkbug
+                                    .setTrigger(waypointAction0Trigger)
+                                    .setActuator(waypointAction0Actuator)
+                                    .build();
+                            waypointV2ActionList.add(waypointAction0);
+                        }
+
+                        //如果是悬停并且当前是航点的最后一个动作
+                        if ("0".equals(wayPointsBean.getWayPointAction().get(0).getActionType()) && j == wayPointsBean.getWayPointAction().size() - 1) {
+                            actionId++;
+                            actionTypeList.add("1");
+                            actionIndexList.add(actionId + "");
+                            waypointAction0Trigger = new WaypointTrigger.Builder()
+                                    .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
+                                    .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
+                                            .setAssociateActionID(actionId - 1)
+                                            .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
+                                            .setWaitingTime(Float.parseFloat(("30".equals(wayPointsBean.getWayPointAction().get(0).getWaitingTime()) ? "120" :
+                                                    wayPointsBean.getWayPointAction().get(0).getWaitingTime())))
                                             .build())
                                     .build();
-                            break;
-                        case "1"://继续飞行
-                            waypointActionActuator = new WaypointActuator.Builder()
+                            waypointAction0Actuator = new WaypointActuator.Builder()
                                     .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
                                     .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
                                             .setAircraftControlType(ActionTypes.AircraftControlType.START_STOP_FLY)
@@ -6170,192 +6360,184 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
                                                     .build())
                                             .build())
                                     .build();
-                            break;
-                        case "2"://旋转
-                            waypointActionActuator = new WaypointActuator.Builder()
-                                    .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
-                                    .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
-                                            .setAircraftControlType(ActionTypes.AircraftControlType.ROTATE_YAW)
-                                            .setRotateYawParam(new WaypointAircraftControlRotateYawParam.Builder()
-                                                    .setYawAngle(Float.parseFloat(wayPointAction.getYawAngle()))
-                                                    .setDirection(WaypointV2MissionTypes.WaypointV2TurnMode.find(Integer.parseInt(wayPointAction.getDirection())))
-//                                            .setRelative()
-                                                    .build())
-                                            .build())
+
+                            WaypointV2Action waypointAction0 = new WaypointV2Action.Builder()
+                                    .setActionID(actionId)//0会报错sdkbug
+                                    .setTrigger(waypointAction0Trigger)
+                                    .setActuator(waypointAction0Actuator)
                                     .build();
-                            break;
-                        case "3"://云台
-                            waypointActionActuator = new WaypointActuator.Builder()
-                                    .setActuatorType(ActionTypes.ActionActuatorType.GIMBAL)
-                                    .setGimbalActuatorParam(new WaypointGimbalActuatorParam.Builder()
-                                            .operationType(ActionTypes.GimbalOperationType.ROTATE_GIMBAL)
-                                            .rotation(new Rotation.Builder()
-                                                    .mode(RotationMode.ABSOLUTE_ANGLE)
-                                                    .pitch(Float.parseFloat(wayPointAction.getPitch() == null ? "0" : wayPointAction.getPitch()))
-                                                    .roll(0)
-//                                                        .yaw(Float.parseFloat(wayPointActionBean.getYaw() == null ? "0" : wayPointActionBean.getYaw()))
-                                                    .yaw(0)
-                                                    .time(2)
-                                                    .build())
-                                            .build())
-                                    .build();
-                            break;
-                        case "4"://变焦
-                            //修改变焦数据为从前端拿2-200自己计算然后放入官方的sdk
-                            waypointActionActuator = new WaypointActuator.Builder()
-                                    .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
-                                    .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
-                                            .setCameraOperationType(ActionTypes.CameraOperationType.ZOOM)
-                                            .setZoomParam(new WaypointCameraZoomParam.Builder()
-                                                    .setFocalLength(getbigZoomValue(wayPointAction.getFocalLength()))
-                                                    .build())
-                                            .build())
-                                    .build();
-                            break;
-                        case "5"://拍照
-                            waypointActionActuator = new WaypointActuator.Builder()
-                                    .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
-                                    .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
-                                            .setCameraOperationType(ActionTypes.CameraOperationType.SHOOT_SINGLE_PHOTO)
-                                            .build())
-                                    .build();
-                            break;
-                        case "6"://开始录像
-                            waypointActionActuator = new WaypointActuator.Builder()
-                                    .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
-                                    .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
-                                            .setCameraOperationType(ActionTypes.CameraOperationType.START_RECORD_VIDEO)
-                                            .build())
-                                    .build();
-                            break;
-                        case "7"://结束录像
-                            waypointActionActuator = new WaypointActuator.Builder()
-                                    .setActuatorType(ActionTypes.ActionActuatorType.CAMERA)
-                                    .setCameraActuatorParam(new WaypointCameraActuatorParam.Builder()
-                                            .setCameraOperationType(ActionTypes.CameraOperationType.STOP_RECORD_VIDEO)
-                                            .build())
-                                    .build();
-                            break;
+                            waypointV2ActionList.add(waypointAction0);
+                        }
                     }
-                    WaypointV2Action waypointAction = new WaypointV2Action.Builder()
-                            .setActionID(actionID)//0会报错sdkbug
-                            .setTrigger(waypointActionTrigger)
-                            .setActuator(waypointActionActuator)
-                            .build();
-                    waypointV2ActionList.add(waypointAction);
+                    updateActionToWebBean.setActionIndex(actionIndexList);
+                    updateActionToWebBean.setActionType(actionTypeList);
+                    mMissionPointBeans.add(missionPointBean);
+
+                    if (actionIndexList != null && actionIndexList.size() != 0 && actionTypeList != null && actionTypeList.size() != 0) {
+                        mUpdateActionToWebBeans.add(updateActionToWebBean);
+                    }
+                    Log.d("飞机飞行流程上传航线储存数据", mUpdateActionToWebBeans.toString());
                 }
-                //如果是悬停并且当前是航点的最后一个动作
-                if ("0".equals(wayPointsBean.getWayPointAction().get(0).getActionType()) && j == wayPointsBean.getWayPointAction().size() - 1) {
-                    actionID++;
-                    waypointActionTrigger = new WaypointTrigger.Builder()
-                            .setTriggerType(ActionTypes.ActionTriggerType.ASSOCIATE)
-                            .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
-                                    .setAssociateActionID(actionID - 1)
-                                    .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
-                                    .setWaitingTime(Float.parseFloat(("30".equals(wayPointsBean.getWayPointAction().get(0).getWaitingTime()) ? "120" :
-                                            wayPointsBean.getWayPointAction().get(0).getWaitingTime())))
-                                    .build())
-                            .build();
-                    waypointActionActuator = new WaypointActuator.Builder()
-                            .setActuatorType(ActionTypes.ActionActuatorType.AIRCRAFT_CONTROL)
-                            .setAircraftControlActuatorParam(new WaypointAircraftControlParam.Builder()
-                                    .setAircraftControlType(ActionTypes.AircraftControlType.START_STOP_FLY)
-                                    .setFlyControlParam(new WaypointAircraftControlStartStopFlyParam.Builder()
-                                            .setStartFly(true)
-                                            .build())
-                                    .build())
-                            .build();
+                XcFileLog.getInstace().i("飞机飞行流程初始化喊话的内容", "mMissionPointBeans==" + (mMissionPointBeans != null ? mMissionPointBeans.toString() : "null"));
+                Log.d("飞机飞行流程初始化喊话的内容", "mMissionPointBeans==" + (mMissionPointBeans != null ? mMissionPointBeans.toString() : "null"));
 
-                    WaypointV2Action waypointAction0 = new WaypointV2Action.Builder()
-                            .setActionID(actionID)//0会报错sdkbug
-                            .setTrigger(waypointActionTrigger)
-                            .setActuator(waypointActionActuator)
-                            .build();
-                    waypointV2ActionList.add(waypointAction0);
+                if (wayPointsV2Bean == null) {
+                    if (waypointV2MissionOperator != null && waypointV2MissionOperator.getLoadedActions() != null) {
+                        waypointV2MissionOperator.getLoadedActions().clear();
+                    }
+                    if (waypointV2ActionList.size() == 0) {
+                        communication_upload_mission.setEquipmentId(ApronApp.EQUIPMENT_ID);
+                        communication_upload_mission.setResult("Mission is uploaded successfully");
+                        communication_upload_mission.setCode(200);
+                        communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                        NettyClient.getInstance().sendMessage(communication_upload_mission, null);
+                        Log.d("飞机飞行流程", "上传航点动作成功当前没有规划航点动作");
+                    } else {
+                        waypointV2MissionOperator.uploadWaypointActions(waypointV2ActionList, new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
+                            @Override
+                            public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
+                                if (djiWaypointV2Error != null) {
+                                    communication_upload_mission.setEquipmentId(ApronApp.EQUIPMENT_ID);
+                                    communication_upload_mission.setResult(djiWaypointV2Error.getDescription());
+                                    communication_upload_mission.setCode(-1);
+                                    communication_upload_mission.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                                    NettyClient.getInstance().sendMessage(communication_upload_mission, null);
+                                    XcFileLog.getInstace().i("飞机飞行流程", "上传失败" + djiWaypointV2Error.getDescription());
+                                } else {
+                                    Log.d("飞机飞行流程", "上传航点动作成功");
+                                }
+                            }
+                        });
+                    }
                 }
-
-            }
-            updateActionToWebBean.setActionIndex(actionIndexList);
-            updateActionToWebBean.setActionType(actionTypeList);
-            mMissionPointBeans.add(missionPointBean);
-
-            if (actionIndexList != null && actionIndexList.size() != 0 && actionTypeList != null && actionTypeList.size() != 0) {
-                mUpdateActionToWebBeans.add(updateActionToWebBean);
+            } catch (Exception e) {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                e.printStackTrace(pw);
+                Log.d("添加航点动作捕获异常", sw.toString());
+                return;
             }
         }
-        waypointV2MissionOperator.uploadWaypointActions(waypointV2ActionList, new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
-            @Override
-            public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
-                XcFileLog.getInstace().i("waypoint_plan_V2 uploadWaypointAction:", djiWaypointV2Error == null ? "success" : djiWaypointV2Error.getDescription());
-                CommonDjiCallback(djiWaypointV2Error, communication);
-            }
-        });
+
+
     }
 
-    //创建航线任务
-    private WaypointV2Mission createWaypointMission() {
-        if (wayPointsBeans != null && wayPointsBeans.size() > 0) {
+    private WaypointV2Mission createWaypointMission(Communication communication) {
+
+        String speed = communication.getPara().get(Constant.SPEED);
+        String turnMode = communication.getPara().get(Constant.TURN_MODE);
+        String altitude = communication.getPara().get("altitude");
+        String finishedAction = communication.getPara().get(Constant.FINISHED_ACTION);
+        String headingMode = communication.getPara().get(Constant.HEADING_MODE);
+        if (!TextUtils.isEmpty(speed)) {
+            mSpeed = Float.parseFloat(speed);
+        }
+        String mPathMode = communication.getPara().get(Constant.FLIGHT_PATH_MODE);
+        String wayPoints = communication.getPara().get(Constant.WAY_POINTS);
+        Log.d("wayPointsV2", wayPoints);
+
+//        wayPointAction = communication.getPara().get("action");
+//        Log.d("wayPointAction",wayPointAction);
+        if (!TextUtils.isEmpty(wayPoints)) {
+            List<WayPointsV2Bean.WayPointsBean> myWayPointList = gson.fromJson(wayPoints, new TypeToken<List<WayPointsV2Bean.WayPointsBean>>() {
+            }.getType());
+
             waypointV2List.clear();
-            for (int i = 0; i < wayPointsBeans.size(); i++) {
-                double[] latLng = MapConvertUtils.getDJILatLng(Double.parseDouble(wayPointsBeans.get(i).getLatitude()),
-                        Double.parseDouble(wayPointsBeans.get(i).getLongitude()));
-                WaypointV2 waypoint = new WaypointV2.Builder()
-                        .setDampingDistance(20f)//设置阻尼距离
-                        .setCoordinate(new LocationCoordinate2D(latLng[0], latLng[1]))//设置经纬度
-                        .setAltitude(Double.parseDouble(wayPointsBeans.get(i).getAltitude()))//高度[-200,500]
-                        //设置飞行路线模式
-                        .setFlightPathMode(WaypointV2MissionTypes.WaypointV2FlightPathMode.find(Integer.parseInt(wayPointsBeans.get(i).getFlightPathMode())))
-                        //设置航向模式
-                        .setHeadingMode(WaypointV2MissionTypes.WaypointV2HeadingMode.find(Integer.parseInt(wayPointsBeans.get(i).getHeadingMode())))
-                        //设置转弯模式
-                        .setTurnMode(WaypointV2MissionTypes.WaypointV2TurnMode.find(Integer.parseInt(wayPointsBeans.get(i).getTurnMode())))
-                        //设置自动飞行速度
-                        .setAutoFlightSpeed(Float.parseFloat(wayPointsBeans.get(i).getSpeed()))
+            for (int i = 0; i < myWayPointList.size(); i++) {
+                double[] latLng = MapConvertUtils.getDJILatLng(Double.parseDouble(myWayPointList.get(i).getLatitude()), Double.parseDouble(myWayPointList.get(i).getLongitude()));
+                WaypointV2 waypoint0 = new WaypointV2.Builder()
+                        .setDampingDistance(20f)
+                        //设置经纬度
+                        .setCoordinate(new LocationCoordinate2D(latLng[0], latLng[1]))
+                        //高度[-200,500]
+                        .setAltitude(Double.parseDouble(myWayPointList.get(i).getAltitude()))
+                        //设置路径模式
+                        .setFlightPathMode(WaypointV2MissionTypes.WaypointV2FlightPathMode.find(Integer.parseInt(myWayPointList.get(i).getFlightPathMode())))
+                        .setHeadingMode(WaypointV2MissionTypes.WaypointV2HeadingMode.find(Integer.parseInt(myWayPointList.get(i).getHeadingMode())))
+                        .setTurnMode(WaypointV2MissionTypes.WaypointV2TurnMode.find(Integer.parseInt(myWayPointList.get(i).getTurnMode())))
+                        .setAutoFlightSpeed(Float.parseFloat(myWayPointList.get(i).getSpeed()))
+                        .setUsingWaypointAutoFlightSpeed(true)
                         .build();
-                waypointV2List.add(waypoint);
+                waypointV2List.add(waypoint0);
             }
         }
 
         waypointV2MissionBuilder = new WaypointV2Mission.Builder();
         waypointV2MissionBuilder.setMissionID(new Random().nextInt(65535))
-                .setMaxFlightSpeed(TextUtils.isEmpty(speed) ? 15f : Float.parseFloat(speed))
-                .setAutoFlightSpeed(TextUtils.isEmpty(speed) ? 15f : Float.parseFloat(speed))
+                .setMaxFlightSpeed(TextUtils.isEmpty(mPathMode) ? 15f : Float.parseFloat(speed))
+                .setAutoFlightSpeed(TextUtils.isEmpty(mPathMode) ? 15f : Float.parseFloat(speed))
+//                .setFinishedAction(WaypointV2MissionTypes.MissionFinishedAction.AUTO_LAND)
                 .setFinishedAction(WaypointV2MissionTypes.MissionFinishedAction.find(Integer.parseInt(finishedAction)))
                 .setGotoFirstWaypointMode(WaypointV2MissionTypes.MissionGotoWaypointMode.SAFELY)
                 .setExitMissionOnRCSignalLostEnabled(true)
                 .setRepeatTimes(1)
                 .addwaypoints(waypointV2List);
+
         return waypointV2MissionBuilder.build();
     }
 
     private void startWaypointV2(Communication communication) {
+//        if (canStartMission) {
+        Log.d("开始飞行航点-EU", "紧紧测试" + communication.getPara().get(Constant.WAY_POINTS));
         WaypointV2MissionState state = null;
         int i = 0;
         while (++i < 15) {
             state = waypointV2MissionOperator.getCurrentState();
-            if (canStartMission) {
+
+            if (state.equals(WaypointV2MissionState.READY_TO_EXECUTE)) {
                 break;
             }
-            XcFileLog.getInstace().i("waypoint_fly_start_v2 航线开始飞行", "循环回调，当前状态为：" + state.name() + "  " + state);
+            XcFileLog.getInstace().i("航线开始飞行", "循环回调，当前状态为：" + state.name() + "  " + state);
+
             try {
                 TimeUnit.SECONDS.sleep(1);
             } catch (Exception e) {
             }
         }
         if (i == 15) {
-            XcFileLog.getInstace().i("waypoint_fly_start_v2 航线开始飞行", "等待了15秒，state 不为 READY_TO_EXECUTE , 当前状态为 ：" + state);
+            XcFileLog.getInstace().i("航线开始飞行", "等待了15秒，state 不为 READY_TO_UPLOAD 或 READY_TO_EXECUTE , 当前状态为 ：" + state);
         } else {
-            XcFileLog.getInstace().i("waypoint_fly_start_v2 航线开始飞行", "第" + i + "秒，获取到state正常状态成功，状态为" + state);
+            XcFileLog.getInstace().i("航线开始飞行", "第" + i + "秒，获取到state正常状态成功，状态为" + state);
         }
 
         waypointV2MissionOperator.startMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
             @Override
             public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
-                XcFileLog.getInstace().i("waypoint_fly_start_v2 startMission:", djiWaypointV2Error == null ? "success" : djiWaypointV2Error.getDescription());
-                CommonDjiCallback(djiWaypointV2Error, communication);
+                if (djiWaypointV2Error == null) {
+                    Toast.makeText(ConnectionActivity.this, djiWaypointV2Error == null ? "Mission is started successfully" : djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
+                }
+//                if (djiWaypointV2Error != null && currentStartMission < 5) {
+//
+//                    currentStartMission += 1;
+//                    startWaypointMission(communication);
+//                }else
+                if (djiWaypointV2Error != null) {
+
+                    Log.d("飞机飞行流程", "startWaypointMissionV2报错");
+                    XcFileLog.getInstace().i("航线开始飞行", djiWaypointV2Error.getDescription() + "      " + djiWaypointV2Error.toString());
+                    communication.setResult("startMission报错:" + djiWaypointV2Error.getDescription());
+                    communication.setCode(-1);
+                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                    NettyClient.getInstance().sendMessage(communication, null);
+                } else {
+                    Log.d("飞机飞行流程", "tartWaypointMissionV2成功");
+                    communication.setResult("Success");
+                    communication.setCode(200);
+                    communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                    NettyClient.getInstance().sendMessage(communication, null);
+                }
+
             }
         });
 
+//            canStartMission=false;
+//        } else {
+//            Toast.makeText(ConnectionActivity.this, "Wait for mission to be uploaded", Toast.LENGTH_SHORT).show();
+//            communication.setResult("startMission报错: Wait for mission to be uploaded");
+//            communication.setCode(-1);
+//            communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//            NettyClient.getInstance().sendMessage(communication, null);
+//        }
     }
 
     private void stopWaypointV2(Communication communication) {
@@ -6364,6 +6546,7 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
             waypointV2MissionOperator.stopMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
+                    Toast.makeText(ConnectionActivity.this, djiWaypointV2Error == null ? "The mission has been stopped" : djiWaypointV2Error.getDescription(), Toast.LENGTH_SHORT).show();
                     send(PagerUtils.getInstance().TTSSTOPINS);
                 }
             });
@@ -6419,13 +6602,6 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
         if (waypointV2MissionOperator != null) {
             waypointV2MissionOperator.removeWaypointListener(waypointV2MissionOperatorListener);
             waypointV2MissionOperator.removeActionListener(waypointV2ActionListener);
-        }
-        if (activationStateListener != null) {
-            appActivationManager.removeAppActivationStateListener(activationStateListener);
-
-        }
-        if (bindingStateListener != null) {
-            appActivationManager.removeAircraftBindingStateListener(bindingStateListener);
         }
     }
 
@@ -6483,6 +6659,7 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
 
         if (aircraft == null) {
         } else {
+
             mFlightController = aircraft.getFlightController();
             if (mFlightController != null) {
                 mFlightController.sendDataToOnboardSDKDevice(data, new CommonCallbacks.CompletionCallback() {
@@ -6623,9 +6800,9 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
                 public void onResult(DJIError djiError) {
                     if (djiError != null) {
                         showToast("Error:" + djiError.getErrorCode());
-                        XcFileLog.getInstace().i("喊话结束失败", "发送关闭喊话器结束失败" + djiError.getErrorCode());
+                        XcFileLog.getInstace().i("飞机飞行流程喊话结束失败", "发送关闭喊话器结束失败" + djiError.getErrorCode());
                     } else {
-                        XcFileLog.getInstace().i("喊话结束成功", "发送关闭喊话器结束成功");
+                        XcFileLog.getInstace().i("飞机飞行流程喊话结束成功", "发送关闭喊话器结束成功");
                     }
                 }
             });
@@ -6905,84 +7082,4 @@ private void sendCallBackMessage2Server(String msg,Communication communication){
             mView.requestLayout();
         }
     }
-
-    private AtomicBoolean isRegistrationInProgress = new AtomicBoolean(false);
-
-    private void startSDKRegistration() {
-        if (isRegistrationInProgress.compareAndSet(false, true)) {
-            AsyncTask.execute(new Runnable() {
-                @Override
-                public void run() {
-                    DJISDKManager.getInstance().registerApp(ConnectionActivity.this, new DJISDKManager.SDKManagerCallback() {
-                        @Override
-                        public void onRegister(DJIError djiError) {
-                            if (djiError == DJISDKError.REGISTRATION_SUCCESS) {
-                                DJILog.e("App registration", DJISDKError.REGISTRATION_SUCCESS.getDescription());
-                                DJISDKManager.getInstance().startConnectionToProduct();
-                            } else {
-                                showToast(djiError.getDescription());
-                            }
-                            Log.v(TAG, djiError.getDescription());
-                        }
-                        @Override
-                        public void onProductDisconnect() {
-                            Log.d(TAG, "onProductDisconnect");
-                            notifyStatusChange();
-                        }
-                        @Override
-                        public void onProductConnect(BaseProduct baseProduct) {
-                            Log.d(TAG, String.format("onProductConnect newProduct:%s", baseProduct));
-                            notifyStatusChange();
-                        }
-
-                        @Override
-                        public void onProductChanged(BaseProduct baseProduct) {
-                            notifyStatusChange();
-                        }
-
-                        @Override
-                        public void onComponentChange(BaseProduct.ComponentKey componentKey,
-                                                      BaseComponent oldComponent,
-                                                      BaseComponent newComponent) {
-                            if (newComponent != null) {
-                                newComponent.setComponentListener(mDJIComponentListener);
-                            }
-                            notifyStatusChange();
-                        }
-
-                        @Override
-                        public void onInitProcess(DJISDKInitEvent djisdkInitEvent, int i) {
-
-                        }
-
-                        @Override
-                        public void onDatabaseDownloadProgress(long current, long total) {
-
-                        }
-                    });
-                }
-            });
-        }
-    }
-    private void notifyStatusChange() {
-        mHandler.removeCallbacks(updateRunnable);
-        mHandler.postDelayed(updateRunnable, 500);
-    }
-
-    private Runnable updateRunnable = new Runnable() {
-
-        @Override
-        public void run() {
-            Intent intent = new Intent(FLAG_CONNECTION_CHANGE);
-            sendBroadcast(intent);
-        }
-    };
-    private BaseComponent.ComponentListener mDJIComponentListener = new BaseComponent.ComponentListener() {
-
-        @Override
-        public void onConnectivityChange(boolean isConnected) {
-            Log.d(TAG, "onComponentConnectivityChanged: " + isConnected);
-            notifyStatusChange();
-        }
-    };
 }

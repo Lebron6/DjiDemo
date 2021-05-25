@@ -21,6 +21,9 @@ allprojects {
 //        jcenter()
         jcenter(){ url 'http://jcenter.bintray.com/'}
         maven { url 'https://jitpack.io' }
+        maven {
+            url "http://maven.aliyun.com/nexus/content/repositories/releases"
+        }
     }
 }
 

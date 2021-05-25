@@ -1,7 +1,7 @@
 package com.compass.ux.netty_lib.netty;
 
 
-import com.compass.ux.app.MApplication;
+import com.compass.ux.app.ApronApp;
 import com.compass.ux.netty_lib.zhang.ConnectorIdleStateTrigger;
 import com.compass.ux.netty_lib.zhang.EventHandle;
 import com.compass.ux.netty_lib.zhang.HeartBeatClientHandler;
@@ -12,21 +12,17 @@ import java.util.concurrent.TimeUnit;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import io.netty.handler.codec.LengthFieldPrepender;
-import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.protobuf.ProtobufDecoder;
 import io.netty.handler.codec.protobuf.ProtobufEncoder;
 import io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
 import io.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 
 /**
  * Created by 张俨 on 2017/10/9.
+ * socket配置
  */
 
 public class NettyClientInitializer extends ChannelInitializer<SocketChannel> {
@@ -61,7 +57,7 @@ public class NettyClientInitializer extends ChannelInitializer<SocketChannel> {
 
         pipeline.addLast(new IdleStateHandler(0, 4, 0, TimeUnit.SECONDS));
         pipeline.addLast(new ConnectorIdleStateTrigger());
-        pipeline.addLast(new HeartBeatClientHandler(MApplication.EQUIPMENT_ID,listener));
+        pipeline.addLast(new HeartBeatClientHandler(ApronApp.EQUIPMENT_ID,listener));
 //        pipeline.addLast( new Decode<>(Communication.class));//解码器 这里要与服务器保持一致
 //        pipeline.addLast(new Encode());//编码器 这里要与服务器保持一致
 

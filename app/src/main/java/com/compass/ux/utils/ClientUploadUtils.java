@@ -1,6 +1,6 @@
 package com.compass.ux.utils;
 
-import com.compass.ux.app.MApplication;
+import com.compass.ux.app.ApronApp;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +47,7 @@ public class ClientUploadUtils {
                 .setType(MultipartBody.FORM)
 //                .addFormDataPart("uavName","uav_1")
                 .addFormDataPart("type", type)
-                .addFormDataPart("uavName", MApplication.EQUIPMENT_ID)
+                .addFormDataPart("uavName", ApronApp.EQUIPMENT_ID)
 //                .addFormDataPart("file", fileName, RequestBody.create(MediaType.parse("multipart/form-data"), addfile))
                 .addFormDataPart("file", fileName, fileBody)
                 .build();

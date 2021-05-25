@@ -109,7 +109,6 @@ public class NettyClient {
     public void sendMessage(Communication vo, FutureListener futureListener) {
         boolean flag = channel != null && isConnect;
         if (!flag) {
-            Log.e(TAG, "------尚未连接");
             return;
         }
 //        responseJson+= Constant.LINE_SEPARATOR;
@@ -117,17 +116,12 @@ public class NettyClient {
             channel.writeAndFlush(vo.coverProtoMessage()).addListener(new FutureListener() {
                 @Override
                 public void success() {
-                    XcFileLog.getInstace().i("飞机飞行流程nettyClient sendMessage","发送成功--->"+vo.toString() );
-//                    Log.d("飞机飞行流程nettyClient sendMessage","发送成功--->"+vo.toString() );
-//                    Log.d(TAG, "发送成功--->"+vo.getMethod() );
+                    XcFileLog.getInstace().i("Netty发送:",new Gson().toJson(vo));
                 }
 
                 @Override
                 public void error() {
-                    Log.e(TAG, "发送失败--->");
-                    XcFileLog.getInstace().i("飞机飞行流程nettyClient sendMessage","发送失败--->" );
-                    Log.d("飞机飞行流程nettyClient sendMessage","发送失败--->" );
-
+                    XcFileLog.getInstace().i("Netty发送：","---"+vo.getMethod()+"---失败---" );
                 }
             });
         } else {

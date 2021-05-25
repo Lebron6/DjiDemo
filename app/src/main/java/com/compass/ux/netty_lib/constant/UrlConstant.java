@@ -14,8 +14,9 @@ public class UrlConstant {
 //    public static final String SOCKET_HOST = "61.155.157.42";
     public static final String SOCKET_HOST = "47.102.102.224";
 //    public static final String SOCKET_HOST = "10.0.1.139";
+//    public static final String SOCKET_HOST = "10.0.11.114";
     /**
-     *  socket 服务器端口号
+     * socket 服务器端口号
      */
     public static final int SOCKET_PORT = 60000;
 }

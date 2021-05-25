@@ -28,42 +28,29 @@
     <uses-feature
         android:name="android.hardware.usb.accessory"
         android:required="true" />
-    <!-- 这些是高德地图要用到的 -->
-    <!-- <uses-permission android:name="android.permission.BLUETOOTH" /> -->
-    <!-- <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" /> -->
-    <!-- <uses-permission android:name="android.permission.INTERNET" /> -->
-    <!-- <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> -->
-    <!-- <uses-permission android:name="android.permission.READ_PHONE_STATE" /> -->
-    <!-- <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> -->
-    <!-- <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> -->
-    <!-- <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> -->
-    <!-- <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> -->
-    <!-- <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" /> -->
-    <!-- <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" /> -->
-    <uses-permission android:name="android.permission.CHANGE_CONFIGURATION" /> <!-- <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" /> -->
-    <uses-permission android:name="android.permission.WRITE_SETTINGS" /> <!-- <uses-permission android:name="android.permission.VIBRATE" /> -->
-    <!-- <uses-permission android:name="android.permission.WAKE_LOCK" /> -->
-    <!-- <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" /> -->
+    <uses-permission android:name="android.permission.CHANGE_CONFIGURATION" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+
     <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" /> <!-- bugly -->
-    <!-- <uses-permission android:name="android.permission.READ_PHONE_STATE" /> -->
-    <!-- <uses-permission android:name="android.permission.INTERNET" /> -->
-    <!-- <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> -->
-    <!-- <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" /> -->
+
     <uses-permission android:name="android.permission.READ_LOGS" />
 
     <!-- 开机启动所需权限 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
-        android:name=".app.MApplication"
+        android:name=".app.ApronApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:usesCleartextTraffic="true">
-        <activity android:name=".ui.FirstActivity">
+        <activity android:name=".ui.FirstActivity"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|keyboardHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -77,35 +64,6 @@
             android:name="org.apache.http.legacy"
             android:required="false" />
 
-        <activity android:name=".live.LiveMainActivity" />
-        <activity android:name=".simulator.SimulatorMainActivity"></activity>
-        <activity
-            android:name=".TapFlyandActiveTrack.TrackingTestActivity"
-            android:label="@string/title_activity_tracking_test"
-            android:launchMode="singleInstance"
-            android:screenOrientation="landscape"
-            android:theme="@android:style/Theme.Holo.NoActionBar.Fullscreen" />
-        <activity
-            android:name=".TapFlyandActiveTrack.PointingTestActivity"
-            android:label="@string/title_activity_pointing_test"
-            android:launchMode="singleInstance"
-            android:screenOrientation="landscape"
-            android:theme="@android:style/Theme.Holo.NoActionBar.Fullscreen" />
-        <activity
-            android:name=".TapFlyandActiveTrack.TFMainActivity"
-            android:configChanges="orientation|screenSize"
-            android:screenOrientation="landscape"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" /> <!-- <activity -->
-        <!-- android:name=".GaodeMap.GaodeMainActivity" -->
-        <!-- android:configChanges="orientation|screenSize" -->
-        <!-- android:screenOrientation="landscape" /> -->
-<!--        <activity-->
-<!--            android:name=".downloadpic.DownLoadPicActivity"-->
-<!--            android:screenOrientation="landscape" />-->
-<!--        <activity-->
-<!--            android:name=".downloadpic.DefaultLayoutActivity"-->
-<!--            android:screenOrientation="landscape" />-->
-        <activity android:name=".live.live.LiveStreamView" />
 
         <uses-library android:name="com.android.future.usb.accessory" />
 
@@ -133,29 +91,29 @@
         </activity>
 
         <service android:name="dji.sdk.sdkmanager.DJIGlobalService" /> <!-- DJI SDK -->
+        <service android:name="com.amap.api.location.APSService"></service>
+
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".ui.ConnectionActivity"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"></activity>
-        <activity
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="stateAlwaysHidden">
+        </activity>
+        <!--<activity
             android:name=".ui.ConnectionActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden">
-
-        </activity>
-        <activity
-            android:name=".takephoto.TakePhotoActivity"
-            android:screenOrientation="landscape" />
+        </activity>-->
 
         <service
             android:name=".netty_lib.NettyService"
             android:enabled="true"
             android:exported="true" />
 
-        <activity
-            android:name=".crash.DefaultErrorActivity"
-            android:process=":error_activity" />
+<!--        <activity-->
+<!--            android:name=".crash.DefaultErrorActivity"-->
+<!--            android:process=":error_activity" />-->
 
         <provider
             android:name=".crash.CaocInitProvider"
@@ -174,6 +132,18 @@
                 <category android:name="android.intent.category.HOME"/>
             </intent-filter>
         </receiver>
+
+        <meta-data
+            android:name="com.taobao.android.hotfix.IDSECRET"
+            android:value="333432605-1" />
+        <meta-data
+            android:name="com.taobao.android.hotfix.APPSECRET"
+            android:value="08f79ddfe3104d11b58575f4fbc51717" />
+        <meta-data
+            android:name="com.taobao.android.hotfix.RSASECRET"
+            android:value="MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCv5cGP8ajPrdw64UOO0NfkW5g9WTf9WzfgckGiSVn1u60AKDf9D6cfmZihBMb/+e/EhonHV/ZlhvT7VQGwv4bb8QeHg9yfvlCbD1HIVYQKHUKJiGdiRoyYbaGc0P3/4K5YkZX5ulwMn+14RCQ9z850MFW3gWaULshZ5U4dk/aLsK7pZW3PKikYtEEcsHKla62fSH/9+Mb2px0Ho8mWOzQs/IhPUTYnNg8fsS8cSUFw0YnIC3hV7gG9ysQppCJ/FeAZ72DcLRShEDWKLedjEF5Gn/j5NeeAFXJyM8/9Gi7NvP4CQAwkmA0VcpDOPl5uk4QDeWwnGWzbf/52B90nw4blAgMBAAECggEAYgG+jBm2WaEh6JzDK7wpzs9KUER58ez1gVWoRGhie40Ko9/E8nfaQr0uUel7h/0XH4VnF29nlsJPlgqTWowc9EekTlmmgEtmVj9+7gTYAVq0TDV4hUWR6QyM0/eOzxe9jRPxYKf5yf8CLdSp7NbwzcRwvkKXiVFXyN7/W3OqF8J3LsfNjL3BBQzeLOSL/Og//qEOnPsT04wYeiHGwKWEdkvHJeCZ6Aex8Tj8ZbUcKIUzBBpURb5Rq6cZohPHD93yLoCMUlp7pqCZEzxQKGb2+zsxdqioWoOOjnnyrMDAhppye25qzlvcmNKm4K0ktw9+HhM67fiONfVUuhxr71xPAQKBgQD3awQ4xFfEImB9lsB15G4CuYtm9Vg+OwY1FhT3yGTWjS9X1AXz7NdPoF5EHr2NlDM+mn5JVZo95O/4hIatSPKn3e5KmQjrLWAJmZWcf3Url3j004J22ou5r2a4DDVe4XWcjPdhf9H/fUGtnABM+SLISGI0wLb02gK4gWDsphcYMQKBgQC1/6mqrT+4Qb+Qh5Kn2+j3Q9eIfQUIZFxet0w9je02bA+5X54nYwxt8X4QYVaiEkg8Bp57sm9c6tMTJSWxwfp80r3ZavEjeJgHdSuMR3jEIBB3FJux6EeeN+5fNMK7Scech9BK34EFEJUraRC95AKvsImJ5H7RhySj37lu5Udg9QKBgAm/Z50s7yBFEnQgOljqtQLaeImH5QAepzH0OsNAW+iwC0t0iP+BN0Jl2RDp/SHU0ugGgi81diw2FtY9smilVRoT/k1mFhnd4ci/CkvuIZmkEBnlM2CnX5XjOTLLGFcynsWaMCzhMk7Uin/ig4iE0D//yg62AP9Ij47hWgY4zPQhAoGAR7eMQz5r6o62DxztVIoavj0UlKs3LXxmzcgLGgJwZE6mz5R3POwR/Mz5sTi6K7lqj4TINNQ2f/Xk4Rl1Rhu7Oi7NMvyqMyEVP3MTiv6q/xXnhxUu2Sc/+X/uxcODrMvBBdSa5rY2ICnNrkKDn2BXEqZNPHI26xgG/zBs4N8mhnUCgYBXTk8wug2iaIPK2VEcbR6r7mAiPoRN3EqdrhvngPaLb4JqtmgZTUsivDUY+AOsZr2ycfoP7iE1rlD04VF+UnTJErZnOBNEqNOoTFVlvG7nKwiq958j5j9yS3p7KdgzSVBTi+PSsYT1l5S7cQ7LzToFlPbiz6wsJwdZpjZmF3QcLQ==" />
+
+
     </application>
 
 </manifest>

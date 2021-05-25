@@ -62,7 +62,6 @@ public abstract class NettyActivity extends AppCompatActivity {
             final NettyActivity nettyActivity = activity.get();
             switch (msg.what) {
                 case NettyActivity.MSG_FROM_SERVER:
-                    XcFileLog.getInstace().i("飞机飞行流程nettyActivity",((Communication) msg.obj).toString() );
                     nettyActivity.notifyData((Communication) msg.obj);
                     break;
             }

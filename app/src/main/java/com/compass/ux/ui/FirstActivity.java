@@ -1,6 +1,5 @@
 package com.compass.ux.ui;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -17,25 +16,19 @@ import dji.sdk.useraccount.UserAccountManager;
 import dji.thirdparty.afinal.core.AsyncTask;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.compass.ux.R;
-import com.compass.ux.app.Constant;
-import com.compass.ux.app.MApplication;
-import com.compass.ux.bean.TextMessageBean;
-import com.compass.ux.netty_lib.zhang.RsaUtil;
+import com.compass.ux.app.ApronApp;
 import com.compass.ux.utils.FileUtils;
 import com.google.gson.Gson;
+import com.taobao.sophix.SophixManager;
 import com.yanzhenjie.permission.AndPermission;
 
 import java.io.File;
@@ -43,7 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.compass.ux.app.MApplication.HAVE_Permission;
+import static com.compass.ux.app.ApronApp.HAVE_Permission;
 
 public class FirstActivity extends AppCompatActivity {
     private static final String TAG = FirstActivity.class.getName();
@@ -75,44 +68,51 @@ public class FirstActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_first);
+//        setContentView(R.layout.activity_first);
 //        checkAndRequestPermissions();
-//        if(HAVE_Permission){
-//            Intent intent=new Intent(FirstActivity.this,ConnectionActivity.class);
-//            startActivity(intent);
-//            finish();
-//        }else{
-        AndPermission.with(this)
-                .runtime()
-                .permission(REQUIRED_PERMISSION_LIST)
-                .onGranted(permissions -> {
-                    // Storage permission are allowed.
-                    HAVE_Permission = true;
-                    getvalues();
-                })
-                .onDenied(permissions -> {
-                    // Storage permission are not allowed.
-                    HAVE_Permission = false;
-                    showToast("Permission Miss");
-                    finish();
-                })
-                .start();
-//        }
+        if (HAVE_Permission) {
+            Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
+            startActivity(intent);
+            finish();
+        } else {
+            AndPermission.with(this)
+                    .runtime()
+                    .permission(REQUIRED_PERMISSION_LIST)
+                    .onGranted(permissions -> {
+                        // Storage permission are allowed.
+                        HAVE_Permission = true;
+
+                        getvalues();
+                    })
+                    .onDenied(permissions -> {
+                        // Storage permission are not allowed.
+                        HAVE_Permission = false;
+                        showToast("Permission Miss");
+                        finish();
+                    })
+                    .start();
+        }
 
     }
 
 
     void getvalues() {
-        if (TextUtils.isEmpty(MApplication.EQUIPMENT_ID)) {
-            MApplication.EQUIPMENT_ID = "Mobile_01";
-            Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
-            startActivity(intent);
-            finish();
-        } else {
-            Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
-            startActivity(intent);
-            finish();
+        if (TextUtils.isEmpty(ApronApp.EQUIPMENT_ID)) {
+            String mobileNum = FileUtils.readString(file.getAbsolutePath(), "utf-8");
+            if (!TextUtils.isEmpty(mobileNum)) {
+                ApronApp.EQUIPMENT_ID = mobileNum;
+                Log.d("FileUtils", "FileUtils=" + mobileNum);
+            } else {
+                String filePath = FileUtils.createIfNotExist(Environment.getExternalStorageDirectory().getPath() + "/Shebei");
+                FileUtils.writeString(filePath, "Mobile_test", "utf-8");
+                ApronApp.EQUIPMENT_ID = FileUtils.readString(file.getAbsolutePath(), "utf-8");
+            }
+
         }
+        Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
+        startActivity(intent);
+        finish();
+
     }
 
 
@@ -135,18 +135,18 @@ public class FirstActivity extends AppCompatActivity {
         } else {
 //            havePermission = true;
 
-            if (TextUtils.isEmpty(MApplication.EQUIPMENT_ID)) {
-                String text_message = FileUtils.readString(file.getAbsolutePath(), "utf-8");
-
-                if (!TextUtils.isEmpty(text_message)) {
-                    TextMessageBean textMessageBean = gson.fromJson(text_message, TextMessageBean.class);
-                    String mobile_Id = textMessageBean.getEquip_id();
-                    MApplication.EQUIPMENT_ID = mobile_Id;
-//                    MApplication.UPLOAD_URL = textMessageBean.getUpload_url();
-                    Log.d("FileUtils", "FileUtils=" + mobile_Id);
+            if (TextUtils.isEmpty(ApronApp.EQUIPMENT_ID)) {
+                String mobileNum = FileUtils.readString(file.getAbsolutePath(), "utf-8");
+                if (!TextUtils.isEmpty(mobileNum)) {
+                    ApronApp.EQUIPMENT_ID = mobileNum;
+                    Log.d("FileUtils", "FileUtils=" + mobileNum);
                     Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
                     startActivity(intent);
                 } else {
+
+                    //每次运行在新无人机上，需要修改设备编号
+//                    String filePath = FileUtils.createIfNotExist(Environment.getExternalStorageDirectory().getPath() + "/Shebei");
+//                    FileUtils.writeString(filePath,"Mobile_01","utf-8");
                     new Thread(new Runnable() {
                         @Override
                         public void run() {

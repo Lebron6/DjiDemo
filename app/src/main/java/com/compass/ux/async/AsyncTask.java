@@ -13,6 +13,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -43,7 +44,9 @@ public abstract class AsyncTask<Params, Progress, Result> {
 	 * 有N处理器，便长期保持N个活跃线程。
 	 */
 	private static final int CORE_POOL_SIZE = CPU_COUNT;
-	private static final int MAXIMUM_POOL_SIZE = Integer.MAX_VALUE;
+	//private static final int MAXIMUM_POOL_SIZE = Integer.MAX_VALUE;
+	private static final int MAXIMUM_POOL_SIZE = CPU_COUNT*2;
+
 	private static final int KEEP_ALIVE = 10;
 	private static final ThreadFactory sThreadFactory = new ThreadFactory() {
 		private final AtomicInteger mCount = new AtomicInteger(1);
@@ -52,7 +55,8 @@ public abstract class AsyncTask<Params, Progress, Result> {
 			return new Thread(r, "AsyncTask #" + mCount.getAndIncrement());
 		}
 	};
-	private static final BlockingQueue<Runnable> sPoolWorkQueue = new SynchronousQueue<Runnable>();
+	//private static final BlockingQueue<Runnable> sPoolWorkQueue = new SynchronousQueue<Runnable>();
+	private static final BlockingQueue<Runnable> sPoolWorkQueue = new LinkedBlockingQueue<>(1000000);
 	/**
 	 * An {@link Executor} that can be used to execute tasks in parallel.
 	 * 核心线程数为{@link #CORE_POOL_SIZE}，不限制并发总线程数!
@@ -61,7 +65,7 @@ public abstract class AsyncTask<Params, Progress, Result> {
 	 * 它实际控制并执行线程任务。
 	 */
 	public static final ThreadPoolExecutor mCachedSerialExecutor = new ThreadPoolExecutor(CORE_POOL_SIZE,
-			MAXIMUM_POOL_SIZE, KEEP_ALIVE, TimeUnit.SECONDS, sPoolWorkQueue, sThreadFactory);
+			MAXIMUM_POOL_SIZE, KEEP_ALIVE, TimeUnit.SECONDS, sPoolWorkQueue, sThreadFactory,new ThreadPoolExecutor.DiscardPolicy());
 
 	/*********************************** 线程并发控制器 *******************************/
 	/**

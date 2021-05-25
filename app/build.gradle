@@ -10,7 +10,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 4
-        versionName "0.0.4"
+        versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
         ndk {
@@ -87,7 +87,22 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     //集成大疆无人机
-    implementation 'com.dji:dji-sdk:4.14-trial1'
+    implementation ('com.dji:dji-uxsdk:4.14-trial1', {
+        /**
+         * Uncomment the "library-anti-distortion" if your app does not need Anti Distortion for Mavic 2 Pro and Mavic 2 Zoom.
+         * Uncomment the "fly-safe-database" if you need database for release, or we will download it when DJISDKManager.getInstance().registerApp
+         * is called.
+         * Both will greatly reduce the size of the APK.
+         */
+        exclude module: 'library-anti-distortion'
+        exclude module: 'fly-safe-database'
+
+        /**
+         * Uncomment the following line to exclude amap from the app.
+         * Note that Google Play Store does not allow APKs that include this library.
+         */
+        // exclude group: 'com.amap.api'
+    })
     compileOnly 'com.dji:dji-sdk-provided:4.14-trial1'
 
 //    implementation 'com.dji:dji-sdk:4.13.1'
@@ -108,8 +123,9 @@ dependencies {
     implementation 'top.zibin:Luban:1.1.8'
     //权限
     implementation 'com.yanzhenjie:permission:2.0.3'
-    //bugly
-    implementation 'com.tencent.bugly:crashreport:latest.release'
+    compile 'com.tencent.bugly:crashreport:latest.release' //其中latest.release指代最新Bugly SDK版本号，也可以指定明确的版本号，例如2.1.9
+    compile 'com.tencent.bugly:nativecrashreport:latest.release' //其中latest.release指代最新Bugly NDK版本号，也可以指定明确的版本号，例如3.0
+
     implementation 'com.google.android.gms:play-services-maps:17.0.0'
 
     implementation 'com.amap.api:map2d:6.0.0'
@@ -123,5 +139,10 @@ dependencies {
     //序列化工具
     implementation 'com.google.protobuf:protobuf-java:3.8.0'
     implementation 'com.google.protobuf:protobuf-java-util:3.8.0'
+
+    //阿里热更新
+    api 'com.aliyun.ams:alicloud-android-hotfix:3.2.15'
+    implementation 'com.android.support:multidex:1.0.3'
+
 
 }

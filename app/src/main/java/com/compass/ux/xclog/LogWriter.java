@@ -2,6 +2,8 @@ package com.compass.ux.xclog;
 
 import android.os.Environment;
 
+import com.compass.ux.async.Log;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
@@ -47,6 +49,7 @@ public class LogWriter {
         return file;
     }
 
+
     /**
      * 开启新线程写数据
      * */
@@ -54,6 +57,7 @@ public class LogWriter {
         mThreadPool.execute(new Runnable() {
             @Override
             public void run() {
+                System.out.println("thread"+"   "+msg);
                 synchronized (LogWriter.class){
                     if(!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
                         return;
