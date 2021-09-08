@@ -78,7 +78,6 @@ public class NettyClient {
         if (group!=null){
             group.shutdownGracefully();
         }
-
     }
 
     public void reconnect() {
@@ -95,6 +94,7 @@ public class NettyClient {
             disconnect();
         }
     }
+
 
     public Channel getChannel() {
         return channel;

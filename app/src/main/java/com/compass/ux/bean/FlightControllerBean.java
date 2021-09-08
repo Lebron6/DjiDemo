@@ -151,6 +151,48 @@ public class FlightControllerBean {
     private boolean isLowerThanSeriousBatteryWarningThreshold;
 
     /**
+     *电池电压
+     */
+    private float voltageOne, voltageTwo;
+
+    /**
+     *电池剩余电量
+     */
+    private int persentOne, persentTwo;
+
+    public float getVoltageOne() {
+        return voltageOne;
+    }
+
+    public void setVoltageOne(float voltageOne) {
+        this.voltageOne = voltageOne;
+    }
+
+    public float getVoltageTwo() {
+        return voltageTwo;
+    }
+
+    public void setVoltageTwo(float voltageTwo) {
+        this.voltageTwo = voltageTwo;
+    }
+
+    public int getPersentOne() {
+        return persentOne;
+    }
+
+    public void setPersentOne(int persentOne) {
+        this.persentOne = persentOne;
+    }
+
+    public int getPersentTwo() {
+        return persentTwo;
+    }
+
+    public void setPersentTwo(int persentTwo) {
+        this.persentTwo = persentTwo;
+    }
+
+    /**
      *电池寿命周期内的飞行计数。上电时清除。
      */
     private int flightCount;

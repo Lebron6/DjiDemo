@@ -3,8 +3,9 @@ package com.compass.ux.utils;
 
 import android.content.Context;
 
-import com.amap.api.maps2d.CoordinateConverter;
-import com.amap.api.maps2d.model.LatLng;
+import com.amap.api.maps.CoordinateConverter;
+import com.amap.api.maps.model.LatLng;
+
 
 
 /**
@@ -37,7 +38,7 @@ public class MapConvertUtils {
   public static LatLng getGDLatLng(double lat, double lng, Context context) {
 
 //    CoordinateConverter converter = new CoordinateConverter(context);
-    CoordinateConverter converter = new CoordinateConverter();
+    CoordinateConverter converter = new CoordinateConverter(context);
     // CoordType.GPS 待转换坐标类型
     converter.from(CoordinateConverter.CoordType.GPS);
     // sourceLatLng待转换坐标点 DPoint类型

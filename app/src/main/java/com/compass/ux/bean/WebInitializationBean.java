@@ -50,38 +50,7 @@ public class WebInitializationBean {
     //用户当前状态
     private String userAccountState;
 
-    public String getUserAccountState() {
-        return userAccountState;
-    }
 
-    public void setUserAccountState(String userAccountState) {
-        this.userAccountState = userAccountState;
-    }
-
-
-    public String getHyDisplayMode() {
-        return hyDisplayMode;
-    }
-
-    public void setHyDisplayMode(String hyDisplayMode) {
-        this.hyDisplayMode = hyDisplayMode;
-    }
-
-    public WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean getVoiceBean() {
-        return voiceBean;
-    }
-
-    public void setVoiceBean(WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean voiceBean) {
-        this.voiceBean = voiceBean;
-    }
-
-    public String getCurrentVideoSource() {
-        return currentVideoSource;
-    }
-
-    public void setCurrentVideoSource(String currentVideoSource) {
-        this.currentVideoSource = currentVideoSource;
-    }
 
     //当前流是不是fpv
     private String currentVideoSource;
@@ -229,5 +198,38 @@ public class WebInitializationBean {
 
     public void setDownLink(int downLink) {
         this.downLink = downLink;
+    }
+
+    public String getUserAccountState() {
+        return userAccountState;
+    }
+
+    public void setUserAccountState(String userAccountState) {
+        this.userAccountState = userAccountState;
+    }
+
+
+    public String getHyDisplayMode() {
+        return hyDisplayMode;
+    }
+
+    public void setHyDisplayMode(String hyDisplayMode) {
+        this.hyDisplayMode = hyDisplayMode;
+    }
+
+    public WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean getVoiceBean() {
+        return voiceBean;
+    }
+
+    public void setVoiceBean(WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean voiceBean) {
+        this.voiceBean = voiceBean;
+    }
+
+    public String getCurrentVideoSource() {
+        return currentVideoSource;
+    }
+
+    public void setCurrentVideoSource(String currentVideoSource) {
+        this.currentVideoSource = currentVideoSource;
     }
 }

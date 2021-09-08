@@ -58,6 +58,7 @@ public class ModuleVerificationUtil {
                 .getMediaManager());
     }
 
+
     //rtk判断
     public static boolean isRtkAvailable() {
         return isFlightControllerAvailable() && isAircraft() && (null != ApronApp.getAircraftInstance()

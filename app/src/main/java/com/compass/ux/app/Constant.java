@@ -5,7 +5,6 @@ package com.compass.ux.app;
  */
 public class Constant {
     public static final String MISSION_UPDATE_MODE="missionUpdateMode";
-    public static final String MISSIONWAYPOINT="missionWaypoint";
     public static final String MISSIONWAYPOINT_SHOUTTING="missionWaypoint";
 
     public static final String START_TAKE_OFF="startTakeoff";
@@ -39,42 +38,31 @@ public class Constant {
     public static final String GIMBAL_VISUAL="gimbalVisual";
     public static final String CHANGE_CAMERA_FPV_VISUAL="changeCameraFPVVisual";
     public static final String CHANGE_LENS="changeLens";
-    public static final String CHANGE_CAMERA_MODE="changeCameraMode";//切换相机拍照录像模式
+    public static final String CHANGE_CAMERA_MODE="changeCameraMode";
     public static final String CHANGE_CAMERA_SHOOT_MODE="changeCameraShootMode";
     public static final String CAMERE_START_SHOOT="cameraStartShoot";
     public static final String CAMERE_STOP_SHOOT="cameraStopShoot";
     public static final String CAMERE_STOP_RECORE="cameraStopRecord";
     public static final String CAMERE_START_RECORE="cameraStartRecord";
     public static final String PHOTO_UP_LOAD="photoUpLoad";
-    public static final String UP_LOAD_SIGNAL="upLoadSignal";
-    public static final String DOWN_LOAD_SIGNAL="downLoadSignal";
-    public static final String LINK_PLANE_STATUS="linkPlaneStatus";
     public static final String SET_LASER_ENABLE="setLaserEnabled";
     public static final String GET_LASER_ENABLE="getLaserEnabled";
-    public static final String LASER_DATA="laserData";
     public static final String CAMERA_DATA="cameraData";
     public static final String SET_LED="setLed";
     public static final String SET_ISO="setISO";
     public static final String SET_EXPOSURE_COM="setExposureCompensation";
     public static final String SET_EXPOSURE_MODE="setExposureMode";
     public static final String SET_SHUTTER="setShutter";
-    public static final String DIAGNOSTICS="diagnostics";
-    public static final String BS_INFO="bs_info";
-    public static final String BatteryPAV="batteryPersentAndVoltage";
     public static final String SET_CAMERA_ZOOM="setCameraZoom";
     public static final String PERCEPTION_DATA="perceptionData";
     public static final String SET_FOCUS_MODE="setFocusMode";
     public static final String LOCK_EXPOSURE="setLockExposure";
     public static final String SET_THERMAL_DIGITAL_ZOOM="setThermalDigitalZoom";
     public static final String OASS="obstacleAvoidanceSensorState";
-    public static final String STORAGE_STATE="storageState";
-    public static final String IS_FLYING="isFlying";
     public static final String GET_IS_FLYING="getIsFlying";
-    public static final String GO_HOME_LENGTH="goHomeLength";
     public static final String IS_DOWNLOAD="isDownload";
     public static final String ON_EXECUTION_FINISH="onExecutionFinish";
     public static final String HAVEPIC="isHavePic";
-    public static final String DISTANCE_GO_HOME="distanceGoHome";
     public static final String SET_CONNECT_FAIL_BEHAVIOR="setConnectionFailSafeBehavior";
     public static final String SET_HY_DISPLAY_MODE="setHyDisplayMode";
     public static final String TRANSMISSION_SET_BEAN="transmissionSetBean";
@@ -131,8 +119,6 @@ public class Constant {
     public static final String VOLUME_CONTROL = "volumeControl";
     public static final String ISRTKBEINGUSED = "isRTKBeingUsed";
 
-    public static String LINE_SEPARATOR=System.getProperty("line.separator");
-
     public static String SPEED = "speed";
     public static String ANGLE = "angle";
     public static String TYPE = "type";
@@ -150,11 +136,23 @@ public class Constant {
     public static String WAY_POINTS = "wayPoints";
     public static String GIMBAL_PITCH = "gimbalPitch";
     public static String TURN_MODE = "turnMode";
-//    public static String APRONID = "Mobile_01";
     public static String FLIGHT_CONTROLLER_BEAN = "flightControllerBean";
     public static String BATTERY_STATE_BEAN = "batteryStateBean";
     public static String flightController = "flightController";
-    public static String RTKBean = "rtkBean";
+
+    public static final String MISSIONWAYPOINT="missionWaypoint";
+    public static final String RTKBean = "rtkBean";
+    public static final String BS_INFO="bs_info";
+    public static final String BatteryPAV="batteryPersentAndVoltage";
+    public static final String STORAGE_STATE="storageState";
+    public static final String LASER_DATA="laserData";
+    public static final String LINK_PLANE_STATUS="linkPlaneStatus";
+    public static final String DOWN_LOAD_SIGNAL="downLoadSignal";
+    public static final String UP_LOAD_SIGNAL="upLoadSignal";
+    public static final String GO_HOME_LENGTH="goHomeLength";
+    public static final String IS_FLYING="isFlying";
+    public static final String DISTANCE_GO_HOME="distanceGoHome";
+    public static final String DIAGNOSTICS="diagnostics";
 
 
 

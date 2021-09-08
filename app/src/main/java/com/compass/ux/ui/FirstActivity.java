@@ -4,16 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import dji.common.error.DJIError;
-import dji.common.error.DJISDKError;
-import dji.common.useraccount.UserAccountState;
-import dji.common.util.CommonCallbacks;
-import dji.sdk.base.BaseComponent;
-import dji.sdk.base.BaseProduct;
-import dji.sdk.sdkmanager.DJISDKInitEvent;
-import dji.sdk.sdkmanager.DJISDKManager;
-import dji.sdk.useraccount.UserAccountManager;
-import dji.thirdparty.afinal.core.AsyncTask;
+
 
 import android.Manifest;
 import android.content.Intent;
@@ -21,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
@@ -70,48 +62,54 @@ public class FirstActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 //        setContentView(R.layout.activity_first);
 //        checkAndRequestPermissions();
-        if (HAVE_Permission) {
-            Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
-            startActivity(intent);
-            finish();
-        } else {
+//        if (HAVE_Permission) {
+//            Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
+//            startActivity(intent);
+//            finish();
+//        } else {
             AndPermission.with(this)
                     .runtime()
                     .permission(REQUIRED_PERMISSION_LIST)
                     .onGranted(permissions -> {
                         // Storage permission are allowed.
                         HAVE_Permission = true;
-
                         getvalues();
                     })
                     .onDenied(permissions -> {
                         // Storage permission are not allowed.
                         HAVE_Permission = false;
-                        showToast("Permission Miss");
                         finish();
                     })
                     .start();
-        }
+//        }
 
     }
 
 
     void getvalues() {
         if (TextUtils.isEmpty(ApronApp.EQUIPMENT_ID)) {
-            String mobileNum = FileUtils.readString(file.getAbsolutePath(), "utf-8");
-            if (!TextUtils.isEmpty(mobileNum)) {
-                ApronApp.EQUIPMENT_ID = mobileNum;
-                Log.d("FileUtils", "FileUtils=" + mobileNum);
-            } else {
-                String filePath = FileUtils.createIfNotExist(Environment.getExternalStorageDirectory().getPath() + "/Shebei");
-                FileUtils.writeString(filePath, "Mobile_test", "utf-8");
-                ApronApp.EQUIPMENT_ID = FileUtils.readString(file.getAbsolutePath(), "utf-8");
-            }
+//            String mobileNum = FileUtils.readString(file.getAbsolutePath(), "utf-8");
+//            new Handler().postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    if (!TextUtils.isEmpty(mobileNum)) {
+//                        FileUtil.deleteFile(file);
+//                        ApronApp.EQUIPMENT_ID = mobileNum;
+//                        Log.d("FileUtils", "FileUtils=" + mobileNum);
+//                    } else {
+                        String filePath = FileUtils.createIfNotExist(Environment.getExternalStorageDirectory().getPath() + "/Shebei");
+                        FileUtils.writeString(filePath, "Mobile_03", "utf-8");
+                        ApronApp.EQUIPMENT_ID = FileUtils.readString(file.getAbsolutePath(), "utf-8");
+//                    }
+                    Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
+                    startActivity(intent);
+                    finish();
+//                }
+//            },2000);
+
 
         }
-        Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
-        startActivity(intent);
-        finish();
+
 
     }
 
@@ -143,7 +141,6 @@ public class FirstActivity extends AppCompatActivity {
                     Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
                     startActivity(intent);
                 } else {
-
                     //每次运行在新无人机上，需要修改设备编号
 //                    String filePath = FileUtils.createIfNotExist(Environment.getExternalStorageDirectory().getPath() + "/Shebei");
 //                    FileUtils.writeString(filePath,"Mobile_01","utf-8");
@@ -168,184 +165,6 @@ public class FirstActivity extends AppCompatActivity {
             }
         }
 
-    }
-
-//    /**
-//     * Result of runtime permission request
-//     */
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode,
-//                                           @NonNull String[] permissions,
-//                                           @NonNull int[] grantResults) {
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//        // Check for granted permission and remove from missing list
-//        if (requestCode == REQUEST_PERMISSION_CODE) {
-//            for (int i = grantResults.length - 1; i >= 0; i--) {
-//                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-//                    missingPermission.remove(permissions[i]);
-//                }
-//            }
-//        }
-//        // If there is enough permission, we will start the registration
-//        if (missingPermission.isEmpty()) {
-////            havePermission = true;
-//            startSDKRegistration();
-//            loginAccount();
-//            if (TextUtils.isEmpty(MApplication.EQUIPMENT_ID) || TextUtils.isEmpty(MApplication.UPLOAD_URL)) {
-//                String text_message = FileUtils.readString(file.getAbsolutePath(), "utf-8");
-//
-//                if (!TextUtils.isEmpty(text_message)) {
-//                    TextMessageBean textMessageBean = gson.fromJson(text_message, TextMessageBean.class);
-//                    String mobile_Id = RsaUtil.encrypt(textMessageBean.getEquip_id());
-//                    MApplication.EQUIPMENT_ID = mobile_Id;
-//                    MApplication.UPLOAD_URL = textMessageBean.getUpload_url();
-//                    Log.d("FileUtils", "FileUtils=" + mobile_Id);
-//                    Intent intent=new Intent(FirstActivity.this,ConnectionActivity.class);
-//                    startActivity(intent);
-//                } else {
-//                    new Thread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            try {
-//                                Thread.sleep(10000);
-//                                runOnUiThread(new Runnable() {
-//                                    @Override
-//                                    public void run() {
-//                                        Toast.makeText(getApplicationContext(), "配置文件为空,请去添加", Toast.LENGTH_SHORT).show();
-//                                    }
-//                                });
-//                                finish();
-//                            } catch (InterruptedException e) {
-//                                e.printStackTrace();
-//                            }
-//                        }
-//                    }).start();
-//                }
-//            }
-//        } else {
-//            showToast("Missing permissions!!!");
-////            havePermission = false;
-//        }
-//    }
-
-    private void startSDKRegistration() {
-        if (isRegistrationInProgress.compareAndSet(false, true)) {
-            AsyncTask.execute(new Runnable() {
-                @Override
-                public void run() {
-                    showToast("registering, pls wait...");
-                    DJISDKManager.getInstance().registerApp(getApplicationContext(), new DJISDKManager.SDKManagerCallback() {
-                        @Override
-                        public void onRegister(DJIError djiError) {
-                            if (djiError == DJISDKError.REGISTRATION_SUCCESS) {
-                                Log.e("App registration", DJISDKError.REGISTRATION_SUCCESS.getDescription());
-                                DJISDKManager.getInstance().startConnectionToProduct();
-                                showToast("Register Success");
-
-                            } else {
-                                showToast("Register sdk fails, check network is available");
-                            }
-                            Log.v(TAG, djiError.getDescription());
-                        }
-
-                        @Override
-                        public void onProductDisconnect() {
-                            Log.d(TAG, "onProductDisconnect");
-                            showToast("Product Disconnected");
-
-                        }
-
-                        @Override
-                        public void onProductConnect(BaseProduct baseProduct) {
-                            Log.d(TAG, String.format("onProductConnect newProduct:%s", baseProduct));
-                            showToast("Product Connected");
-
-                        }
-
-                        @Override
-                        public void onProductChanged(BaseProduct baseProduct) {
-
-                        }
-
-                        @Override
-                        public void onComponentChange(BaseProduct.ComponentKey componentKey, BaseComponent oldComponent,
-                                                      BaseComponent newComponent) {
-
-                            if (newComponent != null) {
-                                newComponent.setComponentListener(new BaseComponent.ComponentListener() {
-
-                                    @Override
-                                    public void onConnectivityChange(boolean isConnected) {
-                                        Log.d(TAG, "onComponentConnectivityChanged: " + isConnected);
-                                    }
-                                });
-                            }
-                            Log.d(TAG,
-                                    String.format("onComponentChange key:%s, oldComponent:%s, newComponent:%s",
-                                            componentKey,
-                                            oldComponent,
-                                            newComponent));
-
-                        }
-
-                        @Override
-                        public void onInitProcess(DJISDKInitEvent djisdkInitEvent, int i) {
-
-                        }
-
-                        @Override
-                        public void onDatabaseDownloadProgress(long l, long l1) {
-
-                        }
-
-                    });
-
-
-                    Intent launchIntent = getPackageManager().getLaunchIntentForPackage("dji.go.v4");
-                    if (launchIntent != null) {
-                        startActivity(launchIntent);//null pointer check in case package name was not found
-                    } else {
-                        showToast("Cannot redirect to DJI Go 4, Please check if DJI Go 4 has installed");
-                    }
-
-                    Intent launchIntent2 = getPackageManager().getLaunchIntentForPackage("dji.pilot");
-                    if (launchIntent2 != null) {
-                        startActivity(launchIntent2);//null pointer check in case package name was not found
-                    } else {
-                        showToast("Cannot redirect to DJI Go, Please check if DJI Go has installed");
-                    }
-                }
-            });
-        }
-    }
-
-
-    private void showToast(final String toastMsg) {
-
-//        Handler handler = new Handler(Looper.getMainLooper());
-//        handler.post(new Runnable() {
-//            @Override
-//            public void run() {
-        Toast.makeText(getApplicationContext(), toastMsg, Toast.LENGTH_LONG).show();
-//            }
-//        });
-
-    }
-
-    private void loginAccount() {
-        UserAccountManager.getInstance().logIntoDJIUserAccount(this,
-                new CommonCallbacks.CompletionCallbackWith<UserAccountState>() {
-                    @Override
-                    public void onSuccess(final UserAccountState userAccountState) {
-                        Log.e(TAG, "Login Success");
-                    }
-
-                    @Override
-                    public void onFailure(DJIError error) {
-                        showToast("Login Error:"
-                                + error.getDescription());
-                    }
-                });
     }
 
 }

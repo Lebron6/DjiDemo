@@ -94,7 +94,6 @@ public class TabNavitationLayout extends RelativeLayout {
             textViews[i].setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
                     if(onTitleClickListener != null)
                     {
                         if(index == 0) {
@@ -147,7 +146,7 @@ public class TabNavitationLayout extends RelativeLayout {
         }
     }
 
-    private void setSelectedTxtColor(Context context, int selectedcolor, int unselectedColor, int position)
+    public void setSelectedTxtColor(Context context, int selectedcolor, int unselectedColor, int position)
     {
         if(textViews != null)
         {
