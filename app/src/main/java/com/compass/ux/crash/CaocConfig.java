@@ -17,7 +17,6 @@
 package com.compass.ux.crash;
 
 import android.app.Activity;
-
 import java.io.Serializable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

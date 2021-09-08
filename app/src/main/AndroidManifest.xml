@@ -3,6 +3,7 @@
     package="com.compass.ux"
     >
     <!-- Permissions and features -->
+
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -16,6 +17,7 @@
     <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -37,12 +39,16 @@
 
     <!-- 开机启动所需权限 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
+    <!--弃用硬件加速-->
+   <!-- android:hardwareAccelerated="false"-->
     <application
         android:name=".app.ApronApp"
         android:allowBackup="true"
+        android:hardwareAccelerated="true"
+        android:requestLegacyExternalStorage="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:largeHeap="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
@@ -64,19 +70,20 @@
             android:name="org.apache.http.legacy"
             android:required="false" />
 
-
         <uses-library android:name="com.android.future.usb.accessory" />
 
-<!--        <meta-data
-            android:name="com.dji.sdk.API_KEY"
-            android:value="e4b698d80c1023b8b61a2226" /> -->
+
+        <!--这里为开通了会员的DJI开发者账号注册的APP，不受注册设备数量限制-->
         <meta-data
             android:name="com.dji.sdk.API_KEY"
-            android:value="68cafaa3d0356ecdd42ab491" />
+            android:value="8a46b20ad0f263b51431bdda" />
         <!-- 启用高德地图服务 -->
-        <meta-data
+       <!-- <meta-data
             android:name="com.amap.api.v2.apikey"
-            android:value="a5cde3f241e787f1ef5efee127c63e29" />
+            android:value="a5cde3f241e787f1ef5efee127c63e29" />-->
+         <meta-data
+            android:name="com.amap.api.v2.apikey"
+            android:value="2364a59c159f6772d7c567532ac90352" />
 
         <activity
             android:name="dji.sdk.sdkmanager.DJIAoaControllerActivity"
@@ -99,12 +106,6 @@
             android:screenOrientation="landscape"
             android:windowSoftInputMode="stateAlwaysHidden">
         </activity>
-        <!--<activity
-            android:name=".ui.ConnectionActivity"
-            android:configChanges="orientation"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="stateAlwaysHidden">
-        </activity>-->
 
         <service
             android:name=".netty_lib.NettyService"

@@ -3,13 +3,16 @@ package com.compass.ux.app;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 
+import androidx.annotation.NonNull;
 import androidx.multidex.MultiDex;
 
 import com.compass.ux.R;
 import com.compass.ux.crash.CaocConfig;
 import com.compass.ux.ui.FirstActivity;
 import com.secneo.sdk.Helper;
+import com.squareup.leakcanary.LeakCanary;
 import com.taobao.sophix.SophixManager;
 import com.tencent.bugly.crashreport.CrashReport;
 
@@ -23,30 +26,41 @@ import dji.sdk.sdkmanager.DJISDKManager;
 /**
  * Created by xhf on 2020-06-08
  */
-public class ApronApp extends Application {
+public class ApronApp extends Application{
+
     public static String EQUIPMENT_ID;
     public static boolean HAVE_Permission = false;
     private static BaseProduct mProduct;
 
+    private FPVDemoApplication fpvDemoApplication;
+
+    @Override
+    protected void attachBaseContext(Context paramContext) {
+        super.attachBaseContext(paramContext);
+        Helper.install(ApronApp.this);
+        //拍照
+        if (fpvDemoApplication == null) {
+            fpvDemoApplication = new FPVDemoApplication();
+            fpvDemoApplication.setContext(this);
+        }
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
-        Helper.install(ApronApp.this);
+        fpvDemoApplication.onCreate();
+
+//        Thread.setDefaultUncaughtExceptionHandler(this);
 
 //        初始化全局异常崩溃
 //        initCrash();
-
-        //内存泄漏检测
+//        内存泄漏检测
 //        if (!LeakCanary.isInAnalyzerProcess(this)) {
 //            LeakCanary.install(this);
 //        }
-
-// 主要是添加下面这句代码
-//        MultiDex.install(this);
 // queryAndLoadNewPatch不可放在attachBaseContext 中，否则无网络权限，建议放在后面任意时刻，如onCreate中
 //        SophixManager.getInstance().queryAndLoadNewPatch();//查询是否有新的补丁
     }
-
 
     private void initCrash() {
         CaocConfig.Builder.create()
@@ -72,22 +86,6 @@ public class ApronApp extends Application {
             mProduct = DJISDKManager.getInstance().getProduct();
         }
         return mProduct;
-    }
-
-    public static synchronized Camera getCameraInstance() {
-
-        if (getProductInstance() == null) return null;
-
-        Camera camera = null;
-
-        if (getProductInstance() instanceof Aircraft) {
-            camera = ((Aircraft) getProductInstance()).getCamera();
-
-        } else if (getProductInstance() instanceof HandHeld) {
-            camera = ((HandHeld) getProductInstance()).getCamera();
-        }
-
-        return camera;
     }
 
     public static synchronized AirLink getAirLinkInstance() {
@@ -116,4 +114,13 @@ public class ApronApp extends Application {
         return (Aircraft) getProductInstance();
     }
 
+//    @Override
+//    public void uncaughtException(@NonNull Thread t, @NonNull Throwable e) {
+//        Intent intent = new Intent(this, FirstActivity.class);
+//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
+//                Intent.FLAG_ACTIVITY_NEW_TASK);
+//        startActivity(intent);
+//        android.os.Process.killProcess(android.os.Process.myPid());
+//
+//    }
 }

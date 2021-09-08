@@ -1,583 +1,402 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:custom="http://schemas.android.com/tools"
-    android:id="@+id/root_view"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+        xmlns:custom="http://schemas.android.com/tools"
+        android:id="@+id/root_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
     <RelativeLayout
-        android:id="@+id/layout_previewer_container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/background_blue">
-
-        <TextureView
-            android:id="@+id/video_previewer_surface"
+            android:id="@+id/layout_previewer_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-             />
+            android:background="@color/background_blue">
+
+        <TextureView
+                android:id="@+id/video_previewer_surface"
+                android:layout_height="match_parent"
+                android:layout_width="match_parent" />
 
         <com.compass.ux.view.TabNavitationLayout
-            android:id="@+id/tab_change"
-            android:layout_width="@dimen/x230"
-            android:layout_height="@dimen/x41"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="@dimen/x111"
-            android:gravity="center" />
-        <TextView
-            android:id="@+id/tv_live_url"
-            android:paddingLeft="@dimen/x17"
-            android:paddingRight="@dimen/x17"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/x41"
-            android:layout_marginTop="@dimen/x111"
-            android:layout_alignParentRight="true"
-            android:layout_marginRight="@dimen/x200"
-            android:gravity="center"
-            android:text=""
-            android:textColor="@color/colorWhite"
-            android:textSize="@dimen/x17" />
-        <TextView
-            android:id="@+id/tv_zoom"
-            android:layout_width="@dimen/x134"
-            android:layout_height="@dimen/x41"
-            android:layout_alignParentRight="true"
-            android:layout_marginTop="@dimen/x111"
-            android:layout_marginRight="@dimen/x41"
-            android:background="@drawable/bg_zoom"
-            android:gravity="center"
-            android:text="变焦  2.0"
-            android:textColor="@color/colorWhite"
-            android:textSize="@dimen/x17" />
+                android:id="@+id/tab_change"
+                android:layout_width="@dimen/x230"
+                android:layout_height="@dimen/x41"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="@dimen/x111"
+                android:gravity="center" />
 
         <TextView
-            android:id="@+id/tv_appActivation_status"
-            android:paddingLeft="@dimen/x17"
-            android:paddingRight="@dimen/x17"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/x41"
-            android:layout_alignParentLeft="true"
-            android:layout_marginTop="@dimen/x111"
-            android:layout_marginLeft="@dimen/x41"
-            android:background="@drawable/bg_zoom"
-            android:gravity="center"
-            android:text="LOGIN_REQUIRED"
-            android:textColor="@color/colorWhite"
-            android:textSize="@dimen/x17" />
+                android:id="@+id/tv_live_url"
+                android:paddingLeft="@dimen/x17"
+                android:paddingRight="@dimen/x17"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/x41"
+                android:layout_marginTop="@dimen/x111"
+                android:layout_alignParentRight="true"
+                android:layout_marginRight="@dimen/x200"
+                android:gravity="center"
+                android:text=""
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/x17" />
         <TextView
-            android:id="@+id/tv_bind_status"
-            android:paddingLeft="@dimen/x17"
-            android:paddingRight="@dimen/x17"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/x41"
-            android:layout_toRightOf="@+id/tv_appActivation_status"
-            android:layout_marginTop="@dimen/x111"
-            android:layout_marginLeft="@dimen/x41"
-            android:background="@drawable/bg_zoom"
-            android:gravity="center"
-            android:text="UNBOUND"
-            android:textColor="@color/colorWhite"
-            android:textSize="@dimen/x17" />
+                android:id="@+id/tv_zoom"
+                android:visibility="visible"
+                android:layout_width="@dimen/x134"
+                android:layout_height="@dimen/x41"
+                android:layout_alignParentRight="true"
+                android:layout_marginTop="@dimen/x111"
+                android:layout_marginRight="@dimen/x41"
+                android:background="@drawable/bg_zoom"
+                android:gravity="center"
+                android:text="变焦  2.0"
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/x17" />
+
         <TextView
-            android:id="@+id/tv_account_state"
-            android:paddingLeft="@dimen/x17"
-            android:paddingRight="@dimen/x17"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/x41"
-            android:layout_toRightOf="@+id/tv_bind_status"
-            android:layout_marginTop="@dimen/x111"
-            android:layout_marginLeft="@dimen/x41"
-            android:background="@drawable/bg_zoom"
-            android:gravity="center"
-            android:text="？"
-            android:textColor="@color/colorWhite"
-            android:textSize="@dimen/x17" />
+                android:visibility="gone"
+                android:id="@+id/tv_appActivation_status"
+                android:paddingLeft="@dimen/x17"
+                android:paddingRight="@dimen/x17"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/x41"
+                android:layout_alignParentLeft="true"
+                android:layout_marginTop="@dimen/x111"
+                android:layout_marginLeft="@dimen/x41"
+                android:background="@drawable/bg_zoom"
+                android:gravity="center"
+                android:text="LOGIN_REQUIRED"
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/x17" />
+
+        <TextView
+                android:visibility="gone"
+                android:id="@+id/tv_bind_status"
+                android:paddingLeft="@dimen/x17"
+                android:paddingRight="@dimen/x17"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/x41"
+                android:layout_toRightOf="@+id/tv_appActivation_status"
+                android:layout_marginTop="@dimen/x111"
+                android:layout_marginLeft="@dimen/x41"
+                android:background="@drawable/bg_zoom"
+                android:gravity="center"
+                android:text="UNBOUND"
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/x17" />
+
+        <TextView
+                android:visibility="gone"
+                android:id="@+id/tv_account_state"
+                android:paddingLeft="@dimen/x17"
+                android:paddingRight="@dimen/x17"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/x41"
+                android:layout_toRightOf="@+id/tv_bind_status"
+                android:layout_marginTop="@dimen/x111"
+                android:layout_marginLeft="@dimen/x41"
+                android:background="@drawable/bg_zoom"
+                android:gravity="center"
+                android:text="？"
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/x17" />
+
+        <TextView
+                android:visibility="gone"
+                android:id="@+id/tv_LiveVideoFps"
+                android:paddingLeft="@dimen/x17"
+                android:paddingRight="@dimen/x17"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/x41"
+                android:layout_below="@+id/tv_bind_status"
+                android:layout_toRightOf="@+id/layout_rate_window"
+                android:layout_marginTop="@dimen/x31"
+                android:layout_marginLeft="@dimen/x41"
+                android:background="@drawable/bg_zoom"
+                android:gravity="center"
+                android:text="LiveVideoFps"
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/x17" />
 
         <RelativeLayout
-            android:id="@+id/layout_sort"
-            android:layout_width="@dimen/x32"
-            android:layout_height="200dp"
-            android:layout_alignParentRight="true"
-            android:layout_marginTop="@dimen/x210"
-            android:layout_marginRight="@dimen/x44"
-            android:background="@drawable/bg_angle"
-            android:orientation="vertical">
+                android:visibility="gone"
+                android:layout_below="@+id/tv_appActivation_status"
+                android:layout_alignParentLeft="true"
+                android:layout_marginTop="@dimen/x31"
+                android:layout_marginLeft="@dimen/x41"
+                android:background="@drawable/bg_zoom"
+                android:id="@+id/layout_rate_window"
+                android:layout_width="@dimen/x80"
+                android:layout_height="@dimen/x41"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="@dimen/x24">
 
             <TextView
-                android:id="@+id/tv_top"
-                android:layout_width="match_parent"
-                android:layout_height="15dp"
-                android:layout_alignParentTop="true"
-                android:gravity="center"
-                android:text="30°"
-                android:textColor="@color/colorWhite"
-                android:textSize="5sp" />
+                    android:id="@+id/tv_rate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:layout_centerVertical="true"
+                    android:text="6"
+                    android:textColor="@color/colorWhite"
+                    android:textSize="@dimen/x17" />
+
+            <ImageView
+                    android:layout_marginRight="@dimen/x2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:background="@mipmap/icon_down_w" />
+        </RelativeLayout>
+
+        <RelativeLayout
+                android:visibility="visible"
+                android:id="@+id/layout_sort"
+                android:layout_width="@dimen/x32"
+                android:layout_height="200dp"
+                android:layout_alignParentRight="true"
+                android:layout_marginTop="@dimen/x210"
+                android:layout_marginRight="@dimen/x44"
+                android:background="@drawable/bg_angle"
+                android:orientation="vertical">
+
+            <TextView
+                    android:id="@+id/tv_top"
+                    android:layout_width="match_parent"
+                    android:layout_height="15dp"
+                    android:layout_alignParentTop="true"
+                    android:gravity="center"
+                    android:text="30°"
+                    android:textColor="@color/colorWhite"
+                    android:textSize="5sp" />
 
             <LinearLayout
-                android:layout_below="@+id/tv_top"
-                android:layout_above="@+id/tv_bottom"
-                android:layout_width="match_parent"
-                android:layout_height="170dp">
-                <include layout="@layout/layout_sort"/>
+                    android:layout_below="@+id/tv_top"
+                    android:layout_above="@+id/tv_bottom"
+                    android:layout_width="match_parent"
+                    android:layout_height="170dp">
+
+                <include layout="@layout/layout_sort" />
             </LinearLayout>
 
 
             <TextView
-                android:id="@+id/tv_bottom"
-                android:layout_width="match_parent"
-                android:layout_height="15dp"
-                android:layout_alignParentBottom="true"
-                android:gravity="center"
-                android:text="-90°"
-                android:textColor="@color/colorWhite"
-                android:textSize="5sp" />
+                    android:id="@+id/tv_bottom"
+                    android:layout_width="match_parent"
+                    android:layout_height="15dp"
+                    android:layout_alignParentBottom="true"
+                    android:gravity="center"
+                    android:text="-90°"
+                    android:textColor="@color/colorWhite"
+                    android:textSize="5sp" />
         </RelativeLayout>
+
         <RelativeLayout
-            android:id="@+id/layout_air_info"
-            android:background="@mipmap/biankuang_icon_home"
-            android:layout_marginBottom="@dimen/x58"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:layout_width="@dimen/x624"
-            android:layout_height="@dimen/x70">
-            <TextView
-                android:layout_marginLeft="@dimen/x30"
-                android:layout_marginTop="@dimen/x10"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="水平速度"
-                android:textColor="@color/colorWhite"
-                android:textSize="@dimen/x15"
-                />
-            <TextView
-                android:id="@+id/tv_horizontal_speed"
-                android:layout_marginLeft="@dimen/x135"
-                android:layout_marginTop="@dimen/x8"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#ffffffff"
-                android:textSize="@dimen/x18"
-                />
-            <TextView
+                android:id="@+id/layout_air_info"
+                android:background="@mipmap/biankuang_icon_home"
+                android:layout_marginBottom="@dimen/x58"
                 android:layout_alignParentBottom="true"
-                android:layout_marginLeft="@dimen/x30"
-                android:layout_marginBottom="@dimen/x10"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="遥控距离"
-                android:textColor="@color/colorWhite"
-                android:textSize="@dimen/x15"
-                />
+                android:layout_centerHorizontal="true"
+                android:layout_width="@dimen/x624"
+                android:layout_height="@dimen/x70">
+
             <TextView
-                android:id="@+id/tv_control_distance"
-                android:layout_alignParentBottom="true"
-                android:layout_marginLeft="@dimen/x135"
-                android:layout_marginBottom="@dimen/x8"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#ffffffff"
-                android:textSize="@dimen/x18"
-                />
+                    android:layout_marginLeft="@dimen/x30"
+                    android:layout_marginTop="@dimen/x10"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="水平速度"
+                    android:textColor="@color/colorWhite"
+                    android:textSize="@dimen/x15" />
+
+            <TextView
+                    android:id="@+id/tv_horizontal_speed"
+                    android:layout_marginLeft="@dimen/x135"
+                    android:layout_marginTop="@dimen/x8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="#ffffffff"
+                    android:textSize="@dimen/x18" />
+
+            <TextView
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginLeft="@dimen/x30"
+                    android:layout_marginBottom="@dimen/x10"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="图传码率"
+                    android:textColor="@color/colorWhite"
+                    android:textSize="@dimen/x15" />
+
+            <TextView
+                    android:id="@+id/tv_LiveVideoBitRate"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginLeft="@dimen/x135"
+                    android:layout_marginBottom="@dimen/x8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="#ffffffff"
+                    android:textSize="@dimen/x18" />
+
             <ImageView
-                android:id="@+id/iv_apron"
-                android:layout_marginTop="@dimen/x12"
-                android:layout_centerHorizontal="true"
-                android:background="@mipmap/icon_apron_stop"
-                android:layout_width="@dimen/x25"
-                android:layout_height="@dimen/x25"/>
+                    android:id="@+id/iv_apron"
+                    android:layout_marginTop="@dimen/x12"
+                    android:layout_centerHorizontal="true"
+                    android:background="@mipmap/icon_apron_stop"
+                    android:layout_width="@dimen/x25"
+                    android:layout_height="@dimen/x25" />
+
             <TextView
-                android:id="@+id/tv_distance"
-                android:layout_marginTop="@dimen/x2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="距返航点0.00m"
-                android:layout_below="@+id/iv_apron"
-                android:layout_centerHorizontal="true"
-                android:textColor="#ff000000"
-                android:textSize="@dimen/x14"
-                />
+                    android:id="@+id/tv_distance"
+                    android:layout_marginTop="@dimen/x2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="距返航点0.00m"
+                    android:layout_below="@+id/iv_apron"
+                    android:layout_centerHorizontal="true"
+                    android:textColor="#ff000000"
+                    android:textSize="@dimen/x14" />
+
             <TextView
 
-                android:id="@+id/tv_heigth"
-                android:layout_alignParentRight="true"
-                android:layout_marginRight="@dimen/x135"
-                android:layout_marginTop="@dimen/x8"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#ffffffff"
-                android:textSize="@dimen/x18"
-                />
+                    android:id="@+id/tv_heigth"
+                    android:layout_alignParentRight="true"
+                    android:layout_marginRight="@dimen/x135"
+                    android:layout_marginTop="@dimen/x8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="#ffffffff"
+                    android:textSize="@dimen/x18" />
+
             <TextView
-                android:id="@+id/tv_vertical_speed"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentBottom="true"
-                android:layout_marginRight="@dimen/x135"
-                android:layout_marginBottom="@dimen/x8"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#ffffffff"
-                android:textSize="@dimen/x18"
-                />
+                    android:id="@+id/tv_vertical_speed"
+                    android:layout_alignParentRight="true"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginRight="@dimen/x135"
+                    android:layout_marginBottom="@dimen/x8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="#ffffffff"
+                    android:textSize="@dimen/x18" />
+
             <TextView
-                android:layout_alignParentRight="true"
-                android:layout_marginRight="@dimen/x30"
-                android:layout_marginTop="@dimen/x10"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="飞行高度"
-                android:textColor="@color/colorWhite"
-                android:textSize="@dimen/x15"
-                />
+                    android:layout_alignParentRight="true"
+                    android:layout_marginRight="@dimen/x30"
+                    android:layout_marginTop="@dimen/x10"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="飞行高度"
+                    android:textColor="@color/colorWhite"
+                    android:textSize="@dimen/x15" />
+
             <TextView
-                android:layout_alignParentRight="true"
-                android:layout_alignParentBottom="true"
-                android:layout_marginRight="@dimen/x30"
-                android:layout_marginBottom="@dimen/x10"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="垂直速度"
-                android:textColor="@color/colorWhite"
-                android:textSize="@dimen/x15"
-                />
+                    android:layout_alignParentRight="true"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginRight="@dimen/x30"
+                    android:layout_marginBottom="@dimen/x10"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="垂直速度"
+                    android:textColor="@color/colorWhite"
+                    android:textSize="@dimen/x15" />
         </RelativeLayout>
     </RelativeLayout>
 
     <dji.ux.widget.MapWidget
-        android:id="@+id/map_widget"
-        android:layout_width="@dimen/x257"
-        android:layout_height="@dimen/x154"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentBottom="true" />
-
+            android:id="@+id/map_widget"
+            android:layout_width="125dp"
+            android:layout_height="76dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentBottom="true" />
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/x79"
-        android:background="#60000000"
-        android:gravity="center_vertical">
-
+            android:visibility="invisible"
+            android:id="@+id/layout_map_tools"
+            android:orientation="horizontal"
+            android:layout_width="@dimen/x200"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="@dimen/x111"
+            android:layout_marginRight="@dimen/x41"
+            android:gravity="center"
+            android:layout_height="wrap_content">
         <ImageView
-            android:layout_width="@dimen/x132"
-            android:layout_height="@dimen/x54"
-            android:layout_marginLeft="15.5dp"
-            android:background="@mipmap/icon_logo" />
-
-        <View
-            android:layout_width="0.5dp"
-            android:layout_height="25dp"
-            android:layout_marginLeft="16.5dp"
-            android:layout_marginRight="16.5dp"
-            android:background="@color/button_normal" />
-
-        <dji.ux.widget.PreFlightStatusWidget
-            android:layout_width="120dp"
-            android:layout_height="18dp"
-            android:layout_gravity="center_vertical" />
-
-        <dji.ux.widget.FlightModeWidget
-            android:layout_marginLeft="5dp"
-            android:layout_width="103dp"
-            android:layout_height="22dp" />
-
-        <dji.ux.widget.GPSSignalWidget
-            android:layout_marginLeft="5dp"
-
-            android:layout_width="44dp"
-            android:layout_height="22dp" />
-
-        <dji.ux.widget.VisionWidget
-            android:layout_marginLeft="5dp"
-
-            android:layout_width="22dp"
-            android:layout_height="22dp" />
-
-        <dji.ux.widget.RemoteControlSignalWidget
-            android:layout_marginLeft="5dp"
-
-            android:layout_width="38dp"
-            android:layout_height="22dp" />
-
-        <dji.ux.widget.VideoSignalWidget
-            android:layout_marginLeft="5dp"
-
-            android:layout_width="38dp"
-            android:layout_height="22dp" />
-
-        <dji.ux.widget.WiFiSignalWidget
-            android:layout_marginLeft="5dp"
-
-            android:layout_width="32dp"
-            android:layout_height="25dp" />
-
-        <dji.ux.widget.BatteryWidget
-            android:layout_marginLeft="5dp"
-
-            android:layout_width="96dp"
-            android:layout_height="22dp"
-            custom:excludeView="singleVoltage" />
-
-        <dji.ux.widget.ConnectionWidget
-            android:layout_marginLeft="5dp"
-
-            android:layout_width="18dp"
-            android:layout_height="18dp"
-            android:layout_marginTop="3dp" />
+                android:id="@+id/iv_exclamatory"
+                android:background="@mipmap/icon_exclamatory"
+                android:layout_width="@dimen/x38"
+                android:layout_height="@dimen/x38"/>
+        <ImageView
+                android:id="@+id/iv_aircraft_position"
+                android:layout_marginLeft="@dimen/x14"
+                android:background="@mipmap/icon_aircraft_position"
+                android:layout_width="@dimen/x38"
+                android:layout_height="@dimen/x38"/>
+        <ImageView
+                android:id="@+id/iv_mode_switching"
+                android:layout_marginLeft="@dimen/x14"
+                android:background="@mipmap/icon_mode_switching"
+                android:layout_width="@dimen/x38"
+                android:layout_height="@dimen/x38"/>
+        <ImageView
+                android:id="@+id/iv_clear_track"
+                android:layout_marginLeft="@dimen/x14"
+                android:background="@mipmap/icon_clear_track"
+                android:layout_width="@dimen/x38"
+                android:layout_height="@dimen/x38"/>
     </LinearLayout>
 
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-        <Button
-            android:id="@+id/bt_login_account"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true"
-            android:text="登录"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/text_connection_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignBottom="@+id/text_product_info"
-            android:layout_centerInParent="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="50dp"
-            android:gravity="center"
-            android:text="Status: No Product Connected"
-            android:textColor="@android:color/black"
-            android:textSize="20dp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/text_plane_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_marginLeft="30dp"
-            android:layout_marginTop="40dp"
-            android:gravity="center"
-            android:text=""
-            android:textColor="@android:color/holo_red_light"
-            android:textSize="20dp"
-            android:textStyle="bold"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/text_product_info"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="60dp"
-            android:layout_marginRight="40dp"
-            android:gravity="center"
-            android:text="@string/product_information"
-            android:textColor="@android:color/black"
-            android:textSize="20dp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/text_net_rtk_state"
+    <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="100dp"
-            android:gravity="center"
-            android:text="---"
-            android:textColor="@android:color/black"
-            android:textSize="20dp"
-            android:textStyle="bold" />
+            android:layout_height="@dimen/x79"
+            android:background="#60000000"
+            android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/text_net_rtk_account_state"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="130dp"
-            android:gravity="center"
-            android:text="---"
-            android:textColor="@android:color/black"
-            android:textSize="20dp"
-            android:textStyle="bold" />
+        <ImageView
+                android:layout_width="@dimen/x132"
+                android:layout_height="@dimen/x54"
+                android:layout_marginLeft="15.5dp"
+                android:background="@mipmap/icon_logo" />
 
-        <TextView
-            android:id="@+id/text_wendu"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:gravity="right"
-            android:text="0"
-            android:textColor="@android:color/black"
-            android:textSize="20dp"
-            android:textStyle="bold" />
+        <View
+                android:layout_width="0.3dp"
+                android:layout_height="25dp"
+                android:layout_marginLeft="@dimen/x35"
+                android:layout_marginRight="@dimen/x35"
+                android:background="@color/white" />
 
-        <EditText
-            android:id="@+id/et_url"
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginTop="180dp"
-            android:background="@drawable/round_btn"
-            android:hint="这里写推流地址"
-            android:padding="5dp"
-            android:textColor="@color/colorWhite"
-            android:textSize="20dp" />
+        <com.compass.ux.view.CustomizedPreFlightWidget
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+        <com.compass.ux.view.CustomizeFlightModeWidget
+                android:layout_marginLeft="@dimen/x80"
+                android:layout_width="100dp"
+                android:layout_height="22dp" />
 
-        </LinearLayout>
+        <dji.ux.widget.GPSSignalWidget
+                android:layout_width="60dp"
+                android:layout_height="22dp" />
+<ImageView
+        android:id="@+id/iv_obstacle_avoidance"
+        android:layout_marginRight="@dimen/x36"
+        android:background="@mipmap/icon_center_control"
+        android:layout_width="@dimen/x28"
+        android:layout_height="@dimen/x28"/>
 
-        <Button
-            android:id="@+id/btn_open"
-            android:layout_width="100dp"
-            android:layout_height="55dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginTop="250dp"
-            android:background="@drawable/round_btn"
-            android:text="takephoto"
-            android:textColor="@color/colorWhite"
-            android:textSize="20dp" />
+        <dji.ux.widget.RemoteControlSignalWidget
+                android:layout_width="60dp"
+                android:layout_height="22dp" />
 
+        <dji.ux.widget.VideoSignalWidget
+                android:layout_width="60dp"
+                android:layout_height="22dp" />
 
-        <SeekBar
-            android:id="@+id/seek_bar_volume"
-            android:layout_width="150dp"
-            android:layout_height="30dp"
-            android:layout_alignParentRight="true"
-            android:layout_marginTop="250dp"
-            android:layout_marginRight="30dp"
-            android:max="100"
-            android:maxHeight="2dp"
-            android:progress="30"
-            android:thumb="@drawable/seek_bar" />
+        <com.compass.ux.view.BatteryWidget
+                android:layout_width="96dp"
+                android:layout_height="22dp"
+                 />
 
-        <Button
-            android:id="@+id/btn_voice_end"
-            android:layout_width="100dp"
-            android:layout_height="55dp"
-            android:layout_below="@+id/seek_bar_volume"
-            android:layout_alignParentRight="true"
-            android:layout_marginTop="10dp"
-            android:layout_marginRight="30dp"
-            android:background="@drawable/round_btn"
-            android:text="关闭D-RTK"
-            android:textColor="@color/colorWhite"
-            android:textSize="20dp" />
+    </LinearLayout>
 
-        <Button
-            android:id="@+id/btn_download"
-            android:layout_width="100dp"
-            android:layout_height="55dp"
-            android:layout_alignParentRight="true"
-            android:layout_marginTop="350dp"
-            android:layout_marginRight="30dp"
-            android:background="@drawable/round_btn"
-            android:text="上传测试"
-            android:textColor="@color/colorWhite"
-            android:textSize="20dp"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/btn_gaode"
-            android:layout_width="100dp"
-            android:layout_height="55dp"
-            android:layout_below="@+id/btn_open"
-            android:layout_marginLeft="20dp"
-            android:layout_marginTop="30dp"
-            android:background="@drawable/round_btn"
-            android:text="循环播放开启"
-            android:textColor="@color/colorWhite"
-            android:textSize="20dp"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/btn_login"
-            android:layout_width="100dp"
-            android:layout_height="55dp"
-            android:layout_below="@+id/btn_gaode"
-            android:layout_marginLeft="20dp"
-            android:layout_marginTop="30dp"
-            android:background="@drawable/round_btn"
-            android:text="停止循环播放"
-            android:textColor="@color/colorWhite"
-            android:textSize="20dp"
-            android:visibility="gone" />
-
-
-        <Button
-            android:id="@+id/btn_simulator"
-            android:layout_width="100dp"
-            android:layout_height="55dp"
-            android:layout_below="@+id/btn_open"
-            android:layout_alignParentRight="true"
-            android:layout_marginTop="30dp"
-            android:layout_marginRight="30dp"
-            android:background="@drawable/round_btn"
-            android:text="开启D-RTK"
-            android:textColor="@color/colorWhite"
-            android:textSize="20dp" />
-
-        <EditText
-            android:id="@+id/et_zoom"
-            android:layout_width="100dp"
-            android:layout_height="55dp"
-            android:layout_below="@+id/btn_simulator"
-            android:layout_alignParentRight="true"
-            android:layout_marginLeft="20dp"
-            android:layout_marginTop="30dp"
-            android:layout_marginRight="30dp"
-            android:background="@drawable/round_btn"
-            android:textColor="@color/colorWhite"
-            android:textSize="20dp" />
-
-        <Button
-            android:id="@+id/btn_stop_live_show"
-            android:layout_width="100dp"
-            android:layout_height="55dp"
-            android:layout_below="@+id/btn_start_live_show"
-            android:layout_marginLeft="20dp"
-            android:layout_marginTop="30dp"
-            android:layout_marginRight="30dp"
-            android:background="@drawable/round_btn"
-            android:text="停止推流"
-            android:textColor="@color/colorWhite"
-            android:textSize="20dp" />
-
-        <Button
-            android:id="@+id/btn_start_live_show"
-            android:layout_width="100dp"
-            android:layout_height="55dp"
-            android:layout_below="@+id/btn_open"
-            android:layout_marginLeft="20dp"
-            android:layout_marginTop="30dp"
-            android:layout_marginRight="30dp"
-            android:background="@drawable/round_btn"
-            android:text="开始推流"
-            android:textColor="@color/colorWhite"
-            android:textSize="20dp" />
-
-        <TextView
-            android:id="@+id/textView2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="30dp"
-            android:text="@string/sdk_version"
-            android:textSize="15dp"
-            android:visibility="gone" />
-
-
-    </RelativeLayout>
 </RelativeLayout>

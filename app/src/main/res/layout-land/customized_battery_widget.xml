@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="@dimen/x80"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:layout_height="match_parent"
+        tools:ignore="MissingDefaultResource">
+
+    <TextView
+            android:id="@+id/textview_battery_value"
+            android:layout_width="40dp"
+            android:layout_height="22dp"
+            android:text="0%"
+            android:gravity="right"
+            android:textAlignment="gravity"
+            android:textColor="@color/light_gray"
+            android:textSize="14dp"
+            android:layout_gravity="left" />
+
+    <ImageView
+            android:layout_toRightOf="@+id/textview_battery_value"
+            android:id="@+id/imageview_battery_icon"
+            android:layout_width="16dp"
+            android:layout_height="22dp"
+            android:layout_gravity="right"
+            android:src="@mipmap/battery_error" />
+
+</RelativeLayout>
