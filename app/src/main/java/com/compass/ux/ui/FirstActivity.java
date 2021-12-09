@@ -20,7 +20,7 @@ import android.widget.Toast;
 import com.compass.ux.app.ApronApp;
 import com.compass.ux.utils.FileUtils;
 import com.google.gson.Gson;
-import com.taobao.sophix.SophixManager;
+//import com.taobao.sophix.SophixManager;
 import com.yanzhenjie.permission.AndPermission;
 
 import java.io.File;
@@ -33,9 +33,7 @@ import static com.compass.ux.app.ApronApp.HAVE_Permission;
 public class FirstActivity extends AppCompatActivity {
     private static final String TAG = FirstActivity.class.getName();
     File file = new File(Environment.getExternalStorageDirectory().getPath() + "/Shebei");
-    private List<String> missingPermission = new ArrayList<>();
     private static final int REQUEST_PERMISSION_CODE = 12345;
-    private AtomicBoolean isRegistrationInProgress = new AtomicBoolean(false);
     private static final String[] REQUIRED_PERMISSION_LIST = new String[]{
             Manifest.permission.VIBRATE,
             Manifest.permission.INTERNET,
@@ -60,13 +58,6 @@ public class FirstActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_first);
-//        checkAndRequestPermissions();
-//        if (HAVE_Permission) {
-//            Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
-//            startActivity(intent);
-//            finish();
-//        } else {
             AndPermission.with(this)
                     .runtime()
                     .permission(REQUIRED_PERMISSION_LIST)
@@ -81,8 +72,6 @@ public class FirstActivity extends AppCompatActivity {
                         finish();
                     })
                     .start();
-//        }
-
     }
 
 
@@ -113,58 +102,5 @@ public class FirstActivity extends AppCompatActivity {
 
     }
 
-
-    /**
-     * Checks if there is any missing permissions, and
-     * requests runtime permission if needed.
-     */
-    private void checkAndRequestPermissions() {
-        // Check for permissions
-        for (String eachPermission : REQUIRED_PERMISSION_LIST) {
-            if (ContextCompat.checkSelfPermission(this, eachPermission) != PackageManager.PERMISSION_GRANTED) {
-                missingPermission.add(eachPermission);
-            }
-        }
-        // Request for missing permissions
-        if (!missingPermission.isEmpty() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            ActivityCompat.requestPermissions(this,
-                    missingPermission.toArray(new String[missingPermission.size()]),
-                    REQUEST_PERMISSION_CODE);
-        } else {
-//            havePermission = true;
-
-            if (TextUtils.isEmpty(ApronApp.EQUIPMENT_ID)) {
-                String mobileNum = FileUtils.readString(file.getAbsolutePath(), "utf-8");
-                if (!TextUtils.isEmpty(mobileNum)) {
-                    ApronApp.EQUIPMENT_ID = mobileNum;
-                    Log.d("FileUtils", "FileUtils=" + mobileNum);
-                    Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
-                    startActivity(intent);
-                } else {
-                    //每次运行在新无人机上，需要修改设备编号
-//                    String filePath = FileUtils.createIfNotExist(Environment.getExternalStorageDirectory().getPath() + "/Shebei");
-//                    FileUtils.writeString(filePath,"Mobile_01","utf-8");
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                Thread.sleep(10000);
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Toast.makeText(getApplicationContext(), "配置文件为空,请去添加", Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-                                finish();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }).start();
-                }
-            }
-        }
-
-    }
 
 }

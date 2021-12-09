@@ -65,15 +65,7 @@ public class HeartBeatClientHandler extends ChannelInboundHandlerAdapter {
 
   }
 
-//  public static void main(String[] args) {
-//
-//    Communication communication=new Communication();
-//    communication.setMethod("hello");
-//
-//    System.out.println(communication.coverProtoMessage());
-//
-//
-//  }
+
   @Override
   public void channelInactive(ChannelHandlerContext ctx) {
     NettyClient.getInstance().setConnectStatus(false);

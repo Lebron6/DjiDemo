@@ -4,6 +4,16 @@ package com.compass.ux.app;
  * Created by xhf on 2020-06-18
  */
 public class Constant {
+    //打开相册预览，返回相册预览列表Json
+    public static final String PHOTO_ALBUM="photoAlbum";
+    //关闭相册预览
+    public static final String EXIT_PLAY_BACK="exitPlayback";
+    //根据文件名下载相片
+    public static final String DOWNLOAD_PHOTO_BY_NAME="downloadPhotoByName";
+    //根据文件名删除相片
+    public static final String DELETE_PHOTO="deletePhoto";
+    //根据文件名获取图片预览图
+    public static final String GET_PREVIEW_BY_NAME="getPreviewByName";
     public static final String MISSION_UPDATE_MODE="missionUpdateMode";
     public static final String MISSIONWAYPOINT_SHOUTTING="missionWaypoint";
 
@@ -109,10 +119,9 @@ public class Constant {
     public static final String SET_NSCS="setNetworkServiceCoordinateSystem";
     public static final String SET_RTK_NETWORK="setRTKNetwork";
     public static final String LIVE_PATH="livePath";
-    public static final String PITCH_RANGE_EXTENSION="pitchRangeExtension";
+    public static final String PITCH_RANGE_EXTENSION="setPitchRangeExtension";
     public static final String SET_FREQUENCY_BAND="setFrequencyBand";
     public static final String SET_GIMBAL_MODE="setGimbalMode";
-    public static final String CAPTURE="capture";
     public static final String SEND_VOICE_COMMAND = "sendVoiceCommand";
     public static final String END_VOICE = "endVoice";
     public static final String SEND_VOICE_MP3 = "sendVoiceMP3";

@@ -113,6 +113,7 @@ public class NettyClient {
         }
 //        responseJson+= Constant.LINE_SEPARATOR;
         if (futureListener == null) {
+
             channel.writeAndFlush(vo.coverProtoMessage()).addListener(new FutureListener() {
                 @Override
                 public void success() {

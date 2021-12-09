@@ -21,7 +21,7 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -137,8 +137,9 @@ dependencies {
     implementation 'com.google.protobuf:protobuf-java-util:3.8.0'
 
     //阿里热更新
-    api 'com.aliyun.ams:alicloud-android-hotfix:3.2.15'
+//    api 'com.aliyun.ams:alicloud-android-hotfix:3.2.15'
     implementation 'com.android.support:multidex:1.0.3'
+    implementation 'com.orhanobut:logger:2.1.1'
 
 
 }

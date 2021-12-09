@@ -5,7 +5,10 @@ import android.content.Context;
 
 import com.amap.api.maps.CoordinateConverter;
 import com.amap.api.maps.model.LatLng;
+import com.compass.ux.async.Log;
 
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -189,6 +192,41 @@ public class MapConvertUtils {
     double[] result = MapConvertUtils.getDJILatLng(31.306237, 120.665986);
     System.out.println(result[0]+"   "+result[1]);
   }
+  /**
+   * 给定一个圆心的经纬度和半径，求圆弧上的坐标
+   * @param centerPoint 经纬度坐标
+   * @param radius 半径
+   */
+  public static List<LatLng> getCircleAxis(Double[] centerPoint, int radius) {
+    Double X; //经度
+    Double Y; //纬度
+    double r = 6371000.79;
+    List<LatLng> optionsAxis = new ArrayList<>();
+    int numpoints = 360; // 角度
+    double phase = 2 * Math.PI / numpoints;
+    Log.e("phase:",phase+"");
+    //画图
+    for (int i = 0; i < numpoints; i++) {
+      /**
+       * 计算坐标点
+       */
+      double dx = (radius * Math.cos(i * phase));
+      double dy = (radius * Math.sin(i * phase)); //乘以1.6 椭圆比例
+
+      /**
+       * 转换成经纬度
+       */
+      double dlng = dx / (r * Math.cos(centerPoint[1] * Math.PI / 180) * Math.PI / 180); //纬度的差值
+      double dlat = dy / (r * Math.PI / 180);  // 经度的差值
+
+      X = centerPoint[1] + dlat;
+      Y = centerPoint[0] + dlng;
+      optionsAxis.add(new LatLng(Y,X));
+    }
+    return optionsAxis;
+  }
+
+
 
 
 }

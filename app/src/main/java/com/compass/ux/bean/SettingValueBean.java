@@ -30,6 +30,17 @@ public class SettingValueBean {
     //上避障
     private boolean upwardsAvoidance;
 
+    //云台模式
+    private int gimbalMode=0;
+
+    public int isGimbalMode() {
+        return gimbalMode;
+    }
+
+    public void setGimbalMode(int gimbalMode) {
+        this.gimbalMode = gimbalMode;
+    }
+
     //下避障
     private boolean landingProtection;
     //    上避障安全距离范围为[1.0，10]
@@ -321,6 +332,24 @@ public class SettingValueBean {
         //是否连接
         private int isConnectOne;
         private int isConnectTwo;
+        //电池1剩余百分比
+        private int persentOne;
+        //电池2剩余百分比
+        private int persentTwo;
+        //电池1电压
+        private String voltageOne;
+        //电池2电压
+        private String voltageTwo;
+        //电池1电压组
+        private List<Float> battery_list_one;
+        //温度1
+        private float battery_temperature_one;
+        //温度2
+        private float battery_temperature_two;
+        //循环次数1
+        private int battery_discharges_one;
+        //循环次数2
+        private int battery_discharges_two;
 
         public int getIsConnectOne() {
             return isConnectOne;
@@ -336,47 +365,6 @@ public class SettingValueBean {
 
         public void setIsConnectTwo(int isConnectTwo) {
             this.isConnectTwo = isConnectTwo;
-        }
-
-        //电池1剩余百分百
-        private int persentOne;
-        //电池2剩余百分百
-        private int persentTwo;
-        //电池1电压
-        private String voltageOne;
-        //电池2电压
-        private String voltageTwo;
-        //电池1电压组
-        private List<Float> battery_list_one;
-        //电池2电压组
-        private List<Float> battery_list_two;
-        //电池1电量组
-        private List<String> battery_list_per_one;
-        //电池2电量组
-        private List<String> battery_list_per_two;
-        //温度1
-        private float battery_temperature_one;
-        //温度2
-        private float battery_temperature_two;
-        //循环次数1
-        private int battery_discharges_one;
-        //循环次数2
-        private int battery_discharges_two;
-
-        public List<String> getBattery_list_per_one() {
-            return battery_list_per_one;
-        }
-
-        public void setBattery_list_per_one(List<String> battery_list_per_one) {
-            this.battery_list_per_one = battery_list_per_one;
-        }
-
-        public List<String> getBattery_list_per_two() {
-            return battery_list_per_two;
-        }
-
-        public void setBattery_list_per_two(List<String> battery_list_per_two) {
-            this.battery_list_per_two = battery_list_per_two;
         }
 
         public int getBattery_discharges_one() {
@@ -419,13 +407,6 @@ public class SettingValueBean {
             this.battery_list_one = battery_list_one;
         }
 
-        public List<Float> getBattery_list_two() {
-            return battery_list_two;
-        }
-
-        public void setBattery_list_two(List<Float> battery_list_two) {
-            this.battery_list_two = battery_list_two;
-        }
 
         public int getPersentOne() {
             return persentOne;

@@ -50,8 +50,8 @@ public class FPVDemoApplication extends Application {
     }
 
     /**
-     * This function is used to get the instance of DJIBaseProduct.
-     * If no product is connected, it returns null.
+     * This function is used to get the instance of DJIBaseProduct. If no product is connected, it
+     * returns null.
      */
     public static synchronized BaseProduct getProductInstance() {
         if (null == mProduct) {
@@ -75,7 +75,7 @@ public class FPVDemoApplication extends Application {
             //Listens to the SDK registration result
             @Override
             public void onRegister(DJIError djiError) {
-                if(djiError == DJISDKError.REGISTRATION_SUCCESS) {
+                if (djiError == DJISDKError.REGISTRATION_SUCCESS) {
                     DJISDKManager.getInstance().startConnectionToProduct();
                 } else {
                     Handler handler = new Handler(Looper.getMainLooper());
@@ -96,6 +96,7 @@ public class FPVDemoApplication extends Application {
                 Log.d(TAG, "onProductDisconnect");
                 notifyStatusChange();
             }
+
             @Override
             public void onProductConnect(BaseProduct baseProduct) {
                 Log.d(TAG, String.format("onProductConnect newProduct:%s", baseProduct));
@@ -115,25 +116,16 @@ public class FPVDemoApplication extends Application {
 
                         @Override
                         public void onConnectivityChange(boolean isConnected) {
-                            Log.d("航线动作-EU", "onComponentConnectivityChanged: " + isConnected);
                             notifyStatusChange();
                         }
                     });
                 }
-
-                Log.d("航线动作-EU",
-                        String.format("onComponentChange key:%s, oldComponent:%s, newComponent:%s",
-                                componentKey,
-                                oldComponent,
-                                newComponent));
                 notifyStatusChange();
-                Log.e("mg航点-EU","onComponentChange");
-
             }
 
             @Override
             public void onInitProcess(DJISDKInitEvent djisdkInitEvent, int i) {
-                Log.d("航线动作-EU",i + "");
+
             }
 
             @Override

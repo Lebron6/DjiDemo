@@ -82,4 +82,8 @@
         <item name="android:layout_marginBottom">30dp</item>
     </style>
 
+    <declare-styleable name="CircleViewByImage">
+        <attr name="foreground" format="reference" />
+        <attr name="background" format="reference" />
+    </declare-styleable>
 </resources>

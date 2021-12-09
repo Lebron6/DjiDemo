@@ -33,7 +33,7 @@ public class WebInitializationBean {
     //获取左右俯仰角
     private String horizontalAngle;
     //获取上下俯仰角
-    private String pitchAngle;
+    private String pitchAngle="0";
     //喊话
      private WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean voiceBean;
 

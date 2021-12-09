@@ -2,89 +2,14 @@ package com.compass.ux.bean;
 
 import java.util.List;
 
-/**
- * Created by xhf
- * on 2021-01-19 14:23
- * https://xiaozhuanlan.com/topic/9718620354
- */
-//{
-//        "speed":"5",
-//        "altitude":"120",
-//        "flightPathMode":"",
-//        "wayPoints":[
-//        {
-//        "speed":"5",
-//        "altitude":"120",
-//        "latitude":"31.32584",
-//        "turnMode":"-1",
-//        "longitude":"120.547518",
-//        "flightPathMode":"",
-//        "headingMode":""
-//        }
-//        ],
-//        "headingMode":"0",
-//        "finishedAction":"1",
-//        "action":[
-//        {
-//        "trigger":{
-//        "triggerType":"1",
-//        "reachPointParam":{
-//        "startIndex":"1",
-//        "autoTerminateCount":"1"
-//        },
-//        "associateParam":{
-//        "associateActionID":"1",
-//        "associateType":"1",
-//        "waitingTime":"1"
-//        },
-//        "trajectoryParam":{
-//        "startIndex":"1",
-//        "endIndex":"1"
-//        },
-//        "intervalTriggerParam":{
-//        "startIndex":"1",
-//        "type":"1",
-//        "interval":"1"
-//        }
-//        }
-//        },
-//        {
-//        "actuator":{
-//        "actuatorType":"1",
-//        "gimbalActuatorParam":{
-//        "operationType":"1",
-//        "pitch":"1",
-//        "yaw":"1",
-//        "time":"1"
-//        },
-//        "cameraOperationType":{
-//        "operationType":"1",
-//        "time":"1"
-//        },
-//        "aircraftControlType":{
-//        "operationType":"1",
-//        "startFly":"1",
-//        "direction":"1",
-//        "yawAngle":"1"
-//        }
-//        }
-//        }
-//        ]
-//        }
 public class WayPointsV2Bean {
-    /**
-     * speed : 5
-     * altitude : 120
-     * flightPathMode :
-     * wayPoints : [{"speed":"5","altitude":"120","latitude":"31.32584","turnMode":"-1","longitude":"120.547518","flightPathMode":"","headingMode":"","wayPointAction":[{"actionType":"","yawAngle":"","direction":"","pitch":"","yaw":"","focalLength":"","waitingTime":""}]}]
-     * headingMode : 0
-     * finishedAction : 1
-     */
-
+    //飞行速度
     private String speed;
-    private String altitude;
-    private String flightPathMode;
-    private String headingMode;
+    //航线结束动作0 NO_ACTION 不会采取进一步行动。可以通过遥控器控制飞行器。
+    //1 GO_HOME 任务完成后回家。飞行器距离返航点20米以内直接降落。
+    //2 AUTO_LAND 飞行器将自动降落在最后一个航点。
+    //3 GO_FIRST_WAYPOINT 飞行器将返回第一个航点并悬停。
+    //4 CONTINUE_UNTIL_STOP 当飞机到达最终航路点时，它会悬停而不结束任务。操纵杆仍可用于将飞机沿其先前的航路点拉回。此任务结束的唯一方法是调用 stopMission。
     private String finishedAction;
     private List<WayPointsBean> wayPoints;
 
@@ -96,29 +21,6 @@ public class WayPointsV2Bean {
         this.speed = speed;
     }
 
-    public String getAltitude() {
-        return altitude;
-    }
-
-    public void setAltitude(String altitude) {
-        this.altitude = altitude;
-    }
-
-    public String getFlightPathMode() {
-        return flightPathMode;
-    }
-
-    public void setFlightPathMode(String flightPathMode) {
-        this.flightPathMode = flightPathMode;
-    }
-
-    public String getHeadingMode() {
-        return headingMode;
-    }
-
-    public void setHeadingMode(String headingMode) {
-        this.headingMode = headingMode;
-    }
 
     public String getFinishedAction() {
         return finishedAction;
@@ -136,49 +38,32 @@ public class WayPointsV2Bean {
         this.wayPoints = wayPoints;
     }
 
-    @Override
-    public String toString() {
-        return "WayPointsV2Bean{" +
-                "speed='" + speed + '\'' +
-                ", altitude='" + altitude + '\'' +
-                ", flightPathMode='" + flightPathMode + '\'' +
-                ", headingMode='" + headingMode + '\'' +
-                ", finishedAction='" + finishedAction + '\'' +
-                ", wayPoints=" + wayPoints +
-                '}';
-    }
 
     public static class WayPointsBean {
         /**
-         * speed : 5
-         * altitude : 120
-         * latitude : 31.32584
-         * turnMode : -1
-         * longitude : 120.547518
-         * flightPathMode :
-         * headingMode :
-         * hasWaitingTime;
-         * hasVoice
-         * wayPointAction : [{"actionType":"","yawAngle":"","direction":"","pitch":"","yaw":"","focalLength":"","waitingTime":""}]
+         * speed : 5 altitude : 120 latitude : 31.32584 turnMode : -1 longitude : 120.547518
+         * flightPathMode : headingMode : hasWaitingTime; hasVoice wayPointAction :
+         * [{"actionType":"","yawAngle":"","direction":"","pitch":"","yaw":"","focalLength":"","waitingTime":""}]
          */
-        private String hasWaitingTime;
-        private boolean hasVoice;
+        //自动飞行速度(0-15)
         private String speed;
+        //航点高度(5-500)
         private String altitude;
+        //航点经纬度
         private String latitude;
-        private String turnMode;
         private String longitude;
+        //转弯模式：0飞机的航向顺时针旋转。1飞机的航向逆时针旋转。
+        private String turnMode;
+        //飞行路线模式：0飞行器将沿曲线前往航点并飞越航点。1飞行器将沿曲线前往航点并停在航点处。2飞行器将沿直线前往航点并停在航点处。3飞行器会沿着平滑的曲线从上一个航点飞到下一个航点，而不会在这个航点停下来。4在任务中，飞机将沿直线前往第一个航点。这仅对第一个航点有效。5在任务中，飞机将沿直线前往第一个航点。这仅对第一个航点有效。
         private String flightPathMode;
+        //航向模式：0飞机的航向将始终与飞行方向一致。1飞行器航向将设置为到达第一个航点时的航向。在到达第一个航点之前，可以通过遥控器控制飞行器的航向。当飞机到达第一个航点时，其航向将被固定。2飞行器在任务中的航向可以通过遥控器进行控制。3在任务中，飞机的航向会动态变化并适应下一个航点设置的航向。4到达第一个航路点后，飞机将始终朝向兴趣点。5跟随云台视角
         private String headingMode;
 
         private List<WayPointActionBean> wayPointAction;
 
         @Override
         public String toString() {
-            return "WayPointsBean{" +
-                    "hasWaitingTime=" + hasWaitingTime +
-                    ", hasVoice=" + hasVoice +
-                    ", speed='" + speed + '\'' +
+            return "WayPointsBean{" + "speed='" + speed + '\'' +
                     ", altitude='" + altitude + '\'' +
                     ", latitude='" + latitude + '\'' +
                     ", turnMode='" + turnMode + '\'' +
@@ -187,23 +72,6 @@ public class WayPointsV2Bean {
                     ", headingMode='" + headingMode + '\'' +
                     ", wayPointAction=" + wayPointAction +
                     '}';
-        }
-
-
-        public String getHasWaitingTime() {
-            return hasWaitingTime;
-        }
-
-        public void setHasWaitingTime(String hasWaitingTime) {
-            this.hasWaitingTime = hasWaitingTime;
-        }
-
-        public boolean isHasVoice() {
-            return hasVoice;
-        }
-
-        public void setHasVoice(boolean hasVoice) {
-            this.hasVoice = hasVoice;
         }
 
         public String getSpeed() {
@@ -272,23 +140,23 @@ public class WayPointsV2Bean {
 
         public static class WayPointActionBean {
             /**
-             * actionType :
-             * yawAngle :
-             * direction :
-             * pitch :
-             * yaw :
-             * focalLength :
-             * waitingTime :
+             * actionType : yawAngle : direction : pitch : yaw : focalLength : waitingTime :
              */
-
+            //动作类型 0悬停 1继续飞行 2旋转 3云台 4变焦 5拍照 6开始录像 7结束录像
             private String actionType;
+            //飞机旋转角度(0-180)
             private String yawAngle;
+            //航向：0飞机的航向顺时针旋转 1飞机的航向逆时针旋转。
             private String direction;
+            //云台垂直角度(绝对值-30-90)
             private String pitch;
-            private String yaw;
+            //焦距的整数值
             private String focalLength;
+            //悬停时间
             private String waitingTime;
+            //喊话实体
             private VoiceBean voice;
+
             public VoiceBean getVoice() {
                 return voice;
             }
@@ -296,6 +164,7 @@ public class WayPointsV2Bean {
             public void setVoice(VoiceBean voice) {
                 this.voice = voice;
             }
+
             public String getActionType() {
                 return actionType;
             }
@@ -328,13 +197,6 @@ public class WayPointsV2Bean {
                 this.pitch = pitch;
             }
 
-            public String getYaw() {
-                return yaw;
-            }
-
-            public void setYaw(String yaw) {
-                this.yaw = yaw;
-            }
 
             public String getFocalLength() {
                 return focalLength;
@@ -359,14 +221,13 @@ public class WayPointsV2Bean {
                         ", yawAngle='" + yawAngle + '\'' +
                         ", direction='" + direction + '\'' +
                         ", pitch='" + pitch + '\'' +
-                        ", yaw='" + yaw + '\'' +
                         ", focalLength='" + focalLength + '\'' +
                         ", waitingTime='" + waitingTime + '\'' +
                         ", voice=" + voice +
                         '}';
             }
 
-            public static class VoiceBean{
+            public static class VoiceBean {
                 private String flag;
                 private String word;
                 private String volume;
@@ -438,527 +299,5 @@ public class WayPointsV2Bean {
         }
 
     }
-
-
-//    /**
-//     * speed : 5
-//     * altitude : 120
-//     * flightPathMode :
-//     * wayPoints : [{"speed":"5","altitude":"120","latitude":"31.32584","turnMode":"-1","longitude":"120.547518","flightPathMode":"","headingMode":""}]
-//     * headingMode : 0
-//     * finishedAction : 1
-//     * action : [{"trigger":{"triggerType":"1","reachPointParam":{"startIndex":"1","autoTerminateCount":"1"},"associateParam":{"associateActionID":"1","associateType":"1","waitingTime":"1"},"trajectoryParam":{"startIndex":"1","endIndex":"1"},"intervalTriggerParam":{"startIndex":"1","type":"1","interval":"1"}}},{"actuator":{"actuatorType":"1","gimbalActuatorParam":{"operationType":"1","pitch":"1","yaw":"1","time":"1"},"cameraOperationType":{"operationType":"1","time":"1"},"aircraftControlType":{"operationType":"1","startFly":"1","direction":"1","yawAngle":"1"}}}]
-//     */
-//
-//    private String speed;
-//    private String altitude;
-//    private String flightPathMode;
-//    private String headingMode;
-//    private String finishedAction;
-//    private List<WayPointsBean> wayPoints;
-//    private List<ActionBean> action;
-//
-//    public String getSpeed() {
-//        return speed;
-//    }
-//
-//    public void setSpeed(String speed) {
-//        this.speed = speed;
-//    }
-//
-//    public String getAltitude() {
-//        return altitude;
-//    }
-//
-//    public void setAltitude(String altitude) {
-//        this.altitude = altitude;
-//    }
-//
-//    public String getFlightPathMode() {
-//        return flightPathMode;
-//    }
-//
-//    public void setFlightPathMode(String flightPathMode) {
-//        this.flightPathMode = flightPathMode;
-//    }
-//
-//    public String getHeadingMode() {
-//        return headingMode;
-//    }
-//
-//    public void setHeadingMode(String headingMode) {
-//        this.headingMode = headingMode;
-//    }
-//
-//    public String getFinishedAction() {
-//        return finishedAction;
-//    }
-//
-//    public void setFinishedAction(String finishedAction) {
-//        this.finishedAction = finishedAction;
-//    }
-//
-//    public List<WayPointsBean> getWayPoints() {
-//        return wayPoints;
-//    }
-//
-//    public void setWayPoints(List<WayPointsBean> wayPoints) {
-//        this.wayPoints = wayPoints;
-//    }
-//
-//    public List<ActionBean> getAction() {
-//        return action;
-//    }
-//
-//    public void setAction(List<ActionBean> action) {
-//        this.action = action;
-//    }
-//
-//    public static class WayPointsBean {
-//        /**
-//         * speed : 5
-//         * altitude : 120
-//         * latitude : 31.32584
-//         * turnMode : -1
-//         * longitude : 120.547518
-//         * flightPathMode :
-//         * headingMode :
-//         */
-//
-//        private String speed;
-//        private String altitude;
-//        private String latitude;
-//        private String turnMode;
-//        private String longitude;
-//        private String flightPathMode;
-//        private String headingMode;
-//
-//        public String getSpeed() {
-//            return speed;
-//        }
-//
-//        public void setSpeed(String speed) {
-//            this.speed = speed;
-//        }
-//
-//        public String getAltitude() {
-//            return altitude;
-//        }
-//
-//        public void setAltitude(String altitude) {
-//            this.altitude = altitude;
-//        }
-//
-//        public String getLatitude() {
-//            return latitude;
-//        }
-//
-//        public void setLatitude(String latitude) {
-//            this.latitude = latitude;
-//        }
-//
-//        public String getTurnMode() {
-//            return turnMode;
-//        }
-//
-//        public void setTurnMode(String turnMode) {
-//            this.turnMode = turnMode;
-//        }
-//
-//        public String getLongitude() {
-//            return longitude;
-//        }
-//
-//        public void setLongitude(String longitude) {
-//            this.longitude = longitude;
-//        }
-//
-//        public String getFlightPathMode() {
-//            return flightPathMode;
-//        }
-//
-//        public void setFlightPathMode(String flightPathMode) {
-//            this.flightPathMode = flightPathMode;
-//        }
-//
-//        public String getHeadingMode() {
-//            return headingMode;
-//        }
-//
-//        public void setHeadingMode(String headingMode) {
-//            this.headingMode = headingMode;
-//        }
-//    }
-//
-//    public static class ActionBean {
-//        /**
-//         * trigger : {"triggerType":"1","reachPointParam":{"startIndex":"1","autoTerminateCount":"1"},"associateParam":{"associateActionID":"1","associateType":"1","waitingTime":"1"},"trajectoryParam":{"startIndex":"1","endIndex":"1"},"intervalTriggerParam":{"startIndex":"1","type":"1","interval":"1"}}
-//         * actuator : {"actuatorType":"1","gimbalActuatorParam":{"operationType":"1","pitch":"1","yaw":"1","time":"1"},"cameraOperationType":{"operationType":"1","time":"1"},"aircraftControlType":{"operationType":"1","startFly":"1","direction":"1","yawAngle":"1"}}
-//         */
-//
-//        private TriggerBean trigger;
-//        private ActuatorBean actuator;
-//
-//        public TriggerBean getTrigger() {
-//            return trigger;
-//        }
-//
-//        public void setTrigger(TriggerBean trigger) {
-//            this.trigger = trigger;
-//        }
-//
-//        public ActuatorBean getActuator() {
-//            return actuator;
-//        }
-//
-//        public void setActuator(ActuatorBean actuator) {
-//            this.actuator = actuator;
-//        }
-//
-//        public static class TriggerBean {
-//            /**
-//             * triggerType : 1
-//             * reachPointParam : {"startIndex":"1","autoTerminateCount":"1"}
-//             * associateParam : {"associateActionID":"1","associateType":"1","waitingTime":"1"}
-//             * trajectoryParam : {"startIndex":"1","endIndex":"1"}
-//             * intervalTriggerParam : {"startIndex":"1","type":"1","interval":"1"}
-//             */
-//
-//            private String triggerType;
-//            private ReachPointParamBean reachPointParam;
-//            private AssociateParamBean associateParam;
-//            private TrajectoryParamBean trajectoryParam;
-//            private IntervalTriggerParamBean intervalTriggerParam;
-//
-//            public String getTriggerType() {
-//                return triggerType;
-//            }
-//
-//            public void setTriggerType(String triggerType) {
-//                this.triggerType = triggerType;
-//            }
-//
-//            public ReachPointParamBean getReachPointParam() {
-//                return reachPointParam;
-//            }
-//
-//            public void setReachPointParam(ReachPointParamBean reachPointParam) {
-//                this.reachPointParam = reachPointParam;
-//            }
-//
-//            public AssociateParamBean getAssociateParam() {
-//                return associateParam;
-//            }
-//
-//            public void setAssociateParam(AssociateParamBean associateParam) {
-//                this.associateParam = associateParam;
-//            }
-//
-//            public TrajectoryParamBean getTrajectoryParam() {
-//                return trajectoryParam;
-//            }
-//
-//            public void setTrajectoryParam(TrajectoryParamBean trajectoryParam) {
-//                this.trajectoryParam = trajectoryParam;
-//            }
-//
-//            public IntervalTriggerParamBean getIntervalTriggerParam() {
-//                return intervalTriggerParam;
-//            }
-//
-//            public void setIntervalTriggerParam(IntervalTriggerParamBean intervalTriggerParam) {
-//                this.intervalTriggerParam = intervalTriggerParam;
-//            }
-//
-//            public static class ReachPointParamBean {
-//                /**
-//                 * startIndex : 1
-//                 * autoTerminateCount : 1
-//                 */
-//
-//                private String startIndex;
-//                private String autoTerminateCount;
-//
-//                public String getStartIndex() {
-//                    return startIndex;
-//                }
-//
-//                public void setStartIndex(String startIndex) {
-//                    this.startIndex = startIndex;
-//                }
-//
-//                public String getAutoTerminateCount() {
-//                    return autoTerminateCount;
-//                }
-//
-//                public void setAutoTerminateCount(String autoTerminateCount) {
-//                    this.autoTerminateCount = autoTerminateCount;
-//                }
-//            }
-//
-//            public static class AssociateParamBean {
-//                /**
-//                 * associateActionID : 1
-//                 * associateType : 1
-//                 * waitingTime : 1
-//                 */
-//
-//                private String associateActionID;
-//                private String associateType;
-//                private String waitingTime;
-//
-//                public String getAssociateActionID() {
-//                    return associateActionID;
-//                }
-//
-//                public void setAssociateActionID(String associateActionID) {
-//                    this.associateActionID = associateActionID;
-//                }
-//
-//                public String getAssociateType() {
-//                    return associateType;
-//                }
-//
-//                public void setAssociateType(String associateType) {
-//                    this.associateType = associateType;
-//                }
-//
-//                public String getWaitingTime() {
-//                    return waitingTime;
-//                }
-//
-//                public void setWaitingTime(String waitingTime) {
-//                    this.waitingTime = waitingTime;
-//                }
-//            }
-//
-//            public static class TrajectoryParamBean {
-//                /**
-//                 * startIndex : 1
-//                 * endIndex : 1
-//                 */
-//
-//                private String startIndex;
-//                private String endIndex;
-//
-//                public String getStartIndex() {
-//                    return startIndex;
-//                }
-//
-//                public void setStartIndex(String startIndex) {
-//                    this.startIndex = startIndex;
-//                }
-//
-//                public String getEndIndex() {
-//                    return endIndex;
-//                }
-//
-//                public void setEndIndex(String endIndex) {
-//                    this.endIndex = endIndex;
-//                }
-//            }
-//
-//            public static class IntervalTriggerParamBean {
-//                /**
-//                 * startIndex : 1
-//                 * type : 1
-//                 * interval : 1
-//                 */
-//
-//                private String startIndex;
-//                private String type;
-//                private String interval;
-//
-//                public String getStartIndex() {
-//                    return startIndex;
-//                }
-//
-//                public void setStartIndex(String startIndex) {
-//                    this.startIndex = startIndex;
-//                }
-//
-//                public String getType() {
-//                    return type;
-//                }
-//
-//                public void setType(String type) {
-//                    this.type = type;
-//                }
-//
-//                public String getInterval() {
-//                    return interval;
-//                }
-//
-//                public void setInterval(String interval) {
-//                    this.interval = interval;
-//                }
-//            }
-//        }
-//
-//        public static class ActuatorBean {
-//            /**
-//             * actuatorType : 1
-//             * gimbalActuatorParam : {"operationType":"1","pitch":"1","yaw":"1","time":"1"}
-//             * cameraOperationType : {"operationType":"1","time":"1"}
-//             * aircraftControlType : {"operationType":"1","startFly":"1","direction":"1","yawAngle":"1"}
-//             */
-//
-//            private String actuatorType;
-//            private GimbalActuatorParamBean gimbalActuatorParam;
-//            private CameraOperationTypeBean cameraOperationType;
-//            private AircraftControlTypeBean aircraftControlType;
-//
-//            public String getActuatorType() {
-//                return actuatorType;
-//            }
-//
-//            public void setActuatorType(String actuatorType) {
-//                this.actuatorType = actuatorType;
-//            }
-//
-//            public GimbalActuatorParamBean getGimbalActuatorParam() {
-//                return gimbalActuatorParam;
-//            }
-//
-//            public void setGimbalActuatorParam(GimbalActuatorParamBean gimbalActuatorParam) {
-//                this.gimbalActuatorParam = gimbalActuatorParam;
-//            }
-//
-//            public CameraOperationTypeBean getCameraOperationType() {
-//                return cameraOperationType;
-//            }
-//
-//            public void setCameraOperationType(CameraOperationTypeBean cameraOperationType) {
-//                this.cameraOperationType = cameraOperationType;
-//            }
-//
-//            public AircraftControlTypeBean getAircraftControlType() {
-//                return aircraftControlType;
-//            }
-//
-//            public void setAircraftControlType(AircraftControlTypeBean aircraftControlType) {
-//                this.aircraftControlType = aircraftControlType;
-//            }
-//
-//            public static class GimbalActuatorParamBean {
-//                /**
-//                 * operationType : 1
-//                 * pitch : 1
-//                 * yaw : 1
-//                 * time : 1
-//                 */
-//
-//                private String operationType;
-//                private String pitch;
-//                private String yaw;
-//                private String time;
-//
-//                public String getOperationType() {
-//                    return operationType;
-//                }
-//
-//                public void setOperationType(String operationType) {
-//                    this.operationType = operationType;
-//                }
-//
-//                public String getPitch() {
-//                    return pitch;
-//                }
-//
-//                public void setPitch(String pitch) {
-//                    this.pitch = pitch;
-//                }
-//
-//                public String getYaw() {
-//                    return yaw;
-//                }
-//
-//                public void setYaw(String yaw) {
-//                    this.yaw = yaw;
-//                }
-//
-//                public String getTime() {
-//                    return time;
-//                }
-//
-//                public void setTime(String time) {
-//                    this.time = time;
-//                }
-//            }
-//
-//            public static class CameraOperationTypeBean {
-//                /**
-//                 * operationType : 1
-//                 * time : 1
-//                 */
-//
-//                private String operationType;
-//                private String time;
-//
-//                public String getOperationType() {
-//                    return operationType;
-//                }
-//
-//                public void setOperationType(String operationType) {
-//                    this.operationType = operationType;
-//                }
-//
-//                public String getTime() {
-//                    return time;
-//                }
-//
-//                public void setTime(String time) {
-//                    this.time = time;
-//                }
-//            }
-//
-//            public static class AircraftControlTypeBean {
-//                /**
-//                 * operationType : 1
-//                 * startFly : 1
-//                 * direction : 1
-//                 * yawAngle : 1
-//                 */
-//
-//                private String operationType;
-//                private String startFly;
-//                private String direction;
-//                private String yawAngle;
-//
-//                public String getOperationType() {
-//                    return operationType;
-//                }
-//
-//                public void setOperationType(String operationType) {
-//                    this.operationType = operationType;
-//                }
-//
-//                public String getStartFly() {
-//                    return startFly;
-//                }
-//
-//                public void setStartFly(String startFly) {
-//                    this.startFly = startFly;
-//                }
-//
-//                public String getDirection() {
-//                    return direction;
-//                }
-//
-//                public void setDirection(String direction) {
-//                    this.direction = direction;
-//                }
-//
-//                public String getYawAngle() {
-//                    return yawAngle;
-//                }
-//
-//                public void setYawAngle(String yawAngle) {
-//                    this.yawAngle = yawAngle;
-//                }
-//            }
-//        }
-//    }
-
 
 }

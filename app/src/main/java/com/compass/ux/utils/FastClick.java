@@ -103,4 +103,14 @@ public class FastClick {
         }
         return false;
     }
+
+    private static long isFlyClickTime;
+    public synchronized static boolean isFlyClickTime() {
+        long time = System.currentTimeMillis();
+        if (time - isFlyClickTime > 1000) {
+            isFlyClickTime = time;
+            return true;
+        }
+        return false;
+    }
 }

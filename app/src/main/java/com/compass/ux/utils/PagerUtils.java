@@ -41,7 +41,6 @@ public class PagerUtils {
 
     /**
      * 文本转16进制字符串
-     *
      * @param s
      * @return
      */
@@ -122,7 +121,6 @@ public class PagerUtils {
 
     /**
      * 16进制字符串转byte数组
-     *
      * @param src
      * @return
      */
