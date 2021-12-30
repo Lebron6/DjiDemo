@@ -121,6 +121,7 @@ import dji.sdk.remotecontroller.RemoteController;
 import dji.sdk.sdkmanager.DJISDKManager;
 import dji.sdk.sdkmanager.LiveStreamManager;
 import dji.sdk.sdkmanager.LiveVideoBitRateMode;
+import dji.sdk.sdkmanager.LiveVideoResolution;
 import dji.sdk.useraccount.UserAccountManager;
 import dji.ux.widget.MapWidget;
 import okhttp3.Call;
@@ -208,16 +209,23 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import com.dji.mapkit.core.models.annotations.DJICircleOptions;
+import com.orhanobut.logger.Logger;
 import com.tencent.bugly.crashreport.CrashReport;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
@@ -260,6 +268,9 @@ import static dji.common.flightcontroller.flightassistant.PerceptionInformation.
 import static dji.common.gimbal.Axis.PITCH;
 import static dji.common.gimbal.Axis.YAW;
 import static dji.common.realname.AircraftBindingState.BOUND;
+import static dji.keysdk.FlightControllerKey.VELOCITY_X;
+import static dji.keysdk.FlightControllerKey.VELOCITY_Y;
+import static dji.keysdk.FlightControllerKey.VELOCITY_Z;
 import static dji.keysdk.FlightControllerKey.WIND_DIRECTION;
 import static dji.keysdk.FlightControllerKey.WIND_SPEED;
 import static dji.sdk.codec.DJICodecManager.VideoSource.CAMERA;
@@ -271,21 +282,22 @@ import static dji.sdk.sdkmanager.LiveVideoResolution.VIDEO_RESOLUTION_480_360;
 import static dji.sdk.sdkmanager.LiveVideoResolution.VIDEO_RESOLUTION_960_720;
 
 public class ConnectionActivity extends NettyActivity implements MissionControl.Listener, DJIDiagnostics.DiagnosticsInformationCallback, RTK.RTKBaseStationListCallback {
+
     private String liveShowUrl = "";
     private static final String TAG = ConnectionActivity.class.getName();
     private TabNavitationLayout tab_change;
     private LinearLayout layout_map_tools;
     private ImageView iv_exclamatory, iv_aircraft_position, iv_mode_switching, iv_clear_track;
-    private DJIMap.MapType mapType = DJIMap.MapType.NORMAL;
+    //    private DJIMap.MapType mapType = DJIMap.MapType.NORMAL;
     private boolean showFlyZone = false;
     private RelativeLayout layout_rate_window, layout_sort, layout_air_info;
-    private TextView tv_zoom, tv_firmware_version, tv_network_rtk_status, tv_remote_firmware_version, tv_live_url, tv_account_state, tv_bind_status, tv_appActivation_status, tv_horizontal_speed, tv_distance, tv_heigth, tv_vertical_speed;
+    private TextView tv_LiveVideoResolution,tv_zoom, tv_firmware_version, tv_network_rtk_status, tv_remote_firmware_version, tv_live_url, tv_account_state, tv_bind_status, tv_appActivation_status, tv_horizontal_speed, tv_distance, tv_heigth, tv_vertical_speed;
     private TextView tv_txt_1, tv_txt_2, tv_txt_3, tv_txt_4, tv_txt_5, tv_txt_6, tv_txt_7,
             tv_txt_8, tv_txt_9, tv_txt_10, tv_txt_11, tv_txt_12, tv_txt_13, tv_txt_14, tv_txt_15, tv_txt_16, tv_txt_17;
     private TextView tv_rate, tv_LiveVideoBitRate, tv_LiveVideoFps;
     private CircleViewByImage circleRocker;
     int liveResult = -3;
-    private MapWidget mapWidget;
+    //    private MapWidget mapWidget;
     private AppActivationManager appActivationManager;
     private AppActivationState.AppActivationStateListener activationStateListener;
     private AircraftBindingState.AircraftBindingStateListener bindingStateListener;
@@ -409,8 +421,14 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     private MissionPointBean mMissionPointBean;
     private WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean mVoiceBeanShottingContant;
     private LiveStreamManager.OnLiveChangeListener mOnLiveChangeListenner;
-    DJIMap aMap;
+//    DJIMap aMap;
 
+    /*
+  usde to push raw h264 data to server
+   */
+    private static boolean init_socket = false;
+    private static DatagramSocket udp_sock;
+    private static InetAddress serverAddr;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -424,25 +442,25 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         display.getRealSize(outPoint);
         deviceHeight = outPoint.y;
         deviceWidth = outPoint.x;
-        mapWidget = findViewById(R.id.map_widget);
-        mapWidget.initAMap(new MapWidget.OnMapReadyListener() {
-            @Override
-            public void onMapReady(@NonNull DJIMap map) {
-                aMap = map;
-                map.setOnMapClickListener(new DJIMap.OnMapClickListener() {
-                    @Override
-                    public void onMapClick(DJILatLng latLng) {
-                        onViewClick(mapWidget);
-                    }
-                });
-                map.getUiSettings().setZoomControlsEnabled(false);
-            }
-        });
-        mapWidget.onCreate(savedInstanceState);
-        mapWidget.setFlightPathVisible(true);
-        mapWidget.setHomeBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.icon_home));
-        mapWidget.setFlightPathColor(getResources().getColor(R.color.colorTheme));
-        mapWidget.setDirectionToHomeVisible(false);
+//        mapWidget = findViewById(R.id.map_widget);
+//        mapWidget.initAMap(new MapWidget.OnMapReadyListener() {
+//            @Override
+//            public void onMapReady(@NonNull DJIMap map) {
+//                aMap = map;
+//                map.setOnMapClickListener(new DJIMap.OnMapClickListener() {
+//                    @Override
+//                    public void onMapClick(DJILatLng latLng) {
+//                        onViewClick(mapWidget);
+//                    }
+//                });
+//                map.getUiSettings().setZoomControlsEnabled(false);
+//            }
+//        });
+//        mapWidget.onCreate(savedInstanceState);
+//        mapWidget.setFlightPathVisible(true);
+//        mapWidget.setHomeBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.icon_home));
+//        mapWidget.setFlightPathColor(getResources().getColor(R.color.colorTheme));
+//        mapWidget.setDirectionToHomeVisible(false);
 
         initUI();
         initCustomLoggers();
@@ -465,6 +483,16 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 //        每隔一秒更新码率
         sHandler = new Handler();
         sHandler.postDelayed(runnable, 1000); // 在初始化方法里.
+
+//        if(!init_socket){
+//            try {
+//                udp_sock = new DatagramSocket();
+//                init_socket = true;
+//            } catch (SocketException e) {
+//                Log.e(TAG, "udp_sock = new DatagramSocket(6666) error: " + e);
+//                e.printStackTrace();
+//            }
+//        }
     }
 
 
@@ -477,6 +505,24 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             if (mCodecManager != null) {
                 mCodecManager.sendDataToDecoder(videoBuffer, size);
             }
+//            int leftsize = size;
+//            while(leftsize > 0){
+//                int send_size = 1024;
+//                if(leftsize < send_size) {
+//                    send_size = leftsize;
+//                }
+//                byte[] tosends = Arrays.copyOfRange(videoBuffer, size - leftsize, size - leftsize + send_size );
+//                DatagramPacket packet = new DatagramPacket(tosends , send_size, serverAddr, 33330);
+//                try {
+//                    udp_sock.send(packet);
+////                        Log.d(TAG,"send frame....");
+//                } catch (IOException e) {
+//                    Log.d(TAG, "mReceivedVideoDataListener2 recv data, save dato to file, len = "+send_size);
+//                    Log.e(TAG, "udp_sock.send(packet) error: " + e);
+//                    e.printStackTrace();
+//                }
+//                leftsize -= send_size;
+//            }
         }
     };
 
@@ -486,13 +532,13 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         if (getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
-        mapWidget.onResume();
+//        mapWidget.onResume();
     }
 
     @Override
     public void onPause() {
         uninitPreviewer();
-        mapWidget.onPause();
+//        mapWidget.onPause();
         super.onPause();
     }
 
@@ -509,7 +555,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             }
             if (!product.getModel().equals(Model.UNKNOWN_AIRCRAFT)) {
                 VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(mReceivedVideoDataListener);
-                VideoFeeder.getInstance().setTranscodingDataRate(8);
+                VideoFeeder.getInstance().setTranscodingDataRate(20);
                 String cvs = VideoFeeder.getInstance().getPrimaryVideoFeed().getVideoSource().value() + "";
                 if (cvs.equals("5")) {
                     currentVideoSource = "1";//FPV
@@ -572,20 +618,20 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             scheduledFuture.cancel(true);
         }
         executorService.shutdownNow();
-        mapWidget.onDestroy();
+//        mapWidget.onDestroy();
         super.onDestroy();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        mapWidget.onSaveInstanceState(outState);
+//        mapWidget.onSaveInstanceState(outState);
     }
 
     @Override
     public void onLowMemory() {
         super.onLowMemory();
-        mapWidget.onLowMemory();
+//        mapWidget.onLowMemory();
     }
 
     @Override
@@ -617,58 +663,58 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         mVideoSurface.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onViewClick(mVideoSurface);
+//                onViewClick(mVideoSurface);
             }
         });
         layout_map_tools = findViewById(R.id.layout_map_tools);
         iv_aircraft_position = findViewById(R.id.iv_aircraft_position);
-        iv_aircraft_position.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mapWidget.setMapCenterLock(MapWidget.MapCenterLock.AIRCRAFT);
-            }
-        });
+//        iv_aircraft_position.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                mapWidget.setMapCenterLock(MapWidget.MapCenterLock.AIRCRAFT);
+//            }
+//        });
         iv_exclamatory = findViewById(R.id.iv_exclamatory);
-        iv_exclamatory.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (showFlyZone) {
-                    mapWidget.hideAllFlyZones();
-                    showFlyZone = false;
-                } else {
-                    mapWidget.showAllFlyZones();
-                    showFlyZone = true;
-                }
-//                mapWidget.setFlyZoneVisible(FlyZoneCategory.AUTHORIZATION,
-//                        false);
-//                mapWidget.setFlyZoneVisible(FlyZoneCategory.WARNING,
-//                        false);
-//                mapWidget.setFlyZoneVisible(FlyZoneCategory.ENHANCED_WARNING,
-//                        false);
-//                mapWidget.setFlyZoneVisible(FlyZoneCategory.RESTRICTED,
-//                        false);
-            }
-        });
+//        iv_exclamatory.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (showFlyZone) {
+//                    mapWidget.hideAllFlyZones();
+//                    showFlyZone = false;
+//                } else {
+//                    mapWidget.showAllFlyZones();
+//                    showFlyZone = true;
+//                }
+////                mapWidget.setFlyZoneVisible(FlyZoneCategory.AUTHORIZATION,
+////                        false);
+////                mapWidget.setFlyZoneVisible(FlyZoneCategory.WARNING,
+////                        false);
+////                mapWidget.setFlyZoneVisible(FlyZoneCategory.ENHANCED_WARNING,
+////                        false);
+////                mapWidget.setFlyZoneVisible(FlyZoneCategory.RESTRICTED,
+////                        false);
+//            }
+//        });
         iv_clear_track = findViewById(R.id.iv_clear_track);
-        iv_clear_track.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mapWidget.setFlightPathVisible(mapWidget.isFlightPathVisible() ? false : true);
-            }
-        });
+//        iv_clear_track.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                mapWidget.setFlightPathVisible(mapWidget.isFlightPathVisible() ? false : true);
+//            }
+//        });
         iv_mode_switching = findViewById(R.id.iv_mode_switching);
-        iv_mode_switching.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mapType == DJIMap.MapType.NORMAL) {
-                    mapWidget.getMap().setMapType(DJIMap.MapType.HYBRID);
-                    mapType = DJIMap.MapType.HYBRID;
-                } else {
-                    mapWidget.getMap().setMapType(DJIMap.MapType.NORMAL);
-                    mapType = DJIMap.MapType.NORMAL;
-                }
-            }
-        });
+//        iv_mode_switching.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (mapType == DJIMap.MapType.NORMAL) {
+//                    mapWidget.getMap().setMapType(DJIMap.MapType.HYBRID);
+//                    mapType = DJIMap.MapType.HYBRID;
+//                } else {
+//                    mapWidget.getMap().setMapType(DJIMap.MapType.NORMAL);
+//                    mapType = DJIMap.MapType.NORMAL;
+//                }
+//            }
+//        });
         tab_change = findViewById(R.id.tab_change);
         layout_sort = findViewById(R.id.layout_sort);
         layout_rate_window = findViewById(R.id.layout_rate_window);
@@ -682,6 +728,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         tv_account_state = findViewById(R.id.tv_account_state);
 
         tv_zoom = findViewById(R.id.tv_zoom);
+        tv_LiveVideoResolution = findViewById(R.id.tv_LiveVideoResolution);
         tv_zoom.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -800,7 +847,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             public void onClick(View v) {
 //                initMediaManager(null);
 //                loginOut();
-                loginAccount();
+//                loginAccount();
+                restartLiveShow(null);
             }
         });
 
@@ -841,40 +889,41 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         }
         return true;
     }
+    private void getLiveVideoResolution(){
+
+    }
 
     void startLiveShow(Communication communication) {
 
         if (!isLiveStreamManagerOn()) {
             return;
         }
-        if (DJISDKManager.getInstance().getLiveStreamManager().isStreaming()) {
-            if (communication != null) {
-                sendErrorMSG2Server(communication, ERROR, "already started!");
-            }
-            return;
+        LiveStreamManager liveStreamManager = DJISDKManager.getInstance().getLiveStreamManager();
+        if (liveStreamManager.isStreaming()) {
+          liveStreamManager.stopStream();
         }
-
-                DJISDKManager.getInstance().getLiveStreamManager().setLiveUrl(liveShowUrl);
+        liveStreamManager.setLiveUrl(liveShowUrl);
         /**
          * CDN加速
          */
-//        DJISDKManager.getInstance().getLiveStreamManager().setLiveUrl("rtmp://aodianyun.luopan88.com/luopan/11");
-
-
-
+//        liveStreamManager.setLiveUrl("rtmp://aodianyun.luopan88.com/luopan/11");
+//        liveStreamManager.setLiveUrl("rtmp://36.154.125.50:10085/hls/6a2R5927R?sign=eM2Rc9h7Rz");
+//
+//
 //        DJISDKManager.getInstance().getLiveStreamManager().setLiveUrl("rtmp://47.102.102.224:1935/live/wrj");
         //关闭音频
-//                DJISDKManager.getInstance().getLiveStreamManager().setAudioStreamingEnabled(false);
-//                DJISDKManager.getInstance().getLiveStreamManager().setAudioMuted(false);
-        DJISDKManager.getInstance().getLiveStreamManager().setVideoEncodingEnabled(true);
+        liveStreamManager.setAudioStreamingEnabled(true);
+        liveStreamManager.setAudioMuted(true);
+        liveStreamManager.setVideoEncodingEnabled(true);
 //                DJISDKManager.getInstance().getLiveStreamManager().setLiveVideoBitRateMode(LiveVideoBitRateMode.MANUAL);
-        DJISDKManager.getInstance().getLiveStreamManager().setLiveVideoBitRate(1280);
-        DJISDKManager.getInstance().getLiveStreamManager().setLiveVideoBitRateMode(AUTO);
-        DJISDKManager.getInstance().getLiveStreamManager().setLiveVideoResolution(VIDEO_RESOLUTION_1920_1080);
-        DJISDKManager.getInstance().getLiveStreamManager().stopStream();
-        DJISDKManager.getInstance().getLiveStreamManager().setVideoSource(LiveStreamManager.LiveStreamVideoSource.Primary);
-        liveResult = DJISDKManager.getInstance().getLiveStreamManager().startStream();
-        DJISDKManager.getInstance().getLiveStreamManager().setStartTime();
+        liveStreamManager.setLiveVideoBitRate(20);//值越大，FPS就会越大
+//        liveStreamManager.setLiveVideoBitRateMode(AUTO);
+        liveStreamManager.setLiveVideoResolution(VIDEO_RESOLUTION_1920_1080);
+//        DJISDKManager.getInstance().getLiveStreamManager().stopStream();
+        liveStreamManager.setVideoSource(LiveStreamManager.LiveStreamVideoSource.Primary);
+        liveStreamManager.setStartTime();
+
+        liveResult = liveStreamManager.startStream();
 
         runOnUiThread(new Runnable() {
             @Override
@@ -911,8 +960,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         if (!isLiveStreamManagerOn()) {
             return;
         }
-        DJISDKManager.getInstance().getLiveStreamManager().stopStream();
-        XcFileLog.getInstace().i("liveStatus", DJISDKManager.getInstance().getLiveStreamManager().isStreaming() + "");
         new Handler().postDelayed(new Runnable() {//测试延时两秒重启推流
             @Override
             public void run() {
@@ -941,12 +988,10 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             initBattery();
             initCamera();
             initErrorLog();//初始化错误日志
-
             initOcuSyncLink();
-
             initPreviewer();
             initDjiAccount();
-            startLiveShow(null);
+//            startLiveShow(null);
             initLidar();
         }
     };
@@ -1119,7 +1164,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
                         @Override
                         public void onFailure(DJIError djiError) {
-
                         }
                     });
                 } else {
@@ -1240,6 +1284,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         }
         tv_LiveVideoBitRate.setText(DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoBitRate() == 0 ? "" : DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoBitRate() + " (kpbs)");
         tv_LiveVideoFps.setText(DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoFps() + "");
+            tv_LiveVideoResolution.setText(DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoResolution().getHeight()+"---"+DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoResolution().getWidth());
     }
 
     private void loginAccount() {
@@ -1302,14 +1347,32 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 mFlightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
                 mFlightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
                 mFlightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);//相对于自己
+                mFlightController.getSerialNumber(new CommonCallbacks.CompletionCallbackWith<String>() {
+                    @Override
+                    public void onSuccess(String s) {
+                        XcFileLog.getInstace().i("sncode", s + "------");
 
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                tv_network_rtk_status.setText(s);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+
+                    }
+                });
                 initGimbal();
 
                 //获取飞行状态d
                 mFlightController.setStateCallback(new FlightControllerState.Callback() {
                     @Override
                     public void onUpdate(FlightControllerState flightControllerState) {
-//                        flightControllerState.getGoHomeExecutionState()
+                        int horizontalSpeed1 = (int) Math.sqrt((double) ((Math.abs(flightControllerState.getVelocityY()) * Math.abs(flightControllerState.getVelocityY())) + (Math.abs(flightControllerState.getVelocityX()) * Math.abs(flightControllerState.getVelocityX()))));
+//
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -1320,8 +1383,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 //                                }
                                 tv_distance.setText("距返航点" + df1.format(LocationUtils.getDistance(flightControllerState.getHomeLocation().getLongitude() + "", flightControllerState.getHomeLocation().getLatitude() + ""
                                         , flightControllerState.getAircraftLocation().getLongitude() + "", flightControllerState.getAircraftLocation().getLatitude() + "")) + "m");//返航距离
-                                tv_horizontal_speed.setText(Math.abs(flightControllerState.getVelocityX()) + "(m/s)");//水平速度
-                                tv_vertical_speed.setText(Math.abs(flightControllerState.getVelocityY()) + "(m/s)");//垂直速度
+                                tv_horizontal_speed.setText(horizontalSpeed1 + "(m/s)");//水平速度
+                                tv_vertical_speed.setText(Math.abs(flightControllerState.getVelocityZ()) + "(m/s)");//垂直速度
                                 tv_heigth.setText(flightControllerState.getAircraftLocation().getAltitude() + "  (m)");
                             }
                         });
@@ -1464,9 +1527,10 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                 flightControllerBean.setAttitudePitch(flightControllerState.getAttitude().pitch);
                                 flightControllerBean.setAttitudeRoll(flightControllerState.getAttitude().roll);
                                 flightControllerBean.setAttitudeYaw(flightControllerState.getAttitude().yaw);
-                                flightControllerBean.setVelocityX(flightControllerState.getVelocityX());
-                                flightControllerBean.setVelocityY(flightControllerState.getVelocityY());
-                                flightControllerBean.setVelocityZ(flightControllerState.getVelocityZ());
+//                                flightControllerBean.setVelocityX(Math.abs(flightControllerState.getVelocityX()));
+                                flightControllerBean.setVelocityX(horizontalSpeed1);
+                                flightControllerBean.setVelocityY(Math.abs(flightControllerState.getVelocityY()));
+                                flightControllerBean.setVelocityZ(Math.abs(flightControllerState.getVelocityZ()));
                                 flightControllerBean.setFlightTimeInSeconds(flightControllerState.getFlightTimeInSeconds());
                                 flightControllerBean.setSatelliteCount(flightControllerState.getSatelliteCount());
                                 flightControllerBean.setIMUPreheating(flightControllerState.isIMUPreheating());
@@ -1931,8 +1995,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
                         }
                     });
-
-
                     int loginvalue = UserAccountManager.getInstance().getUserAccountState().value();
                     webInitializationBean.setUserAccountState(loginvalue + "");
                 }
@@ -2122,7 +2184,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
                     }
                 });
-
                 camera.getLens(2).getThermalDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ThermalDigitalZoomFactor>() {
                     @Override
                     public void onSuccess(SettingsDefinitions.ThermalDigitalZoomFactor thermalDigitalZoomFactor) {
@@ -2465,6 +2526,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         try {
 
             gimbal = ((Aircraft) ApronApp.getProductInstance()).getGimbals().get(0);
+
             gimbal.getControllerSpeedCoefficient(PITCH, new CommonCallbacks.CompletionCallbackWith<Integer>() {
                 @Override
                 public void onSuccess(Integer integer) {
@@ -2991,7 +3053,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     sendMP32Payload(communication);
                     break;
                 case Constant.END_VOICE:
-                    send(PagerUtils.getInstance().TTSSTOPINS, communication);
+                    sendTTSEndToPayLoad(communication);
                     break;
                 case Constant.VOLUME_CONTROL://暂不可用
 //                send(PagerUtils.getInstance().TTSSTOPINS, communication);
@@ -3145,15 +3207,34 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
                         @Override
                         public void onSuccess(String filePath) {
+
                             File file = new File(filePath + "/" + fileName);
                             Log.e("下载测试", "success" + filePath);
+                            String type = ".jpg";
+                            if (fileName.substring(fileName.length() - 3).equals("mp4")) {
+                                type = ".mp4";
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(getApplicationContext(), "下载一段视频", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            } else {
+                                type = ".jpg";
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(getApplicationContext(), "下载一张照片", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            }
                             OkHttpClient client = new OkHttpClient().newBuilder()
                                     .build();
                             RequestBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
                                     .addFormDataPart("file", file.getName(),
                                             RequestBody.create(okhttp3.MediaType.parse("application/octet-stream"),
                                                     file))
-                                    .addFormDataPart("type", ".jpg")
+                                    .addFormDataPart("type", type)
                                     .addFormDataPart("uavName", ApronApp.EQUIPMENT_ID)
                                     .build();
                             Request request = new Request.Builder()
@@ -3244,7 +3325,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     private void initMediaManager(Communication communication) {
         try {
-
             List<Camera> cameras = ((Aircraft) ApronApp.getProductInstance()).getCameras();
             if (null != cameras && cameras.get(0).isMediaDownloadModeSupported()) {
                 if (ApronApp.isMavicAir2() || ApronApp.isM300()) {
@@ -3305,9 +3385,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                             Log.e("获取相册照片数目111", fileList.size() + "---");
 
                             for (int i = 0; i < fileList.size(); i++) {
-                                if (fileList.get(i).getMediaType() == MediaFile.MediaType.JPEG) {
-                                    mediaFileList.add(fileList.get(i));
-                                }
+//                                if (fileList.get(i).getMediaType() == MediaFile.MediaType.JPEG) {
+                                mediaFileList.add(fileList.get(i));
+//                                }
                             }
                             Log.e("获取相册照片数目", mediaFileList.size() + "---");
 
@@ -4004,8 +4084,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 sendErrorMSG2Server(communication, ERROR, "获取当前相机拍照模式失败:" + djiError.getDescription());
             }
         });
-
-
     }
 
     //结束拍照
@@ -5201,7 +5279,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                tv_network_rtk_status.setText("network_rtk_state:" + rtkState.isRTKBeingUsed());
+//                                tv_network_rtk_status.setText("network_rtk_state:" + rtkState.isRTKBeingUsed());
                             }
                         });
                         isRTKBeingUsed = rtkState.isRTKBeingUsed() ? 1 : 0;
@@ -6495,7 +6573,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         .setCoordinate(new LocationCoordinate2D(latLng[0], latLng[1]))//设置经纬度
                         .setAltitude(Double.parseDouble(wayPointsBeans.get(i).getAltitude()))//高度[-200,500]
                         //设置飞行路线模式
-                        .setFlightPathMode(WaypointV2MissionTypes.WaypointV2FlightPathMode.find(Integer.parseInt(wayPointsBeans.get(i).getFlightPathMode())))
+                        .setFlightPathMode(WaypointV2MissionTypes.WaypointV2FlightPathMode.GOTO_POINT_STRAIGHT_LINE_AND_STOP)
                         //设置航向模式
                         .setHeadingMode(WaypointV2MissionTypes.WaypointV2HeadingMode.find(Integer.parseInt(wayPointsBeans.get(i).getHeadingMode())))
                         //设置转弯模式
@@ -6641,7 +6719,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
      * @param voiceBean
      */
     private void wayPointSendTTS2Payload(WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean voiceBean) {
-        XcFileLog.getInstace().i("飞机飞行流程航点喊话信息", "voiceBean==" + (voiceBean != null ? voiceBean.toString() : "null"));
 
         String tts = voiceBean.getWord();
         String sign = "[" + "d" + "]";//标记
@@ -6702,30 +6779,70 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
      * @param communication
      */
     private void sendTTS2Payload(Communication communication) {
-        String tts = communication.getPara().get("word");
-        String sign = "[" + "d" + "]";//标记
-        String fre = "0";
-        if (TextUtils.isEmpty(tts)) {
-            tts = "未检测到语音文本";
-        } else {
-            fre = communication.getPara().get("model");
-            String volume = communication.getPara().get("volume");//音量
-            String tone = communication.getPara().get("tone");//性别 52男 53女
-            String speed = communication.getPara().get("speed");//语速
-            String sex = "53";
-            if (tone.equals("0")) {
-                sex = "53";
-            } else {
-                sex = "52";
+        BaseProduct product = ApronApp.getProductInstance();
+        if (product != null) {
+            Payload payload = product.getPayload();
+            if (payload != null) {
+                if (payload.getPayloadProductName().equals("MP130S")) {
+
+                    String tts = communication.getPara().get("word");
+                    if (TextUtils.isEmpty(tts)) {
+                        tts = "未检测到语音文本";
+                    } else {
+                        fre = communication.getPara().get("model");
+                        String volume = communication.getPara().get("volume");//音量
+                        String tone = communication.getPara().get("tone");//性别
+                        String speed = communication.getPara().get("speed");//语速
+                        if (speed.equals("11")) {//适配CZZN新版协议
+                            speed = "10";
+                        }
+                        if (volume.equals("11")) {
+                            volume = "10";
+                        }
+                        if (tone.equals("0")) {
+                            speakerValue = " --voice_name xiaoyan";
+                        } else {
+                            speakerValue = " --voice_name xiaofeng";
+                        }
+                        rateValue = " --speed " + speed + "0";
+                        testVoiceLarge = new byte[]{0x24, 0x00, 0x07, 0x53, hexToByte(Integer.toHexString(Integer.valueOf(volume + "0"))), 0x00, 0x23};
+                    }
+                    send(testVoiceLarge);
+                    send(fre.equals("0") ? PagerUtils.getInstance().TTSONEINSMP130S : PagerUtils.getInstance().TTSREPEATINSMP130S, communication);
+                    byte[] bytes = getUTF8Bytes(tts + speakerValue + rateValue);
+                    byte[] bytes1 = getDataHexLength(bytes.length + 1);//这里length+1是MP130S固件bug
+                    send(bytes1);
+                    byte[] data = PagerUtils.getInstance().dataCopy130S(PagerUtils.getInstance().TTSINS130S, bytes);
+                    send(data);
+                } else {
+                    String tts = communication.getPara().get("word");
+                    String sign = "[" + "d" + "]";//标记
+                    String fre = "0";
+                    if (TextUtils.isEmpty(tts)) {
+                        tts = "未检测到语音文本";
+                    } else {
+                        fre = communication.getPara().get("model");
+                        String volume = communication.getPara().get("volume");//音量
+                        String tone = communication.getPara().get("tone");//性别 52男 53女
+                        String speed = communication.getPara().get("speed");//语速
+                        String sex = "53";
+                        if (tone.equals("0")) {
+                            sex = "53";
+                        } else {
+                            sex = "52";
+                        }
+                        sign = "[" + "v" + volume + "]" + "[" + "s" + speed + "]" + "[" + "m" + sex + "]";//科大讯飞标记使用
+                    }
+
+                    PagerUtils pagerUtils = PagerUtils.getInstance();
+                    byte[] content = pagerUtils.HexString2Bytes(pagerUtils.toChineseHex(sign + tts));
+                    byte[] data = pagerUtils.dataCopy(pagerUtils.TTSINS, content);
+                    send(fre.equals("0") ? pagerUtils.TTSONEINS : pagerUtils.TTSREPEATINS, communication);
+                    send(data, communication);
+                }
             }
-            sign = "[" + "v" + volume + "]" + "[" + "s" + speed + "]" + "[" + "m" + sex + "]";//科大讯飞标记使用
         }
 
-        PagerUtils pagerUtils = PagerUtils.getInstance();
-        byte[] content = pagerUtils.HexString2Bytes(pagerUtils.toChineseHex(sign + tts));
-        byte[] data = pagerUtils.dataCopy(pagerUtils.TTSINS, content);
-        send(fre.equals("0") ? pagerUtils.TTSONEINS : pagerUtils.TTSREPEATINS, communication);
-        send(data, communication);
     }
 
     /**
@@ -6786,6 +6903,39 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         CommonDjiCallback(djiError, communication);
                     }
                 });
+            } else {
+                sendErrorMSG2Server(communication, ERROR, "Payload is null");
+            }
+
+        } else {
+            sendErrorMSG2Server(communication, ERROR, "Product is null");
+        }
+    }
+
+    /**
+     * 发送结束语音指令到Payload * @param communication
+     */
+    private void sendTTSEndToPayLoad(Communication communication) {
+        BaseProduct product = ApronApp.getProductInstance();
+        if (product != null) {
+            Payload payload = product.getPayload();
+            if (payload != null) {
+                if (payload.getPayloadProductName().equals("MP130S")) {
+                    payload.sendDataToPayload(PagerUtils.getInstance().TTSSTOPINSMP130S, new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            CommonDjiCallback(djiError, communication);
+                        }
+                    });
+                } else {
+                    payload.sendDataToPayload(PagerUtils.getInstance().TTSSTOPINS, new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            CommonDjiCallback(djiError, communication);
+                        }
+                    });
+                }
+
             } else {
                 sendErrorMSG2Server(communication, ERROR, "Payload is null");
             }
@@ -6864,71 +7014,71 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 //    };
     private boolean isMapMini = true;
 
-    private void onViewClick(View view) {
-        if (view == mVideoSurface && !isMapMini) {
-            showPanels();
-            layout_map_tools.setVisibility(View.INVISIBLE);
-            resizeFPVWidget(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT, 0, 0);
-            ResizeAnimation mapViewAnimation = new ResizeAnimation(mapWidget, deviceWidth, deviceHeight, DisplayUtil.dp2px(this, 125), DisplayUtil.dp2px(this, 76), 0);
-            mapWidget.startAnimation(mapViewAnimation);
-            isMapMini = true;
-        } else if (view == mapWidget && isMapMini) {
-            hidePanels();
-            layout_map_tools.setVisibility(View.VISIBLE);
-            resizeFPVWidget(DisplayUtil.dp2px(this, 125), DisplayUtil.dp2px(this, 76), 0, 2);
-            ResizeAnimation mapViewAnimation = new ResizeAnimation(mapWidget, DisplayUtil.dp2px(this, 125), DisplayUtil.dp2px(this, 76), deviceWidth, deviceHeight, 0);
-            mapWidget.startAnimation(mapViewAnimation);
-            isMapMini = false;
+//    private void onViewClick(View view) {
+//        if (view == mVideoSurface && !isMapMini) {
+//            showPanels();
+//            layout_map_tools.setVisibility(View.INVISIBLE);
+//            resizeFPVWidget(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT, 0, 0);
+//            ResizeAnimation mapViewAnimation = new ResizeAnimation(mapWidget, deviceWidth, deviceHeight, DisplayUtil.dp2px(this, 125), DisplayUtil.dp2px(this, 76), 0);
+//            mapWidget.startAnimation(mapViewAnimation);
+//            isMapMini = true;
+//        } else if (view == mapWidget && isMapMini) {
+//            hidePanels();
+//            layout_map_tools.setVisibility(View.VISIBLE);
+//            resizeFPVWidget(DisplayUtil.dp2px(this, 125), DisplayUtil.dp2px(this, 76), 0, 2);
+//            ResizeAnimation mapViewAnimation = new ResizeAnimation(mapWidget, DisplayUtil.dp2px(this, 125), DisplayUtil.dp2px(this, 76), deviceWidth, deviceHeight, 0);
+//            mapWidget.startAnimation(mapViewAnimation);
+//            isMapMini = false;
+//
+//        }
+//    }
 
-        }
-    }
-
-    private void resizeFPVWidget(int width, int height, int margin, int fpvInsertPosition) {
-        RelativeLayout.LayoutParams fpvParams = (RelativeLayout.LayoutParams) layout_previewer_container.getLayoutParams();
-        fpvParams.height = height;
-        fpvParams.width = width;
-        fpvParams.leftMargin = margin;
-        fpvParams.bottomMargin = margin;
-        if (isMapMini) {
-            fpvParams.addRule(RelativeLayout.CENTER_IN_PARENT, 0);
-            fpvParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE);
-            fpvParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
-        } else {
-            fpvParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT, 0);
-            fpvParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, 0);
-            fpvParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
-        }
-        layout_previewer_container.setLayoutParams(fpvParams);
-
-        parentView.removeView(layout_previewer_container);
-        parentView.addView(layout_previewer_container, fpvInsertPosition);
-    }
-
-    private void hidePanels() {
-        tab_change.setVisibility(View.INVISIBLE);
-        tv_zoom.setVisibility(View.INVISIBLE);
-        layout_sort.setVisibility(View.INVISIBLE);
-        layout_air_info.setVisibility(View.INVISIBLE);
-        tv_live_url.setVisibility(View.INVISIBLE);
-    }
-
-    private void showPanels() {
-        restartLiveShow(null);
-//        tab_change.setVisibility(View.VISIBLE);
-        if (isM300Product()) {
-//            tv_zoom.setVisibility(View.VISIBLE);
-        } else {
-            tv_zoom.setVisibility(View.INVISIBLE);
-        }
-        if (isINSPIRE2Product() || isM300Product()) {
-            tab_change.setVisibility(View.VISIBLE);
-        } else {
-            tab_change.setVisibility(View.INVISIBLE);
-        }
-        layout_sort.setVisibility(View.VISIBLE);
-        layout_air_info.setVisibility(View.VISIBLE);
-        tv_live_url.setVisibility(View.VISIBLE);
-    }
+//    private void resizeFPVWidget(int width, int height, int margin, int fpvInsertPosition) {
+//        RelativeLayout.LayoutParams fpvParams = (RelativeLayout.LayoutParams) layout_previewer_container.getLayoutParams();
+//        fpvParams.height = height;
+//        fpvParams.width = width;
+//        fpvParams.leftMargin = margin;
+//        fpvParams.bottomMargin = margin;
+//        if (isMapMini) {
+//            fpvParams.addRule(RelativeLayout.CENTER_IN_PARENT, 0);
+//            fpvParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE);
+//            fpvParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+//        } else {
+//            fpvParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT, 0);
+//            fpvParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, 0);
+//            fpvParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+//        }
+//        layout_previewer_container.setLayoutParams(fpvParams);
+//
+//        parentView.removeView(layout_previewer_container);
+//        parentView.addView(layout_previewer_container, fpvInsertPosition);
+//    }
+//
+//    private void hidePanels() {
+//        tab_change.setVisibility(View.INVISIBLE);
+//        tv_zoom.setVisibility(View.INVISIBLE);
+//        layout_sort.setVisibility(View.INVISIBLE);
+//        layout_air_info.setVisibility(View.INVISIBLE);
+//        tv_live_url.setVisibility(View.INVISIBLE);
+//    }
+//
+//    private void showPanels() {
+//        restartLiveShow(null);
+////        tab_change.setVisibility(View.VISIBLE);
+//        if (isM300Product()) {
+////            tv_zoom.setVisibility(View.VISIBLE);
+//        } else {
+//            tv_zoom.setVisibility(View.INVISIBLE);
+//        }
+//        if (isINSPIRE2Product() || isM300Product()) {
+//            tab_change.setVisibility(View.VISIBLE);
+//        } else {
+//            tab_change.setVisibility(View.INVISIBLE);
+//        }
+//        layout_sort.setVisibility(View.VISIBLE);
+//        layout_air_info.setVisibility(View.VISIBLE);
+//        tv_live_url.setVisibility(View.VISIBLE);
+//    }
 
     private void changeGimbalAngle(int currentAngle) {
         hideTxtForGimbalAngle();
@@ -7074,5 +7224,63 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         communication.setCode(code);
         communication.setResponseTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
         NettyClient.getInstance().sendMessage(communication, null);
+    }
+
+    String speakerValue = " --voice_name xiaofeng";
+    String rateValue = " --speed 50";
+    String fre = "0";
+    byte[] testVoiceLarge = new byte[]{0x24, 0x00, 0x07, 0x53, 0x30, 0x00, 0x23};
+
+    public String testTTS = "2400081300280023";
+    public String testTTSData = "24002E1420E88081E593A5202D2D766F6963655F6E616D65207869616F79616E202D2D7370656564203530000023";
+
+    public void testTTSVoice(Communication communication) {
+        Logger.e("获取喊话器：" + ApronApp.getProductInstance().getPayload().getPayloadProductName());
+
+
+    }
+
+    public static byte[] getUTF8Bytes(String data) {
+        return getBytes(data, "utf-8");
+    }
+
+
+    private static byte[] getBytes(String data, String charsetName) {
+        Charset charset = Charset.forName(charsetName);
+        return data.getBytes(charset);
+    }
+
+    /**
+     * 获取文本总长度
+     */
+    private byte[] getDataHexLength(int length) {
+        String size = Integer.toHexString(length);
+        if (size.length() == 1) {
+            size = "000" + size;
+        } else if (size.length() == 2) {
+            size = "00" + size;
+        } else if (size.length() == 3) {
+            size = "0" + size;
+        } else if (size.length() > 4) {
+            size = size.substring(size.length() - 4);
+        }
+        String size1 = size.substring(0, 2);
+        byte a = hexToByte(size1);
+        String size2 = size.substring(2, 4);
+        byte b = hexToByte(size2);
+
+        byte[] lengthHex = new byte[]{0x24, 0x00, 0x08, 0x13, a, b, 0x00, 0x23};
+        return lengthHex;
+
+    }
+
+    /**
+     * Hex字符串转byte
+     *
+     * @param inHex 待转换的Hex字符串
+     * @return 转换后的byte
+     */
+    public static byte hexToByte(String inHex) {
+        return (byte) Integer.parseInt(inHex, 16);
     }
 }

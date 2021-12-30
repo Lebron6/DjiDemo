@@ -54,7 +54,7 @@ public class FlightControllerBean {
     /**
      * 使用NED（北-东-下）坐标系，飞机在x方向上的当前速度，以米/秒为单位。
      */
-    private float velocityX;
+    private int velocityX;
 
     /**
      * 使用NED（北-东-下）坐标系，飞机在y方向上的当前速度，以米/秒为单位。
@@ -384,11 +384,11 @@ public class FlightControllerBean {
         this.attitudeYaw = attitudeYaw;
     }
 
-    public float getVelocityX() {
+    public int getVelocityX() {
         return velocityX;
     }
 
-    public void setVelocityX(float velocityX) {
+    public void setVelocityX(int velocityX) {
         this.velocityX = velocityX;
     }
 

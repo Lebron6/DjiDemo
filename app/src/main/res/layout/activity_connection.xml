@@ -70,6 +70,36 @@
                 android:textColor="@color/colorWhite"
                 android:textSize="@dimen/x17" />
         <TextView
+                android:visibility="visible"
+                android:layout_below="@+id/tv_remote_firmware_version"
+                android:id="@+id/tv_network_rtk_status"
+                android:paddingLeft="@dimen/x17"
+                android:paddingRight="@dimen/x17"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/x41"
+                android:layout_marginTop="@dimen/x21"
+                android:layout_alignParentRight="true"
+                android:layout_marginRight="@dimen/x200"
+                android:gravity="center"
+                android:text="网络RTK状态"
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/x17" />
+        <TextView
+                android:visibility="visible"
+                android:layout_below="@+id/tv_network_rtk_status"
+                android:id="@+id/tv_LiveVideoResolution"
+                android:paddingLeft="@dimen/x17"
+                android:paddingRight="@dimen/x17"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/x41"
+                android:layout_marginTop="@dimen/x21"
+                android:layout_alignParentRight="true"
+                android:layout_marginRight="@dimen/x200"
+                android:gravity="center"
+                android:text=""
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/x17" />
+        <TextView
                 android:id="@+id/tv_zoom"
                 android:visibility="gone"
                 android:layout_width="@dimen/x134"
@@ -132,7 +162,7 @@
                 android:textSize="@dimen/x17" />
 
         <TextView
-                android:visibility="gone"
+                android:visibility="visible"
                 android:id="@+id/tv_LiveVideoFps"
                 android:paddingLeft="@dimen/x17"
                 android:paddingRight="@dimen/x17"
@@ -149,7 +179,7 @@
                 android:textSize="@dimen/x17" />
 
         <RelativeLayout
-                android:visibility="gone"
+                android:visibility="visible"
                 android:layout_below="@+id/tv_appActivation_status"
                 android:layout_alignParentLeft="true"
                 android:layout_marginTop="@dimen/x31"
@@ -163,12 +193,12 @@
 
             <TextView
                     android:id="@+id/tv_rate"
-                    android:visibility="gone"
+                    android:visibility="visible"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerInParent="true"
                     android:layout_centerVertical="true"
-                    android:text="6"
+                    android:text=""
                     android:textColor="@color/colorWhite"
                     android:textSize="@dimen/x17" />
 
@@ -347,13 +377,13 @@
             android:layout_above="@+id/map_widget"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
-    <dji.ux.widget.MapWidget
+    <!--<dji.ux.widget.MapWidget
             android:visibility="visible"
             android:id="@+id/map_widget"
             android:layout_width="125dp"
             android:layout_height="76dp"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentBottom="true" />
+            android:layout_alignParentBottom="true" />-->
     <LinearLayout
             android:visibility="gone"
             android:id="@+id/layout_map_tools"
