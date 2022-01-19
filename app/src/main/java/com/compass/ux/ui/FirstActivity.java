@@ -87,7 +87,7 @@ public class FirstActivity extends AppCompatActivity {
 //                        Log.d("FileUtils", "FileUtils=" + mobileNum);
 //                    } else {
                         String filePath = FileUtils.createIfNotExist(Environment.getExternalStorageDirectory().getPath() + "/Shebei");
-                        FileUtils.writeString(filePath, "Mobile_04", "utf-8");
+                        FileUtils.writeString(filePath, "Mobile_01", "utf-8");
                         ApronApp.EQUIPMENT_ID = FileUtils.readString(file.getAbsolutePath(), "utf-8");
 //                    }
                     Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
@@ -95,11 +95,7 @@ public class FirstActivity extends AppCompatActivity {
                     finish();
 //                }
 //            },2000);
-
-
         }
-
-
     }
 
 
