@@ -127,8 +127,11 @@ public class Constant {
     public static final String SEND_VOICE_MP3 = "sendVoiceMP3";
     public static final String VOLUME_CONTROL = "volumeControl";
     public static final String ISRTKBEINGUSED = "isRTKBeingUsed";
+    public static final String SET_RTK_MAINTAIN_POSITION = "setRTKMaintainPositioningAccuracyModeEnabled";
+    public static final String REBOOT = "reboot";//只有Matrice 300 RTK调用reboot方法是重启无人机，精灵4调用该方法只是重启飞控系统。
 
     public static String SPEED = "speed";
+    public static String NAME = "name";
     public static String ANGLE = "angle";
     public static String TYPE = "type";
     public static String VALUE = "value";
@@ -162,6 +165,7 @@ public class Constant {
     public static final String IS_FLYING="isFlying";
     public static final String DISTANCE_GO_HOME="distanceGoHome";
     public static final String DIAGNOSTICS="diagnostics";
+    public static final String MISSION_STATE="missionState";
 
 
 

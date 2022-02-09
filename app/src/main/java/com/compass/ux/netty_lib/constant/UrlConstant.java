@@ -3,6 +3,7 @@ package com.compass.ux.netty_lib.constant;
 
 public class UrlConstant {
 
+
     /**
      * socket 服务器IP地址
      */

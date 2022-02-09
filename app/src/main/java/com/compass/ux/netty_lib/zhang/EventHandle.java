@@ -40,7 +40,6 @@ public class EventHandle extends SimpleChannelInboundHandler<ProtoMessage.Messag
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ProtoMessage.Message msg) throws Exception {
         Communication communication= msg.CoverCommunication();
-        Log.e("Netty接收：",new Gson().toJson(communication));
         XcFileLog.getInstace().i("Netty接收:",new Gson().toJson(communication));
         listener.onMessageResponse(communication);
     }

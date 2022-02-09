@@ -5,6 +5,10 @@ import java.util.List;
 public class WayPointsV2Bean {
     //飞行速度
     private String speed;
+    private String name;
+
+
+
     //航线结束动作0 NO_ACTION 不会采取进一步行动。可以通过遥控器控制飞行器。
     //1 GO_HOME 任务完成后回家。飞行器距离返航点20米以内直接降落。
     //2 AUTO_LAND 飞行器将自动降落在最后一个航点。
@@ -12,7 +16,13 @@ public class WayPointsV2Bean {
     //4 CONTINUE_UNTIL_STOP 当飞机到达最终航路点时，它会悬停而不结束任务。操纵杆仍可用于将飞机沿其先前的航路点拉回。此任务结束的唯一方法是调用 stopMission。
     private String finishedAction;
     private List<WayPointsBean> wayPoints;
+    public String getName() {
+        return name;
+    }
 
+    public void setName(String name) {
+        this.name = name;
+    }
     public String getSpeed() {
         return speed;
     }

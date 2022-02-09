@@ -30,7 +30,7 @@ import dji.sdk.sdkmanager.DJISDKManager;
 /**
  * Created by xhf on 2020-06-08
  */
-public class ApronApp extends Application{
+public class ApronApp extends Application {
 
     public static String EQUIPMENT_ID;
     public static boolean HAVE_Permission = false;
@@ -65,6 +65,7 @@ public class ApronApp extends Application{
 // queryAndLoadNewPatch不可放在attachBaseContext 中，否则无网络权限，建议放在后面任意时刻，如onCreate中
 //        SophixManager.getInstance().queryAndLoadNewPatch();//查询是否有新的补丁
     }
+
     /**
      * Logger 初始化配置
      */
@@ -84,6 +85,7 @@ public class ApronApp extends Application{
             }
         });
     }
+
     private void initCrash() {
         CaocConfig.Builder.create()
                 .backgroundMode(CaocConfig.BACKGROUND_MODE_SILENT) //背景模式,开启沉浸式
@@ -100,8 +102,8 @@ public class ApronApp extends Application{
     }
 
     /**
-     * This function is used to get the instance of DJIBaseProduct.
-     * If no product is connected, it returns null.
+     * This function is used to get the instance of DJIBaseProduct. If no product is connected, it
+     * returns null.
      */
     public static synchronized BaseProduct getProductInstance() {
         if (null == mProduct) {
@@ -115,7 +117,6 @@ public class ApronApp extends Application{
         if (getProductInstance() == null) return null;
 
         AirLink airLink = null;
-
         if (getProductInstance() instanceof Aircraft) {
             airLink = ((Aircraft) getProductInstance()).getAirLink();
 
@@ -135,22 +136,22 @@ public class ApronApp extends Application{
         if (!isAircraftConnected()) return null;
         return (Aircraft) getProductInstance();
     }
+
     public static synchronized Camera getCameraInstance() {
 
         if (getProductInstance() == null) return null;
 
         Camera camera = null;
 
-        if (getProductInstance() instanceof Aircraft){
+        if (getProductInstance() instanceof Aircraft) {
             camera = ((Aircraft) getProductInstance()).getCamera();
-
         } else if (getProductInstance() instanceof HandHeld) {
             camera = ((HandHeld) getProductInstance()).getCamera();
         }
-
         return camera;
     }
-    public static  boolean isMavicAir2() {
+
+    public static boolean isMavicAir2() {
         BaseProduct baseProduct = getProductInstance();
         if (baseProduct != null) {
             return baseProduct.getModel() == Model.MAVIC_AIR_2;
@@ -158,7 +159,7 @@ public class ApronApp extends Application{
         return false;
     }
 
-    public static  boolean isM300() {
+    public static boolean isM300() {
         BaseProduct baseProduct = getProductInstance();
         if (baseProduct != null) {
             return baseProduct.getModel() == Model.MATRICE_300_RTK;

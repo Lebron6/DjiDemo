@@ -446,6 +446,16 @@ public class SettingValueBean {
 
         private int rtkSwitch;//SETRTK状态
         private int serviceType;//RTK类型
+        private int rtkMaintainPositioningAccuracy;//RTK状态保持是否开启
+
+        public int getRtkMaintainPositioningAccuracy() {
+            return rtkMaintainPositioningAccuracy;
+        }
+
+        public void setRtkMaintainPositioningAccuracy(int rtkMaintainPositioningAccuracy) {
+            this.rtkMaintainPositioningAccuracy = rtkMaintainPositioningAccuracy;
+        }
+
         private Info info;
 
         public Info getInfo() {

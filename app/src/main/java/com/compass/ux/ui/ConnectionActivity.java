@@ -25,6 +25,7 @@ import dji.common.flightcontroller.LEDsSettings;
 import dji.common.flightcontroller.ObstacleDetectionSector;
 import dji.common.flightcontroller.RTKState;
 import dji.common.flightcontroller.VisionDetectionState;
+import dji.common.flightcontroller.VisionSystemWarning;
 import dji.common.flightcontroller.WindDirection;
 import dji.common.flightcontroller.flightassistant.PerceptionInformation;
 import dji.common.flightcontroller.rtk.NetworkServiceSettings;
@@ -70,6 +71,7 @@ import dji.common.mission.waypointv2.Action.WaypointV2AssociateTriggerParam;
 import dji.common.mission.waypointv2.WaypointV2;
 import dji.common.mission.waypointv2.WaypointV2Mission;
 import dji.common.mission.waypointv2.WaypointV2MissionDownloadEvent;
+import dji.common.mission.waypointv2.WaypointV2MissionExecuteState;
 import dji.common.mission.waypointv2.WaypointV2MissionExecutionEvent;
 import dji.common.mission.waypointv2.WaypointV2MissionState;
 import dji.common.mission.waypointv2.WaypointV2MissionTypes;
@@ -157,6 +159,7 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -172,6 +175,7 @@ import com.compass.ux.bean.DownLoadFileList;
 import com.compass.ux.bean.FlightControllerBean;
 import com.compass.ux.bean.LaserMeasureInformBean;
 import com.compass.ux.bean.MissionPointBean;
+import com.compass.ux.bean.MissionState;
 import com.compass.ux.bean.PicUpload;
 import com.compass.ux.bean.SettingValueBean;
 import com.compass.ux.bean.StorageStateBean;
@@ -184,6 +188,7 @@ import com.compass.ux.bean.WayPointsV2Bean;
 import com.compass.ux.bean.WebInitializationBean;
 import com.compass.ux.callback.OnRateSelectedListener;
 import com.compass.ux.netty_lib.constant.UrlConstant;
+import com.compass.ux.utils.DJIWaypointV2ErrorMessageUtils;
 import com.compass.ux.utils.DisplayUtil;
 import com.compass.ux.utils.ImageUtils;
 import com.compass.ux.utils.ModuleVerificationUtil;
@@ -291,7 +296,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     //    private DJIMap.MapType mapType = DJIMap.MapType.NORMAL;
     private boolean showFlyZone = false;
     private RelativeLayout layout_rate_window, layout_sort, layout_air_info;
-    private TextView tv_LiveVideoResolution,tv_zoom, tv_firmware_version, tv_network_rtk_status, tv_remote_firmware_version, tv_live_url, tv_account_state, tv_bind_status, tv_appActivation_status, tv_horizontal_speed, tv_distance, tv_heigth, tv_vertical_speed;
+    private TextView tv_LiveVideoResolution, tv_zoom, tv_firmware_version, tv_network_rtk_status, tv_remote_firmware_version, tv_live_url, tv_account_state, tv_bind_status, tv_appActivation_status, tv_horizontal_speed, tv_distance, tv_heigth, tv_vertical_speed;
     private TextView tv_txt_1, tv_txt_2, tv_txt_3, tv_txt_4, tv_txt_5, tv_txt_6, tv_txt_7,
             tv_txt_8, tv_txt_9, tv_txt_10, tv_txt_11, tv_txt_12, tv_txt_13, tv_txt_14, tv_txt_15, tv_txt_16, tv_txt_17;
     private TextView tv_rate, tv_LiveVideoBitRate, tv_LiveVideoFps;
@@ -358,6 +363,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     Communication communication_error_log = null;
     Communication communication_StorageState = null;
     Communication communication_isFlying = null;
+    Communication communication_missionState = null;
     Communication communication_HavePic = null;
     Communication communication_gohomelength = null;
     Communication communication_length = null;
@@ -429,6 +435,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     private static boolean init_socket = false;
     private static DatagramSocket udp_sock;
     private static InetAddress serverAddr;
+
+    private Button cancelLanding, cancelGoHome;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -655,7 +664,69 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
         layout_previewer_container = (RelativeLayout) findViewById(R.id.layout_previewer_container);
         ivAvoidance = (ImageView) findViewById(R.id.iv_obstacle_avoidance);
+        cancelGoHome = findViewById(R.id.cancelGoHome);
+        cancelGoHome.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mFlightController != null) {
+                    mFlightController.cancelGoHome(new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            if (djiError == null) {
+                                Log.e("取消返航", "success");
+                            } else {
+                                Log.e("取消返航", "fail:" + djiError.getDescription());
 
+                            }
+                        }
+                    });
+                }
+            }
+        });
+        cancelLanding = findViewById(R.id.cancelLanding);
+        cancelLanding.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mFlightController != null) {
+//                    mFlightController.startGoHome(new CommonCallbacks.CompletionCallback() {
+//                        @Override
+//                        public void onResult(DJIError djiError) {
+//                            if (djiError == null) {
+//                                Log.e("开始返航", "success");
+//                            } else {
+//                                Log.e("开始返航", "fail:" + djiError.getDescription());
+//                            }
+//                        }
+//                    });
+                    mFlightController.cancelLanding(
+                            new CommonCallbacks.CompletionCallback() {
+                                @Override
+                                public void onResult(DJIError djiError) {
+                                    if (djiError == null) {
+                                        Log.e("取消着落", "success");
+                                    } else {
+                                        Log.e("取消着落", "fail:" + djiError.getDescription());
+                                    }
+                                }
+                            }
+                    );
+                }
+//                if (mFlightController != null) {
+//                    mFlightController.cancelLanding(
+//                            new CommonCallbacks.CompletionCallback() {
+//                                @Override
+//                                public void onResult(DJIError djiError) {
+//                                    if (djiError == null) {
+//                                        Log.e("取消着落", "success");
+//                                    } else {
+//                                        Log.e("取消着落", "fail:" + djiError.getDescription());
+//                                    }
+//                                }
+//                            }
+//                    );
+//                }
+            }
+        });
         mVideoSurface = (TextureView) findViewById(R.id.video_previewer_surface);
         mVideoSurface.setSurfaceTextureListener(textureListener);
 
@@ -751,7 +822,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 camera.getLens(camera.getIndex()).setLaserMeasureInformationCallback(new LaserMeasureInformation.Callback() {
                     @Override
                     public void onUpdate(LaserMeasureInformation laserMeasureInformation) {
-
                         Log.e("激光打点数据", new Gson().toJson(laserMeasureInformation));
                     }
                 });
@@ -849,6 +919,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 //                loginOut();
 //                loginAccount();
                 restartLiveShow(null);
+//                CancelGoHome(null);
             }
         });
 
@@ -859,6 +930,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 loginOut();
             }
         });
+
         for (float i = 0.2f; i <= 20f; i += 0.1f) {
             rates.add(df2.format(i) + "");
         }
@@ -884,12 +956,13 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     private boolean isLiveStreamManagerOn() {
         if (DJISDKManager.getInstance().getLiveStreamManager() == null) {
-            Toast.makeText(getApplicationContext(), "未检测到图传,请检查遥控器是否正常连接", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(getApplicationContext(), "未检测到图传,请检查遥控器是否正常连接", Toast.LENGTH_SHORT).show();
             return false;
         }
         return true;
     }
-    private void getLiveVideoResolution(){
+
+    private void getLiveVideoResolution() {
 
     }
 
@@ -899,9 +972,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             return;
         }
         LiveStreamManager liveStreamManager = DJISDKManager.getInstance().getLiveStreamManager();
-        if (liveStreamManager.isStreaming()) {
-          liveStreamManager.stopStream();
-        }
+//        if (liveStreamManager.isStreaming()) {
+            liveStreamManager.stopStream();
+//        }
         liveStreamManager.setLiveUrl(liveShowUrl);
         /**
          * CDN加速
@@ -912,13 +985,13 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 //
 //        DJISDKManager.getInstance().getLiveStreamManager().setLiveUrl("rtmp://47.102.102.224:1935/live/wrj");
         //关闭音频
-        liveStreamManager.setAudioStreamingEnabled(true);
-        liveStreamManager.setAudioMuted(true);
+        liveStreamManager.setAudioStreamingEnabled(false);
+        liveStreamManager.setAudioMuted(false);
         liveStreamManager.setVideoEncodingEnabled(true);
 //                DJISDKManager.getInstance().getLiveStreamManager().setLiveVideoBitRateMode(LiveVideoBitRateMode.MANUAL);
-        liveStreamManager.setLiveVideoBitRate(20);//值越大，FPS就会越大
-//        liveStreamManager.setLiveVideoBitRateMode(AUTO);
-        liveStreamManager.setLiveVideoResolution(VIDEO_RESOLUTION_1920_1080);
+//        liveStreamManager.setLiveVideoBitRate(20);//码率越高，FPS就会越高
+        liveStreamManager.setLiveVideoBitRateMode(AUTO);
+        liveStreamManager.setLiveVideoResolution(VIDEO_RESOLUTION_1920_1080);//分辨率低，FPS越高
 //        DJISDKManager.getInstance().getLiveStreamManager().stopStream();
         liveStreamManager.setVideoSource(LiveStreamManager.LiveStreamVideoSource.Primary);
         liveStreamManager.setStartTime();
@@ -1284,7 +1357,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         }
         tv_LiveVideoBitRate.setText(DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoBitRate() == 0 ? "" : DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoBitRate() + " (kpbs)");
         tv_LiveVideoFps.setText(DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoFps() + "");
-            tv_LiveVideoResolution.setText(DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoResolution().getHeight()+"---"+DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoResolution().getWidth());
+        tv_LiveVideoResolution.setText(DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoResolution().getHeight() + "---" + DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoResolution().getWidth());
     }
 
     private void loginAccount() {
@@ -1362,7 +1435,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
                     @Override
                     public void onFailure(DJIError djiError) {
-
                     }
                 });
                 initGimbal();
@@ -1372,7 +1444,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     @Override
                     public void onUpdate(FlightControllerState flightControllerState) {
                         int horizontalSpeed1 = (int) Math.sqrt((double) ((Math.abs(flightControllerState.getVelocityY()) * Math.abs(flightControllerState.getVelocityY())) + (Math.abs(flightControllerState.getVelocityX()) * Math.abs(flightControllerState.getVelocityX()))));
-//
+                        MissionState.getInstance().setGoHomeState(flightControllerState.getGoHomeExecutionState().name());
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -1398,6 +1470,16 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                             communication_isFlying.setMethod((Constant.IS_FLYING));
                             communication_isFlying.setResult(isFlying ? "1" : "0");
                             NettyClient.getInstance().sendMessage(communication_isFlying, null);
+
+                            //推送航线状态
+                            if (communication_missionState == null) {
+                                communication_missionState = new Communication();
+                            }
+                            communication_missionState.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                            communication_missionState.setEquipmentId(ApronApp.EQUIPMENT_ID);
+                            communication_missionState.setMethod((Constant.MISSION_STATE));
+                            communication_missionState.setResult(new Gson().toJson(MissionState.getInstance()));
+                            NettyClient.getInstance().sendMessage(communication_missionState, null);
                         }
 
                         try {
@@ -1544,7 +1626,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                 if (mFlightController.getCompass() != null) {
                                     wrj_heading = mFlightController.getCompass().getHeading() + "";
                                     flightControllerBean.setHeading(wrj_heading);
-//                            Log.d("DDDDDD","无人机的航向度数："+mFlightController.getCompass().getHeading());
                                 }
 
                                 LatLng latLngHome = MapConvertUtils.getGDLatLng(flightControllerState.getHomeLocation().getLatitude(), flightControllerState.getHomeLocation().getLongitude(), ConnectionActivity.this);
@@ -1552,7 +1633,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                     flightControllerBean.setHomeLocationLatitude(0);
                                 } else {
                                     flightControllerBean.setHomeLocationLatitude(latLngHome.latitude);
-//                            flightControllerBean.setHomeLocationLatitude(flightControllerState.getHomeLocation().getLatitude());
                                 }
                                 if ((flightControllerState.getHomeLocation().getLongitude() + "").equals("NaN")) {
                                     flightControllerBean.setHomeLocationLongitude(0);
@@ -1679,8 +1759,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
                                     @Override
                                     public void onFailure(DJIError djiError) {
-
-
                                     }
                                 });
                             }
@@ -1709,12 +1787,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                 communication_down_link.setResult(gson.toJson(downLinkBean, StringsBean.class));
                                 NettyClient.getInstance().sendMessage(communication_down_link, null);
                             }
-
-
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-
                     }
                 });
 //            //低电量值，严重低电量，智能返回（都在电池ui那块） 有用
@@ -1743,7 +1818,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 mFlightController.getSmartReturnToHomeEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
                     @Override
                     public void onSuccess(Boolean aBoolean) {
-                        Log.e("设置只能返航初始", aBoolean + "");
                         smartReturnToHomeEnabled = aBoolean;
                     }
 
@@ -1836,6 +1910,43 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 }
 
                 mFlightAssistant = mFlightController.getFlightAssistant();
+//                //设置避障监听
+//                mFlightAssistant.setVisualPerceptionInformationCallback(new CommonCallbacks.CompletionCallbackWith<PerceptionInformation>() {
+//                    @Override
+//                    public void onSuccess(PerceptionInformation perceptionInformation) {
+//                        Log.e("触发了避障", "true");
+//                    }
+//
+//                    @Override
+//                    public void onFailure(DJIError djiError) {
+//
+//                    }
+//                });
+//                mFlightAssistant.setVisionDetectionStateUpdatedCallback(new VisionDetectionState.Callback() {
+//                    @Override
+//                    public void onUpdate(@NonNull VisionDetectionState visionDetectionState) {
+//                        Log.e("避障监听",new Gson().toJson(visionDetectionState));
+//                        VisionSystemWarning systemWarning = visionDetectionState.getSystemWarning();
+//                        if (systemWarning._equals(VisionSystemWarning.find()))
+//                        StringsBean stringsBean = new StringsBean();
+//                        if (systemWarning.equals(VisionSystemWarning.DANGEROUS)) {
+//                            stringsBean.setValue("视觉系统检测到的障碍物与飞行器之间的距离很危险（小于2米）。");
+//                        } else if (systemWarning.equals(VisionSystemWarning.UNKNOWN)) {
+//                            stringsBean.setValue("距离警告未知。发生异常时返回此警告。");
+//                        }
+//                        if (diagnosticsClickTime()) {
+//                            if (communication_error_log == null) {
+//                                communication_error_log = new Communication();
+//                            }
+//                            communication_error_log.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+//                            communication_error_log.setEquipmentId(ApronApp.EQUIPMENT_ID);
+//                            communication_error_log.setMethod((Constant.DIAGNOSTICS));
+//                            communication_error_log.setResult(gson.toJson(stringsBean));
+//                            NettyClient.getInstance().sendMessage(communication_error_log, null);
+//                        }
+//
+//                    }
+//                });
                 //向上避障
                 mFlightAssistant.getUpwardVisionObstacleAvoidanceEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
                     @Override
@@ -2004,6 +2115,13 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     }
 
     private boolean isCanOpenPlayBack = true;
+
+    private boolean isH20T() {
+        if (camera != null) {
+            return camera.getDisplayName().equals("Zenmuse H20T");
+        }
+        return false;
+    }
 
     private void initCamera() {
         //接入扩音器时camera数量为2，多一个是payloadCamera,这里我们暂取第一位
@@ -2184,47 +2302,34 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
                     }
                 });
-                camera.getLens(2).getThermalDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ThermalDigitalZoomFactor>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.ThermalDigitalZoomFactor thermalDigitalZoomFactor) {
-                        webInitializationBean.setThermalDigitalZoom(thermalDigitalZoomFactor.value() + "");
-                    }
+                Logger.e("相机名称" + camera.getDisplayName() + "");
+                if (isH20T()) {
+                    camera.getLens(2).getThermalDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ThermalDigitalZoomFactor>() {
+                        @Override
+                        public void onSuccess(SettingsDefinitions.ThermalDigitalZoomFactor thermalDigitalZoomFactor) {
+                            webInitializationBean.setThermalDigitalZoom(thermalDigitalZoomFactor.value() + "");
+                        }
 
-                    @Override
-                    public void onFailure(DJIError djiError) {
+                        @Override
+                        public void onFailure(DJIError djiError) {
 
-                    }
-                });
+                        }
+                    });
 
-                camera.getLens(2).getDisplayMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.DisplayMode>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.DisplayMode displayMode) {
-                        webInitializationBean.setHyDisplayMode(displayMode.value() + "");
-                    }
+                    camera.getLens(2).getDisplayMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.DisplayMode>() {
+                        @Override
+                        public void onSuccess(SettingsDefinitions.DisplayMode displayMode) {
+                            webInitializationBean.setHyDisplayMode(displayMode.value() + "");
+                        }
 
-                    @Override
-                    public void onFailure(DJIError djiError) {
+                        @Override
+                        public void onFailure(DJIError djiError) {
 
-                    }
-                });
+                        }
+                    });
+                }
 
 
-//                获取变焦距离
-                camera.getLens(camera.getIndex()).getHybridZoomSpec(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.HybridZoomSpec>() {
-                    @Override
-                    public void onSuccess(SettingsDefinitions.HybridZoomSpec hybridZoomSpec) {
-
-                        Log.d("HHHHHFocalLength", hybridZoomSpec.getFocalLengthStep() + "");//11
-                        Log.d("HHHHHMaxH", hybridZoomSpec.getMaxHybridFocalLength() + "");//55620
-                        Log.d("HHHHHMinH", hybridZoomSpec.getMinHybridFocalLength() + "");//317
-                        Log.d("HHHHHMaxO", hybridZoomSpec.getMaxOpticalFocalLength() + "");//5562
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
 //                获取当前变焦焦距
                 camera.getLens(0).getHybridZoomFocalLength(new CommonCallbacks.CompletionCallbackWith<Integer>() {
                     @Override
@@ -2949,7 +3054,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 case Constant.SET_PRECISION_LAND:
                     setPrecisionLand(communication);
                     break;
-
                 //向上避障
                 case Constant.SET_UPWARDS_AVOIDANCE:
                     setUpwardsAvoidance(communication);
@@ -2986,10 +3090,13 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 case Constant.SET_CONTROLLER_SMOOTHING:
                     setControllerSmoothingFactor(communication);
                     break;
-
                 //rtk开关
                 case Constant.SET_RTK:
                     setRTK(communication);
+                    break;
+                //设置RTK状态变化后状态保持10分钟(MSDK4.16后支持)
+                case Constant.SET_RTK_MAINTAIN_POSITION:
+                    setRTKMaintainPositioningAccuracyModeEnabled(communication);
                     break;
                 //开始搜索基站
                 case Constant.START_SET_BS:
@@ -3013,7 +3120,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     //测试
                     setRTKNetwork(communication);
                     break;
-
                 //设置云台限位扩展
                 case Constant.PITCH_RANGE_EXTENSION:
                     setPitchRangeExtension(communication);
@@ -3073,9 +3179,27 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 case Constant.GET_PREVIEW_BY_NAME:
                     downLoadPreview(communication);
                     break;
+                case Constant.REBOOT:
+                    reboot(communication);
+                    break;
             }
         }
 
+    }
+
+    private void reboot(Communication communication) {
+        if (mFlightController != null) {
+            mFlightController.reboot(new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if (djiError == null) {
+                        sendErrorMSG2Server(communication, SUCCESS, "重启指令已发送");
+                    } else {
+                        sendErrorMSG2Server(communication, SUCCESS, "重启指令发送失败");
+                    }
+                }
+            });
+        }
     }
 
     private void downLoadPreview(Communication communication) {
@@ -3138,7 +3262,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 @Override
                 public void onSuccess(List<MediaFile> x, DJICameraError y) {
                     mediaFileList.removeAll(files);
-
                     sendErrorMSG2Server(communication, SUCCESS, "删除成功");
                 }
 
@@ -3168,7 +3291,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         downLoadIndex = 0;
         Log.e("开始下载", downLoadFileList.getName().get(downLoadIndex));
         downloadFileByIndex(downLoadFileList.getName().get(downLoadIndex));
-
     }
 
     File destDir = new File(Environment.getExternalStorageDirectory().getPath() + "/ApronPic/");
@@ -3180,7 +3302,15 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     mediaFileList.get(i).fetchFileData(destDir, null, new DownloadListener<String>() {
                         @Override
                         public void onFailure(DJIError error) {
-                            Log.e("下载失败", error.getDescription());
+                            XcFileLog.getInstace().i("下载失败:" + error.getDescription(), fileName);
+                            if (communication_HavePic == null) {
+                                communication_HavePic = new Communication();
+                            }
+                            communication_HavePic.setRequestTime(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()));
+                            communication_HavePic.setEquipmentId(ApronApp.EQUIPMENT_ID);
+                            communication_HavePic.setMethod((Constant.HAVEPIC));
+                            communication_HavePic.setResult("下载失败:" + error.getDescription() + ",请尝试重新下载");
+                            NettyClient.getInstance().sendMessage(communication_HavePic, null);
                         }
 
                         @Override
@@ -3210,7 +3340,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
                             File file = new File(filePath + "/" + fileName);
                             Log.e("下载测试", "success" + filePath);
-                            String type = ".jpg";
+                            String type;
                             if (fileName.substring(fileName.length() - 3).equals("mp4")) {
                                 type = ".mp4";
                                 runOnUiThread(new Runnable() {
@@ -3245,6 +3375,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                 @Override
                                 public void onFailure(Call call, IOException e) {
                                     Log.e("上传失败", e.toString());
+                                    XcFileLog.getInstace().i("上传文件失败:", file.getName() + "---");
                                     if (communication_HavePic == null) {
                                         communication_HavePic = new Communication();
                                     }
@@ -3296,25 +3427,26 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             @Override
             public void onResult(DJIError djiError) {
                 CommonDjiCallback(djiError, communication);
-                restartLiveShow(null);
+//                restartLiveShow(null);
             }
         });
     }
 
     //打开云台相册
     private void photoAlbum(Communication communication) {
-        if (ApronApp.getProductInstance() == null) {
+        if (ApronApp.getAircraftInstance() == null) {
             mediaFileList.clear();
             sendErrorMSG2Server(communication, ERROR, "Product disconnected");
-            return;
         } else {
-//            if (mediaFileList != null && mediaFileList.size() > 0) {//已请求给相册数据,直接获取缩略图
-//                getThumbnails(communication);
-//            } else {
-            initMediaManager(communication);
-//            }
+            FlightController flightController = ApronApp.getAircraftInstance().getFlightController();
+            if (flightController != null) {
+                if (flightController.getState().isFlying()) {
+                    sendErrorMSG2Server(communication, ERROR, "飞行中无法查看相册");
+                } else {
+                    initMediaManager(communication);
+                }
+            }
         }
-
     }
 
     private List<MediaFile> mediaFileList = new ArrayList<>();
@@ -3370,6 +3502,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 DJILog.e(TAG, "Media Manager is busy.");
                 sendErrorMSG2Server(communication, ERROR, "文件正在同步,请退出相册后重试:" + "Media Manager is busy");
             } else {
+
                 mMediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.SDCARD, djiError -> {
                     if (null == djiError) {
                         List<MediaFile> fileList = mMediaManager.getSDCardFileListSnapshot();
@@ -3382,15 +3515,12 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                 }
                                 return 0;
                             });
-                            Log.e("获取相册照片数目111", fileList.size() + "---");
 
                             for (int i = 0; i < fileList.size(); i++) {
 //                                if (fileList.get(i).getMediaType() == MediaFile.MediaType.JPEG) {
                                 mediaFileList.add(fileList.get(i));
 //                                }
                             }
-                            Log.e("获取相册照片数目", mediaFileList.size() + "---");
-
                             scheduler.resume(new CommonCallbacks.CompletionCallback() {
                                 @Override
                                 public void onResult(DJIError error) {
@@ -3402,7 +3532,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
                         } else {
                             sendErrorMSG2Server(communication, ERROR, "暂无媒体文件");
-
                         }
                     } else {
                         sendErrorMSG2Server(communication, ERROR, "获取媒体文件失败:" + djiError.getDescription());
@@ -3431,7 +3560,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         } else {
             sendErrorMSG2Server(communication, ERROR, "collect error");
         }
-
     }
 
     private void getThumbnailByIndex(List<MediaFile> collect, MediaFile mediaFile, Communication communication) {
@@ -3547,7 +3675,12 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             mFlightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    CommonDjiCallback(djiError, communication);
+                    if (djiError == null) {
+                        sendErrorMSG2Server(communication, SUCCESS, "已获取虚拟摇杆控制权");
+                        mFlightController.setVirtualStickAdvancedModeEnabled(true);
+                    } else {
+                        sendErrorMSG2Server(communication, SUCCESS, "获取虚拟摇杆控制权失败");
+                    }
                 }
             });
         }
@@ -3559,7 +3692,12 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             mFlightController.setVirtualStickModeEnabled(false, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    CommonDjiCallback(djiError, communication);
+                    if (djiError == null) {
+                        sendErrorMSG2Server(communication, SUCCESS, "已取消虚拟摇杆控制权");
+                        mFlightController.setVirtualStickAdvancedModeEnabled(false);
+                    } else {
+                        sendErrorMSG2Server(communication, SUCCESS, "取消虚拟摇杆控制权失败");
+                    }
                 }
             });
         }
@@ -3659,45 +3797,30 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     }
 
-    //摄像头上下 30~-90
+    //摄像头上下绝对角度
     private void camera_up_and_down_by_a(Communication communication) {
-
-        double PitchAngle = Double.parseDouble(webInitializationBean.getPitchAngle());
         double angle = Double.parseDouble(communication.getPara().get(Constant.ANGLE));
-        boolean canmove;
-        if (PitchAngle + angle > 30 || PitchAngle + angle < -90) {
-            canmove = false;
-        } else {
-            canmove = true;
-        }
-
-        if (canmove) {
-
-            if (!TextUtils.isEmpty(angle + "")) {
-
-                if (gimbal == null) {
-                    gimbal = ((Aircraft) ApronApp.getProductInstance()).getGimbals().get(0);
-                }
-                Rotation.Builder builder = new Rotation.Builder().mode(RotationMode.ABSOLUTE_ANGLE).time(2);
-                builder.pitch(Float.parseFloat(angle + ""));
-                builder.build();
-
-                gimbal.rotate(builder.build(), new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(DJIError djiError) {
-                        if (djiError != null) {
-                            sendErrorMSG2Server(communication, ERROR, djiError.getDescription());
-                        } else {
-                            sendErrorMSG2Server(communication, SUCCESS, (Double.parseDouble(webInitializationBean.getPitchAngle()) + angle) + "");
-                        }
-
-                    }
-                });
-            } else {
-                sendErrorMSG2Server(communication, ERROR, "unknow");
+        if (!TextUtils.isEmpty(angle + "")) {
+            if (gimbal == null) {
+                gimbal = ((Aircraft) ApronApp.getProductInstance()).getGimbals().get(0);
             }
+            Rotation.Builder builder = new Rotation.Builder().mode(RotationMode.ABSOLUTE_ANGLE).time(2);
+            builder.pitch(Float.parseFloat(angle + ""));
+            builder.yaw(Float.parseFloat("0"));
+            builder.build();
+
+            gimbal.rotate(builder.build(), new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if (djiError != null) {
+                        sendErrorMSG2Server(communication, ERROR, djiError.getDescription());
+                    } else {
+                        sendErrorMSG2Server(communication, SUCCESS, (Double.parseDouble(webInitializationBean.getPitchAngle()) + angle) + "");
+                    }
+                }
+            });
         } else {
-            sendErrorMSG2Server(communication, ERROR, "云台角度已达到最大值");
+            sendErrorMSG2Server(communication, ERROR, "角度参数有误");
         }
 
     }
@@ -4513,7 +4636,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             }
             webInitializationBean.setThermalDigitalZoom(type);
 
-            if (isM300Product()) {
+            if (isM300Product() && isH20T()) {
                 camera.getLens(2).setThermalDigitalZoomFactor(thermalDigitalZoomFactor, new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
@@ -5003,18 +5126,21 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     private void setThermalPalette(Communication communication) {
         if (camera != null && isM300Product()) {
             String type = communication.getPara().get(Constant.TYPE);
-            camera.getLens(2).setThermalPalette(SettingsDefinitions.ThermalPalette.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
-                    CommonDjiCallback(djiError, communication);
-                }
-            });
+            if (isM300Product() && isH20T()) {
+                camera.getLens(2).setThermalPalette(SettingsDefinitions.ThermalPalette.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        CommonDjiCallback(djiError, communication);
+                    }
+                });
+            }
+
         }
     }
 
     //设置等温度线
     private void setThermalIsothermEnabled(Communication communication) {
-        if (camera != null && isM300Product()) {
+        if (camera != null && isM300Product() && isH20T()) {
             String type = communication.getPara().get(Constant.TYPE);
             String min_value = communication.getPara().get(Constant.MIN_VALUE);
             String max_value = communication.getPara().get(Constant.MAX_VALUE);
@@ -5048,6 +5174,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     }
                 }
             });
+        } else {
+            sendErrorMSG2Server(communication, ERROR, "设备不支持");
         }
     }
 
@@ -5075,6 +5203,35 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     CommonDjiCallback(djiError, communication);
                 }
             });
+        }
+    }
+
+    private void setRTKMaintainPositioningAccuracyModeEnabled(Communication communication) {
+        String type = communication.getPara().get(Constant.TYPE);
+        if (ModuleVerificationUtil.isRtkAvailable()) {
+            if (mRTK != null) {
+                mRTK.setRTKMaintainPositioningAccuracyModeEnabled(type.equals("1") ? true : false, new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        CommonDjiCallback(djiError, communication);
+                    }
+                });
+
+            }
+            //检测状态保持是否打开
+            mRTK.getRTKMaintainPositioningAccuracyModeEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                @Override
+                public void onSuccess(Boolean aBoolean) {
+                    setRtkBean.setRtkMaintainPositioningAccuracy(aBoolean ? 1 : 0);
+                }
+
+                @Override
+                public void onFailure(DJIError djiError) {
+                    setRtkBean.setRtkMaintainPositioningAccuracy(-1);
+                }
+            });
+        } else {
+            showToast("RTK不可用");
         }
     }
 
@@ -5260,6 +5417,18 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         setRtkBean.setRtkSwitch(-1);
                     }
                 });
+                //检测RTK状态保持是否开启
+                mRTK.getRTKMaintainPositioningAccuracyModeEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean aBoolean) {
+                        setRtkBean.setRtkMaintainPositioningAccuracy(aBoolean ? 1 : 0);
+                    }
+
+                    @Override
+                    public void onFailure(DJIError djiError) {
+                        setRtkBean.setRtkMaintainPositioningAccuracy(-1);
+                    }
+                });
                 if (isM300Product()) {
                     //D-RTK实时返回信息
                     mRTK.setRtkConnectionStateWithBaseStationCallback(new RTK.RTKConnectionStateWithBaseStationReferenceSourceCallback() {
@@ -5275,7 +5444,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 mRTK.setStateCallback(new RTKState.Callback() {
                     @Override
                     public void onUpdate(RTKState rtkState) {
-                        Log.e("rtkState:", new Gson().toJson(rtkState));
+//                        Log.e("rtkState:", new Gson().toJson(rtkState));
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -5374,7 +5543,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     //设置红外展示模式 1和2
     private void setHyDisplayMode(Communication communication) {
         String type = communication.getPara().get(Constant.TYPE);
-        if (camera != null) {
+        if (camera != null && isH20T()) {
             camera.getLens(2).setDisplayMode(SettingsDefinitions.DisplayMode.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
@@ -5399,6 +5568,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 }
             });
 
+        } else {
+            sendErrorMSG2Server(communication, ERROR, "设备不支持");
         }
     }
 
@@ -5427,7 +5598,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 mCodecManager.cleanSurface();
                 mCodecManager = null;
             }
-
             return false;
         }
 
@@ -5450,7 +5620,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 errorMsg += list.get(i).getSolution() + ",";
                 Log.d("ErrorUpdate", list.get(i).toString());
             }
-
         }
         if (!TextUtils.isEmpty(errorMsg)) {
             errorMsg = errorMsg.substring(0, errorMsg.length() - 1);
@@ -5472,7 +5641,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             }
 
         }
-
 
     }
 
@@ -5954,38 +6122,40 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     }
 
     String speed;//setMaxFlightSpeed && setAutoFlightSpeed
+    String name;//航线名称
     String finishedAction;
     List<WayPointsV2Bean.WayPointsBean> wayPointsBeans;//航点
 
     //航线规划v2
     private void waypoint_plan_V2(Communication communication) {
-        if (UserAccountManager.getInstance().getUserAccountState() == UserAccountState.AUTHORIZED &&
-                DJISDKManager.getInstance().getAppActivationManager().getAircraftBindingState() == BOUND) {
-            XcFileLog.getInstace().i("waypoint_plan_V2 way_points：", communication.getPara().get(Constant.WAY_POINTS));
-            Log.e("waypoint_plan_V2", communication.getPara().get(Constant.WAY_POINTS));
-            wayPointsBeans = gson.fromJson(communication.getPara().get(Constant.WAY_POINTS), new TypeToken<List<WayPointsV2Bean.WayPointsBean>>() {
-            }.getType());
-            finishedAction = communication.getPara().get(Constant.FINISHED_ACTION);
-            speed = communication.getPara().get(Constant.SPEED);
+//        if (UserAccountManager.getInstance().getUserAccountState() == UserAccountState.AUTHORIZED &&
+//                DJISDKManager.getInstance().getAppActivationManager().getAircraftBindingState() == BOUND) {
+        XcFileLog.getInstace().i("waypoint_plan_V2 way_points：", communication.getPara().get(Constant.WAY_POINTS));
+        Log.e("waypoint_plan_V2", communication.getPara().get(Constant.WAY_POINTS));
+        wayPointsBeans = gson.fromJson(communication.getPara().get(Constant.WAY_POINTS), new TypeToken<List<WayPointsV2Bean.WayPointsBean>>() {
+        }.getType());
+        finishedAction = communication.getPara().get(Constant.FINISHED_ACTION);
+        speed = communication.getPara().get(Constant.SPEED);
+        name = communication.getPara().get(Constant.NAME);
 
-            if (ApronApp.getAircraftInstance() != null) {
-                if (ModuleVerificationUtil.isFlightControllerAvailable()) {
-                    if (waypointV2MissionOperator == null) {
-                        waypointV2MissionOperator = MissionControl.getInstance().getWaypointMissionV2Operator();
-                    }
-                    setWayV2UpListener(communication);
-                    loadMission(communication);
-                } else {
-                    sendErrorMSG2Server(communication, ERROR, "The FlightController is unavailable");
-                    XcFileLog.getInstace().i("waypoint_plan_V2：", "The FlightController is unavailable");
+        if (ApronApp.getAircraftInstance() != null) {
+            if (ModuleVerificationUtil.isFlightControllerAvailable()) {
+                if (waypointV2MissionOperator == null) {
+                    waypointV2MissionOperator = MissionControl.getInstance().getWaypointMissionV2Operator();
                 }
+                setWayV2UpListener(communication);
+                loadMission(communication);
             } else {
-                sendErrorMSG2Server(communication, ERROR, "The Aircraft is disconnected");
-                XcFileLog.getInstace().i("waypoint_plan_V2：", "The Aircraft is disconnected");
+                sendErrorMSG2Server(communication, ERROR, "The FlightController is unavailable");
+                XcFileLog.getInstace().i("waypoint_plan_V2：", "The FlightController is unavailable");
             }
         } else {
-            sendErrorMSG2Server(communication, ERROR, UserAccountManager.getInstance().getUserAccountState().name() + ":请尝试在客户端登录账号");
+            sendErrorMSG2Server(communication, ERROR, "The Aircraft is disconnected");
+            XcFileLog.getInstace().i("waypoint_plan_V2：", "The Aircraft is disconnected");
         }
+//        } else {
+//            sendErrorMSG2Server(communication, ERROR, UserAccountManager.getInstance().getUserAccountState().name() + ":请尝试在客户端登录账号");
+//        }
     }
 
     private void loadMission(Communication communication) {
@@ -6018,9 +6188,10 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
                     if (djiWaypointV2Error == null) {
                         upLoadMission(communication);
+                    } else {
+                        sendErrorMSG2Server(communication, ERROR, "加载航线失败："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
                     }
-                    XcFileLog.getInstace().i("waypoint_plan_V2 loadMission:", djiWaypointV2Error == null ? "Success" : djiWaypointV2Error.getDescription());
-                    CommonDjiCallback(djiWaypointV2Error, communication);
+                    XcFileLog.getInstace().i("waypoint_plan_V2 loadMission:", djiWaypointV2Error == null ? "Success" : DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
                 }
             });
         }
@@ -6030,8 +6201,10 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         waypointV2MissionOperator.uploadMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
             @Override
             public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
-                CommonDjiCallback(djiWaypointV2Error, communication);
-                XcFileLog.getInstace().i("waypoint_plan_V2 upLoadMission:", djiWaypointV2Error == null ? "Success" : djiWaypointV2Error.getDescription());
+                if (djiWaypointV2Error != null) {
+                    sendErrorMSG2Server(communication, ERROR, "上传航线失败："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                }
+                XcFileLog.getInstace().i("waypoint_plan_V2 upLoadMission:", djiWaypointV2Error == null ? "Success" : DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
             }
         });
     }
@@ -6052,15 +6225,18 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             @Override
             public void onUploadUpdate(WaypointV2MissionUploadEvent waypointV2MissionUploadEvent) {
                 if (waypointV2MissionUploadEvent.getError() != null) {
-                    XcFileLog.getInstace().i("waypoint_plan_V2 onUploadUpdate error:", waypointV2MissionUploadEvent.getError().getDescription());
-                    showToast(waypointV2MissionUploadEvent.getError().getDescription());
-                    sendErrorMSG2Server(communication, ERROR, waypointV2MissionUploadEvent.getError().getDescription());
+                    XcFileLog.getInstace().i("waypoint_plan_V2 onUploadUpdate error:", DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(waypointV2MissionUploadEvent.getError()));
+                    sendErrorMSG2Server(communication, ERROR, "监听到航线上传异常："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(waypointV2MissionUploadEvent.getError()));
                 }
+
             }
 
             @Override
             public void onExecutionUpdate(WaypointV2MissionExecutionEvent waypointV2MissionExecutionEvent) {
                 if (waypointV2MissionExecutionEvent != null && waypointV2MissionExecutionEvent.getProgress() != null) {
+                    MissionState.getInstance().setOffIndex(waypointV2MissionExecutionEvent.getProgress().getTargetWaypointIndex() + "");
+//                    waypointV2MissionExecuteStateToString(waypointV2MissionExecutionEvent.getProgress().getExecuteState());
+
                     targetWaypointIndex = waypointV2MissionExecutionEvent.getProgress().getTargetWaypointIndex();
                     for (int i = 0; i < mMissionPointBeans.size(); i++) {
                         mMissionPointBean = mMissionPointBeans.get(i);
@@ -6169,6 +6345,10 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
                     @Override
                     public void onUploadUpdate(ActionUploadEvent actionUploadEvent) {
+                        if (actionUploadEvent.getError() != null) {
+                            XcFileLog.getInstace().i("waypoint_plan_V2 onActionUploadUpdate error:", DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(actionUploadEvent.getError()));
+                            sendErrorMSG2Server(communication, ERROR, "监听到航点动作异常："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(actionUploadEvent.getError()));
+                        }
                         if (actionUploadEvent.getCurrentState().equals(ActionState.READY_TO_UPLOAD)) {
                             uploadWaypointAction(communication);
                         }
@@ -6234,6 +6414,41 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         }
     }
 
+    // 航点任务执行枚举值转字符串
+    private String waypointV2MissionExecuteStateToString(WaypointV2MissionExecuteState state) {
+        Log.e("飞行状态", state.name());
+        switch (state) {
+            case INITIALIZING:
+                return "INITIALIZING 初始化";
+            case MOVING:
+                MissionState.getInstance().setMissionState(0);
+                return "MOVING 移动中";
+            case GO_TO_FIRST_WAYPOINT:
+                MissionState.getInstance().setMissionState(0);
+                return "GO_TO_FIRST_WAYPOINT 飞向第一个航点";
+            case INTERRUPTED:
+                MissionState.getInstance().setMissionState(1);
+                return "INTERRUPTED 飞行器当前被用户打断";
+            case FINISHED:
+                MissionState.getInstance().setMissionState(1);
+                return "FINISHED 完成";
+            case GO_HOME:
+                MissionState.getInstance().setMissionState(0);
+                return "GO_HOME 返航";
+            case LANDING:
+                MissionState.getInstance().setMissionState(0);
+                return "LANDING 着陆";
+            case RETURN_TO_FIRST_WAYPOINT:
+                MissionState.getInstance().setMissionState(0);
+                return "RETURN_TO_FIRST_WAYPOINT 返回到第一个航点";
+            case PAUSED:
+                MissionState.getInstance().setMissionState(1);
+                return "PAUSED 暂停中";
+            default:
+                return "N/A";
+        }
+    }
+
     private void missionSendStop(byte[] bytes, MissionPointBean missionPointBean) {
         if (ApronApp.getProductInstance() != null && ApronApp.getProductInstance().getPayload() != null) {
             Payload payload = ApronApp.getProductInstance().getPayload();
@@ -6294,20 +6509,21 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 }
                 missionUpdateBean.setCurrentVideoSource(currentVideoSource);
             }
-            camera.getLens(2).getThermalDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ThermalDigitalZoomFactor>() {
-                @Override
-                public void onSuccess(SettingsDefinitions.ThermalDigitalZoomFactor thermalDigitalZoomFactor) {
+            if (isH20T()) {
+                camera.getLens(2).getThermalDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.ThermalDigitalZoomFactor>() {
+                    @Override
+                    public void onSuccess(SettingsDefinitions.ThermalDigitalZoomFactor thermalDigitalZoomFactor) {
 //                    Log.d("飞机飞行流程红外焦距上传-EU", thermalDigitalZoomFactor.value() + "");
 //                    XcFileLog.getInstace().i("飞机飞行流程红外焦距上传-EU", thermalDigitalZoomFactor.value() + "");
-                    missionUpdateBean.setThermalDigitalZoom(thermalDigitalZoomFactor.value() + "");
-                }
+                        missionUpdateBean.setThermalDigitalZoom(thermalDigitalZoomFactor.value() + "");
+                    }
 
-                @Override
-                public void onFailure(DJIError djiError) {
+                    @Override
+                    public void onFailure(DJIError djiError) {
 
-                }
-            });
-
+                    }
+                });
+            }
             Communication finalMissionUpdateComm = missionUpdateComm;
             camera.getCameraVideoStreamSource(new CommonCallbacks.CompletionCallbackWith<CameraVideoStreamSource>() {
                 @Override
@@ -6521,8 +6737,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                             .setAssociateParam(new WaypointV2AssociateTriggerParam.Builder()
                                     .setAssociateActionID(actionID - 1)
                                     .setAssociateType(ActionTypes.AssociatedTimingType.AFTER_FINISHED)
-                                    .setWaitingTime(Float.parseFloat(("30".equals(wayPointsBean.getWayPointAction().get(0).getWaitingTime()) ? "120" :
-                                            wayPointsBean.getWayPointAction().get(0).getWaitingTime())))
+                                    .setWaitingTime(Float.parseFloat(
+                                            wayPointsBean.getWayPointAction().get(0).getWaitingTime()))
                                     .build())
                             .build();
                     waypointActionActuator = new WaypointActuator.Builder()
@@ -6542,7 +6758,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                             .build();
                     waypointV2ActionList.add(waypointAction0);
                 }
-
             }
             updateActionToWebBean.setActionIndex(actionIndexList);
             updateActionToWebBean.setActionType(actionTypeList);
@@ -6552,13 +6767,23 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 mUpdateActionToWebBeans.add(updateActionToWebBean);
             }
         }
-        waypointV2MissionOperator.uploadWaypointActions(waypointV2ActionList, new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
-            @Override
-            public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
-                XcFileLog.getInstace().i("waypoint_plan_V2 uploadWaypointAction:", djiWaypointV2Error == null ? "success" : djiWaypointV2Error.getDescription());
-                CommonDjiCallback(djiWaypointV2Error, communication);
-            }
-        });
+        if (waypointV2ActionList == null || waypointV2ActionList.size() == 0) {
+            sendErrorMSG2Server(communication, SUCCESS, "waypoint_plan_V2 uploadWaypointAction:success");
+        } else {
+            waypointV2MissionOperator.uploadWaypointActions(waypointV2ActionList, new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
+                @Override
+                public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
+                    if (djiWaypointV2Error != null) {
+                        XcFileLog.getInstace().i("waypoint_plan_V2 uploadWaypointAction:", DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                        sendErrorMSG2Server(communication, ERROR, "航点动作上传失败："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                    } else {
+                        sendErrorMSG2Server(communication, SUCCESS, "success");
+                        XcFileLog.getInstace().i("waypoint_plan_V2 uploadWaypointAction:", "success");
+                    }
+                }
+            });
+        }
+
     }
 
     //创建航线任务
@@ -6573,7 +6798,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         .setCoordinate(new LocationCoordinate2D(latLng[0], latLng[1]))//设置经纬度
                         .setAltitude(Double.parseDouble(wayPointsBeans.get(i).getAltitude()))//高度[-200,500]
                         //设置飞行路线模式
-                        .setFlightPathMode(WaypointV2MissionTypes.WaypointV2FlightPathMode.GOTO_POINT_STRAIGHT_LINE_AND_STOP)
+                        .setFlightPathMode(WaypointV2MissionTypes.WaypointV2FlightPathMode.find(Integer.parseInt(wayPointsBeans.get(i).getFlightPathMode())))
                         //设置航向模式
                         .setHeadingMode(WaypointV2MissionTypes.WaypointV2HeadingMode.find(Integer.parseInt(wayPointsBeans.get(i).getHeadingMode())))
                         //设置转弯模式
@@ -6617,15 +6842,32 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         } else {
             XcFileLog.getInstace().i("waypoint_fly_start_v2 航线开始飞行", "第" + i + "秒，获取到state正常状态成功，状态为" + state);
         }
-
+        if (isRTKBeingUsed == 1) {
         waypointV2MissionOperator.startMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
             @Override
             public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
-                XcFileLog.getInstace().i("waypoint_fly_start_v2 startMission:", djiWaypointV2Error == null ? "success" : djiWaypointV2Error.getDescription());
-                showToast(djiWaypointV2Error == null ? "起飞成功" : djiWaypointV2Error.getDescription());
-                CommonDjiCallback(djiWaypointV2Error, communication);
+
+                if (djiWaypointV2Error != null) {
+                    XcFileLog.getInstace().i("waypoint_fly_start_v2 startMission:", DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                    sendErrorMSG2Server(communication, ERROR, "开始航线飞行失败："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                } else {
+                    sendErrorMSG2Server(communication, SUCCESS, "起飞成功");
+                    XcFileLog.getInstace().i("waypoint_fly_start_v2 startMission:", "success");
+                    if (!TextUtils.isEmpty(name)) {
+                        MissionState.getInstance().setMissionName(name);
+                    }
+                    if (waypointV2List != null && waypointV2List.size() > 0) {
+                        MissionState.getInstance().setWaypointSize(waypointV2List.size());
+                    }
+                    showToast(djiWaypointV2Error == null ? "起飞成功" : djiWaypointV2Error.getDescription());
+
+                }
             }
         });
+        } else {
+            sendErrorMSG2Server(communication, ERROR, "RTK连接异常,无法起飞");
+        }
+
 
     }
 
@@ -6636,7 +6878,13 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
                     send(PagerUtils.getInstance().TTSSTOPINS);
-                    CommonDjiCallback(djiWaypointV2Error, communication);
+                    if (djiWaypointV2Error != null) {
+                        sendErrorMSG2Server(communication, ERROR, "停止任务失败："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                    } else {
+                        sendErrorMSG2Server(communication, SUCCESS, "stopMission success");
+                    }
+                    XcFileLog.getInstace().i("stopWaypointV2:", djiWaypointV2Error == null ? "stopMission success" : DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+
                 }
             });
         }
@@ -6649,8 +6897,13 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             waypointV2MissionOperator.interruptMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
-                    XcFileLog.getInstace().i("pauseWaypointV2:", djiWaypointV2Error == null ? "The mission has been interrupted" : djiWaypointV2Error.getDescription());
-                    CommonDjiCallback(djiWaypointV2Error, communication);
+                    if (djiWaypointV2Error != null) {
+                        sendErrorMSG2Server(communication, ERROR, "暂停航线失败："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                    } else {
+                        MissionState.getInstance().setMissionState(1);
+                        sendErrorMSG2Server(communication, SUCCESS, "interruptMission success");
+                    }
+                    XcFileLog.getInstace().i("pauseWaypointV2:", djiWaypointV2Error == null ? "The mission has been interrupted" : DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
                 }
 
             });
@@ -6663,10 +6916,14 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             waypointV2MissionOperator.recoverMission(InterruptRecoverActionType.find(Integer.parseInt(type)), new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
-                    if (djiWaypointV2Error == null) {
-                        isHangXianPause = false;
+                    if (djiWaypointV2Error != null) {
+                        sendErrorMSG2Server(communication, ERROR, "恢复航线失败："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                    } else {
+                        MissionState.getInstance().setMissionState(0);
+                        sendErrorMSG2Server(communication, SUCCESS, "resumeWaypointV2 success");
                     }
-                    CommonDjiCallback(djiWaypointV2Error, communication);
+                    XcFileLog.getInstace().i("resumeWaypointV2:", djiWaypointV2Error == null ? "resumeWaypointV2 success" : DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+
                 }
             });
         }
