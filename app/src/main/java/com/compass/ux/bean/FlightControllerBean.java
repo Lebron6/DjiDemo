@@ -160,6 +160,7 @@ public class FlightControllerBean {
      */
     private int persentOne, persentTwo;
 
+
     public float getVoltageOne() {
         return voltageOne;
     }
@@ -218,8 +219,16 @@ public class FlightControllerBean {
      */
     private String FlightModeString;
 
-    //云台度数
-    private String gimbalStatePitch;
+    //云台度数纵向/横向
+    private String gimbalStatePitch,gimbalStateYaw;
+
+    public String getGimbalStateYaw() {
+        return gimbalStateYaw;
+    }
+
+    public void setGimbalStateYaw(String gimbalStateYaw) {
+        this.gimbalStateYaw = gimbalStateYaw;
+    }
 
     public String getGimbalStatePitch() {
         return gimbalStatePitch;

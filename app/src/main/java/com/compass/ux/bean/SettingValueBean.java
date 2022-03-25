@@ -332,6 +332,9 @@ public class SettingValueBean {
         //是否连接
         private int isConnectOne;
         private int isConnectTwo;
+        //单元电池电压
+        private Integer [] cellVoltagesOne;
+        private Integer [] cellVoltagesTwo;
         //电池1剩余百分比
         private int persentOne;
         //电池2剩余百分比
@@ -350,6 +353,21 @@ public class SettingValueBean {
         private int battery_discharges_one;
         //循环次数2
         private int battery_discharges_two;
+        public Integer[] getCellVoltagesOne() {
+            return cellVoltagesOne;
+        }
+
+        public void setCellVoltagesOne(Integer[] cellVoltagesOne) {
+            this.cellVoltagesOne = cellVoltagesOne;
+        }
+
+        public Integer[] getCellVoltagesTwo() {
+            return cellVoltagesTwo;
+        }
+
+        public void setCellVoltagesTwo(Integer[] cellVoltagesTwo) {
+            this.cellVoltagesTwo = cellVoltagesTwo;
+        }
 
         public int getIsConnectOne() {
             return isConnectOne;

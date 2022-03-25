@@ -3,11 +3,6 @@ package com.compass.ux.app;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.Intent;
-
-import androidx.annotation.NonNull;
-import androidx.multidex.MultiDex;
-
 import com.compass.ux.R;
 import com.compass.ux.crash.CaocConfig;
 import com.compass.ux.ui.FirstActivity;
@@ -15,10 +10,6 @@ import com.orhanobut.logger.AndroidLogAdapter;
 import com.orhanobut.logger.Logger;
 import com.orhanobut.logger.PrettyFormatStrategy;
 import com.secneo.sdk.Helper;
-//import com.squareup.leakcanary.LeakCanary;
-//import com.taobao.sophix.SophixManager;
-//import com.tencent.bugly.crashreport.CrashReport;
-
 import dji.common.product.Model;
 import dji.sdk.airlink.AirLink;
 import dji.sdk.base.BaseProduct;

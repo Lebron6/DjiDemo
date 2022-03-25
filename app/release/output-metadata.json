@@ -4,7 +4,7 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.xhw.apron",
+  "applicationId": "com.compass.ux",
   "variantName": "processReleaseResources",
   "elements": [
     {

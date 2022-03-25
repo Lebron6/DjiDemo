@@ -168,8 +168,4 @@ public class Constant {
     public static final String MISSION_STATE="missionState";
 
 
-
-    //无人机名字
-    public static String MATRICE300="Matrice 300 RTK";
-
 }

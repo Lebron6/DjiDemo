@@ -22,7 +22,7 @@ public class UrlConstant {
 //    public static final int SOCKET_PORT = 60000;
 // 
 //    //测试环境(亭苑/车管所)
-    public static final int SOCKET_PORT = 60001;
+    public static final int SOCKET_PORT = 38888;
 
     /**
      * 上传图片接口

@@ -20,6 +20,7 @@ import dji.common.error.DJIError;
 import dji.common.error.DJIWaypointV2Error;
 import dji.common.flightcontroller.ConnectionFailSafeBehavior;
 import dji.common.flightcontroller.FlightControllerState;
+import dji.common.flightcontroller.FlightOrientationMode;
 import dji.common.flightcontroller.GravityCenterState;
 import dji.common.flightcontroller.LEDsSettings;
 import dji.common.flightcontroller.ObstacleDetectionSector;
@@ -273,6 +274,7 @@ import static dji.common.flightcontroller.flightassistant.PerceptionInformation.
 import static dji.common.gimbal.Axis.PITCH;
 import static dji.common.gimbal.Axis.YAW;
 import static dji.common.realname.AircraftBindingState.BOUND;
+import static dji.keysdk.FlightControllerKey.ORIENTATION_MODE;
 import static dji.keysdk.FlightControllerKey.VELOCITY_X;
 import static dji.keysdk.FlightControllerKey.VELOCITY_Y;
 import static dji.keysdk.FlightControllerKey.VELOCITY_Z;
@@ -395,7 +397,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     boolean activeObstacleAvoidance;
     String channelBandwidth = "", frequencyBand = "", transcodingDataRate = "", interferencePower = "", currentVideoSource = "";
     WebInitializationBean webInitializationBean = new WebInitializationBean();
-    String gimbalStatePitch = "";//云台度数
+    String gimbalStatePitch = "";//云台度数纵向
+    String gimbalStateYaw = "";//云台度数横向
     private int gimbalMode = 0;
 
     private boolean pitchRangeExtension;
@@ -917,8 +920,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             public void onClick(View v) {
 //                initMediaManager(null);
 //                loginOut();
-//                loginAccount();
-                restartLiveShow(null);
+                loginAccount();
+//                restartLiveShow(null);
 //                CancelGoHome(null);
             }
         });
@@ -973,7 +976,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         }
         LiveStreamManager liveStreamManager = DJISDKManager.getInstance().getLiveStreamManager();
 //        if (liveStreamManager.isStreaming()) {
-            liveStreamManager.stopStream();
+        liveStreamManager.stopStream();
 //        }
         liveStreamManager.setLiveUrl(liveShowUrl);
         /**
@@ -1417,9 +1420,18 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             mFlightController = aircraft.getFlightController();
             if (mFlightController != null) {
                 mFlightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
+//                mFlightController.setRollPitchControlMode(RollPitchControlMode.ANGLE);
                 mFlightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
                 mFlightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
                 mFlightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);//相对于自己
+                mFlightController.setFlightOrientationMode(FlightOrientationMode.AIRCRAFT_HEADING, new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        if (djiError!=null){
+                            XcFileLog.getInstace().i("setFlightOrientationMode fail:",djiError.getDescription());
+                        }
+                    }
+                });
                 mFlightController.getSerialNumber(new CommonCallbacks.CompletionCallbackWith<String>() {
                     @Override
                     public void onSuccess(String s) {
@@ -1590,6 +1602,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                     flightControllerBean.setAircraftLongitude(latLng.longitude);
                                 }
                                 flightControllerBean.setGimbalStatePitch(gimbalStatePitch);
+                                flightControllerBean.setGimbalStateYaw(gimbalStateYaw);
                                 //航线暂停飞行时记录
                                 if (isHangXianPause) {
                                     HangXianPauselongitude = latLng.longitude;
@@ -2483,6 +2496,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         Log.d("HHHHHcurr", "getHybridZoomFocalLength\\\\" + djiError.toString());
                     }
                 });
+
                 camera.getTapZoomMultiplier(new CommonCallbacks.CompletionCallbackWith<Integer>() {
                     @Override
                     public void onSuccess(Integer integer) {
@@ -2496,6 +2510,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
                     }
                 });
+
                 camera.getDigitalZoomFactor(new CommonCallbacks.CompletionCallbackWith<Float>() {
                     @Override
                     public void onSuccess(Float aFloat) {
@@ -2549,6 +2564,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                     voltageOne = ((float) childBatteryAll / 12000);
                                     persentOne = batteryState.getChargeRemainingInPercent();
                                     batteryStateBean.setVoltageOne(df.format(voltageOne));
+                                    batteryStateBean.setCellVoltagesOne(integers);
                                     submitBatteryInfo(batteryState, battery0);
                                 }
                             }
@@ -2573,6 +2589,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                         voltageTwo = ((float) childBatteryAll / 12000);
                                         persentTwo = batteryState.getChargeRemainingInPercent();
                                         batteryStateBean.setVoltageTwo(df.format(voltageTwo));
+                                        batteryStateBean.setCellVoltagesTwo(integers);
                                         submitBatteryInfo(batteryState, battery1);
                                     }
                                 }
@@ -2666,19 +2683,22 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             gimbal.setStateCallback(new GimbalState.Callback() {
                 @Override
                 public void onUpdate(GimbalState gimbalState) {//左右y 上下p
-                    if (currentGimbalAngle != (int) gimbalState.getAttitudeInDegrees().getPitch() || currentGimbalAngle == 0) {
-                        currentGimbalAngle = (int) gimbalState.getAttitudeInDegrees().getPitch();
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                changeGimbalAngle(currentGimbalAngle);
-                            }
-                        });
-                    }
+//                    if (currentGimbalAngle != (int) gimbalState.getAttitudeInDegrees().getPitch() || currentGimbalAngle == 0) {
+//                        currentGimbalAngle = (int) gimbalState.getAttitudeInDegrees().getPitch();
+                    //暂时注释掉UI上的云台角度
+                    //                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                changeGimbalAngle(currentGimbalAngle);
+//                            }
+//                        });
+//                    }
                     if (gimbalState != null && gimbalState.getAttitudeInDegrees() != null) {
                         webInitializationBean.setHorizontalAngle(gimbalState.getAttitudeInDegrees().getYaw() + "");
                         webInitializationBean.setPitchAngle(gimbalState.getAttitudeInDegrees().getPitch() + "");
                         gimbalStatePitch = gimbalState.getAttitudeInDegrees().getPitch() + "";
+                        gimbalStateYaw = gimbalState.getAttitudeInDegrees().getYaw() + "";
+
                     }
 
                 }
@@ -3792,9 +3812,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             }
         } else {
             sendErrorMSG2Server(communication, ERROR, "云台角度已达到最大值");
-
         }
-
     }
 
     //摄像头上下绝对角度
@@ -4173,9 +4191,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                         @Override
                         public void onResult(DJIError djiError) {
                             if (djiError == null) {
-                                sendErrorMSG2Server(communication, SUCCESS, "拍照成功~");
+                                sendErrorMSG2Server(communication, SUCCESS, "拍照成功");
                             } else {
-                                sendErrorMSG2Server(communication, ERROR, "拍照失败~" + djiError.getDescription());
+                                sendErrorMSG2Server(communication, ERROR, "拍照失败：" + djiError.getDescription());
                             }
                         }
                     });
@@ -6189,7 +6207,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     if (djiWaypointV2Error == null) {
                         upLoadMission(communication);
                     } else {
-                        sendErrorMSG2Server(communication, ERROR, "加载航线失败："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                        sendErrorMSG2Server(communication, ERROR, "加载航线失败：" + DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
                     }
                     XcFileLog.getInstace().i("waypoint_plan_V2 loadMission:", djiWaypointV2Error == null ? "Success" : DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
                 }
@@ -6202,7 +6220,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             @Override
             public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
                 if (djiWaypointV2Error != null) {
-                    sendErrorMSG2Server(communication, ERROR, "上传航线失败："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                    sendErrorMSG2Server(communication, ERROR, "上传航线失败：" + DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
                 }
                 XcFileLog.getInstace().i("waypoint_plan_V2 upLoadMission:", djiWaypointV2Error == null ? "Success" : DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
             }
@@ -6226,7 +6244,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             public void onUploadUpdate(WaypointV2MissionUploadEvent waypointV2MissionUploadEvent) {
                 if (waypointV2MissionUploadEvent.getError() != null) {
                     XcFileLog.getInstace().i("waypoint_plan_V2 onUploadUpdate error:", DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(waypointV2MissionUploadEvent.getError()));
-                    sendErrorMSG2Server(communication, ERROR, "监听到航线上传异常："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(waypointV2MissionUploadEvent.getError()));
+                    sendErrorMSG2Server(communication, ERROR, "监听到航线上传异常：" + DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(waypointV2MissionUploadEvent.getError()));
                 }
 
             }
@@ -6347,7 +6365,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     public void onUploadUpdate(ActionUploadEvent actionUploadEvent) {
                         if (actionUploadEvent.getError() != null) {
                             XcFileLog.getInstace().i("waypoint_plan_V2 onActionUploadUpdate error:", DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(actionUploadEvent.getError()));
-                            sendErrorMSG2Server(communication, ERROR, "监听到航点动作异常："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(actionUploadEvent.getError()));
+                            sendErrorMSG2Server(communication, ERROR, "监听到航点动作异常：" + DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(actionUploadEvent.getError()));
                         }
                         if (actionUploadEvent.getCurrentState().equals(ActionState.READY_TO_UPLOAD)) {
                             uploadWaypointAction(communication);
@@ -6775,7 +6793,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
                     if (djiWaypointV2Error != null) {
                         XcFileLog.getInstace().i("waypoint_plan_V2 uploadWaypointAction:", DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
-                        sendErrorMSG2Server(communication, ERROR, "航点动作上传失败："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                        sendErrorMSG2Server(communication, ERROR, "航点动作上传失败：" + DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
                     } else {
                         sendErrorMSG2Server(communication, SUCCESS, "success");
                         XcFileLog.getInstace().i("waypoint_plan_V2 uploadWaypointAction:", "success");
@@ -6843,27 +6861,27 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             XcFileLog.getInstace().i("waypoint_fly_start_v2 航线开始飞行", "第" + i + "秒，获取到state正常状态成功，状态为" + state);
         }
         if (isRTKBeingUsed == 1) {
-        waypointV2MissionOperator.startMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
-            @Override
-            public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
+            waypointV2MissionOperator.startMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
+                @Override
+                public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
 
-                if (djiWaypointV2Error != null) {
-                    XcFileLog.getInstace().i("waypoint_fly_start_v2 startMission:", DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
-                    sendErrorMSG2Server(communication, ERROR, "开始航线飞行失败："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
-                } else {
-                    sendErrorMSG2Server(communication, SUCCESS, "起飞成功");
-                    XcFileLog.getInstace().i("waypoint_fly_start_v2 startMission:", "success");
-                    if (!TextUtils.isEmpty(name)) {
-                        MissionState.getInstance().setMissionName(name);
-                    }
-                    if (waypointV2List != null && waypointV2List.size() > 0) {
-                        MissionState.getInstance().setWaypointSize(waypointV2List.size());
-                    }
-                    showToast(djiWaypointV2Error == null ? "起飞成功" : djiWaypointV2Error.getDescription());
+                    if (djiWaypointV2Error != null) {
+                        XcFileLog.getInstace().i("waypoint_fly_start_v2 startMission:", DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                        sendErrorMSG2Server(communication, ERROR, "开始航线飞行失败：" + DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                    } else {
+                        sendErrorMSG2Server(communication, SUCCESS, "起飞成功");
+                        XcFileLog.getInstace().i("waypoint_fly_start_v2 startMission:", "success");
+                        if (!TextUtils.isEmpty(name)) {
+                            MissionState.getInstance().setMissionName(name);
+                        }
+                        if (waypointV2List != null && waypointV2List.size() > 0) {
+                            MissionState.getInstance().setWaypointSize(waypointV2List.size());
+                        }
+                        showToast(djiWaypointV2Error == null ? "起飞成功" : djiWaypointV2Error.getDescription());
 
+                    }
                 }
-            }
-        });
+            });
         } else {
             sendErrorMSG2Server(communication, ERROR, "RTK连接异常,无法起飞");
         }
@@ -6879,7 +6897,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
                     send(PagerUtils.getInstance().TTSSTOPINS);
                     if (djiWaypointV2Error != null) {
-                        sendErrorMSG2Server(communication, ERROR, "停止任务失败："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                        sendErrorMSG2Server(communication, ERROR, "停止任务失败：" + DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
                     } else {
                         sendErrorMSG2Server(communication, SUCCESS, "stopMission success");
                     }
@@ -6898,7 +6916,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
                     if (djiWaypointV2Error != null) {
-                        sendErrorMSG2Server(communication, ERROR, "暂停航线失败："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                        sendErrorMSG2Server(communication, ERROR, "暂停航线失败：" + DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
                     } else {
                         MissionState.getInstance().setMissionState(1);
                         sendErrorMSG2Server(communication, SUCCESS, "interruptMission success");
@@ -6917,7 +6935,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
                     if (djiWaypointV2Error != null) {
-                        sendErrorMSG2Server(communication, ERROR, "恢复航线失败："+DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                        sendErrorMSG2Server(communication, ERROR, "恢复航线失败：" + DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
                     } else {
                         MissionState.getInstance().setMissionState(0);
                         sendErrorMSG2Server(communication, SUCCESS, "resumeWaypointV2 success");
@@ -6972,7 +6990,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     /**
      * 航点动作监听到的喊话
-     *
      * @param voiceBean
      */
     private void wayPointSendTTS2Payload(WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean voiceBean) {
@@ -7032,7 +7049,6 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     /**
      * 拼接文本指令
-     *
      * @param communication
      */
     private void sendTTS2Payload(Communication communication) {
