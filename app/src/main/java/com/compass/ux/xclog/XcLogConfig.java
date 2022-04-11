@@ -2,10 +2,7 @@ package com.compass.ux.xclog;
 
 import android.os.Environment;
 import android.text.TextUtils;
-
-
 import com.compass.ux.async.AsyncTask;
-
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -23,7 +20,7 @@ public class XcLogConfig implements XcLogBaseConfig {
 
     @Override
     public int getCacheEffectiveDays() {
-        return 15;
+        return 3;
     }
 
     @Override

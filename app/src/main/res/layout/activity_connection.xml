@@ -160,7 +160,38 @@
                 android:text="？"
                 android:textColor="@color/colorWhite"
                 android:textSize="@dimen/x17" />
+        <dji.ux.widget.TakeOffWidget
+                android:layout_toRightOf="@+id/tv_account_state"
+                android:visibility="visible"
+                android:layout_marginTop="100dp"
+                android:id="@+id/take_off_widget"
+                android:layout_width="40dp"
+                android:layout_height="40dp" />
 
+        <dji.ux.widget.ReturnHomeWidget
+                android:layout_toRightOf="@+id/take_off_widget"
+                android:layout_marginTop="100dp"
+
+                android:visibility="visible"
+                android:id="@+id/return_home_widget"
+                android:layout_width="40dp"
+                android:layout_height="40dp" />
+        <Button
+                android:layout_toRightOf="@+id/return_home_widget"
+                android:layout_marginTop="100dp"
+                android:visibility="visible"
+                android:id="@+id/cancelGoHome"
+                android:text="cancelGoHome"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp" />
+        <Button
+                android:layout_toRightOf="@+id/cancelGoHome"
+                android:layout_marginTop="100dp"
+                android:visibility="visible"
+                android:id="@+id/cancelLanding"
+                android:text="cancelLanding"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp" />
         <TextView
                 android:visibility="visible"
                 android:id="@+id/tv_LiveVideoFps"

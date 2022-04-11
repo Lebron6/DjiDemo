@@ -77,24 +77,12 @@ public class FirstActivity extends AppCompatActivity {
 
     void getvalues() {
         if (TextUtils.isEmpty(ApronApp.EQUIPMENT_ID)) {
-//            String mobileNum = FileUtils.readString(file.getAbsolutePath(), "utf-8");
-//            new Handler().postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                    if (!TextUtils.isEmpty(mobileNum)) {
-//                        FileUtil.deleteFile(file);
-//                        ApronApp.EQUIPMENT_ID = mobileNum;
-//                        Log.d("FileUtils", "FileUtils=" + mobileNum);
-//                    } else {
                         String filePath = FileUtils.createIfNotExist(Environment.getExternalStorageDirectory().getPath() + "/Shebei");
                         FileUtils.writeString(filePath, "Mobile_03test", "utf-8");
                         ApronApp.EQUIPMENT_ID = FileUtils.readString(file.getAbsolutePath(), "utf-8");
-//                    }
                     Intent intent = new Intent(FirstActivity.this, ConnectionActivity.class);
                     startActivity(intent);
                     finish();
-//                }
-//            },2000);
         }
     }
 

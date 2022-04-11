@@ -168,6 +168,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.amap.api.maps.model.LatLng;
+import com.autonavi.base.amap.mapcore.FileUtil;
 import com.compass.ux.app.Constant;
 import com.compass.ux.app.ApronApp;
 import com.compass.ux.R;
@@ -191,6 +192,7 @@ import com.compass.ux.callback.OnRateSelectedListener;
 import com.compass.ux.netty_lib.constant.UrlConstant;
 import com.compass.ux.utils.DJIWaypointV2ErrorMessageUtils;
 import com.compass.ux.utils.DisplayUtil;
+import com.compass.ux.utils.FileUtils;
 import com.compass.ux.utils.ImageUtils;
 import com.compass.ux.utils.ModuleVerificationUtil;
 import com.compass.ux.netty_lib.NettyService;
@@ -667,53 +669,53 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
         layout_previewer_container = (RelativeLayout) findViewById(R.id.layout_previewer_container);
         ivAvoidance = (ImageView) findViewById(R.id.iv_obstacle_avoidance);
-        cancelGoHome = findViewById(R.id.cancelGoHome);
-        cancelGoHome.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mFlightController != null) {
-                    mFlightController.cancelGoHome(new CommonCallbacks.CompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            if (djiError == null) {
-                                Log.e("取消返航", "success");
-                            } else {
-                                Log.e("取消返航", "fail:" + djiError.getDescription());
-
-                            }
-                        }
-                    });
-                }
-            }
-        });
-        cancelLanding = findViewById(R.id.cancelLanding);
-        cancelLanding.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mFlightController != null) {
-//                    mFlightController.startGoHome(new CommonCallbacks.CompletionCallback() {
+//        cancelGoHome = findViewById(R.id.cancelGoHome);
+//        cancelGoHome.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (mFlightController != null) {
+//                    mFlightController.cancelGoHome(new CommonCallbacks.CompletionCallback() {
 //                        @Override
 //                        public void onResult(DJIError djiError) {
 //                            if (djiError == null) {
-//                                Log.e("开始返航", "success");
+//                                Log.e("取消返航", "success");
 //                            } else {
-//                                Log.e("开始返航", "fail:" + djiError.getDescription());
+//                                Log.e("取消返航", "fail:" + djiError.getDescription());
+//
 //                            }
 //                        }
 //                    });
-                    mFlightController.cancelLanding(
-                            new CommonCallbacks.CompletionCallback() {
-                                @Override
-                                public void onResult(DJIError djiError) {
-                                    if (djiError == null) {
-                                        Log.e("取消着落", "success");
-                                    } else {
-                                        Log.e("取消着落", "fail:" + djiError.getDescription());
-                                    }
-                                }
-                            }
-                    );
-                }
+//                }
+//            }
+//        });
+//        cancelLanding = findViewById(R.id.cancelLanding);
+//        cancelLanding.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (mFlightController != null) {
+////                    mFlightController.startGoHome(new CommonCallbacks.CompletionCallback() {
+////                        @Override
+////                        public void onResult(DJIError djiError) {
+////                            if (djiError == null) {
+////                                Log.e("开始返航", "success");
+////                            } else {
+////                                Log.e("开始返航", "fail:" + djiError.getDescription());
+////                            }
+////                        }
+////                    });
+//                    mFlightController.cancelLanding(
+//                            new CommonCallbacks.CompletionCallback() {
+//                                @Override
+//                                public void onResult(DJIError djiError) {
+//                                    if (djiError == null) {
+//                                        Log.e("取消着落", "success");
+//                                    } else {
+//                                        Log.e("取消着落", "fail:" + djiError.getDescription());
+//                                    }
+//                                }
+//                            }
+//                    );
+//                }
 //                if (mFlightController != null) {
 //                    mFlightController.cancelLanding(
 //                            new CommonCallbacks.CompletionCallback() {
@@ -728,8 +730,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 //                            }
 //                    );
 //                }
-            }
-        });
+//            }
+//        });
         mVideoSurface = (TextureView) findViewById(R.id.video_previewer_surface);
         mVideoSurface.setSurfaceTextureListener(textureListener);
 
@@ -800,13 +802,19 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         tv_remote_firmware_version = findViewById(R.id.tv_remote_firmware_version);
         tv_network_rtk_status = findViewById(R.id.tv_network_rtk_status);
         tv_account_state = findViewById(R.id.tv_account_state);
+        tv_account_state.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                restartLiveShow(null);
+            }
+        });
 
         tv_zoom = findViewById(R.id.tv_zoom);
         tv_LiveVideoResolution = findViewById(R.id.tv_LiveVideoResolution);
         tv_zoom.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                restartLiveShow(null);
+                restartLiveShow(null);
 //                loginAccount();
 //               camera.getLens(camera.getIndex()).setFocusMode(SettingsDefinitions.FocusMode.AUTO, new CommonCallbacks.CompletionCallback() {
 //                   @Override
@@ -1358,9 +1366,14 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         if (!isLiveStreamManagerOn()) {
             return;
         }
-        tv_LiveVideoBitRate.setText(DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoBitRate() == 0 ? "" : DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoBitRate() + " (kpbs)");
-        tv_LiveVideoFps.setText(DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoFps() + "");
-        tv_LiveVideoResolution.setText(DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoResolution().getHeight() + "---" + DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoResolution().getWidth());
+        try {
+            tv_LiveVideoBitRate.setText(DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoBitRate() == 0 ? "" : DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoBitRate() + " (kpbs)");
+            tv_LiveVideoFps.setText(DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoFps() + "");
+            tv_LiveVideoResolution.setText(DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoResolution().getHeight() + "---" + DJISDKManager.getInstance().getLiveStreamManager().getLiveVideoResolution().getWidth());
+        } catch (Exception e) {
+
+        }
+
     }
 
     private void loginAccount() {
@@ -1419,19 +1432,24 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
             mFlightController = aircraft.getFlightController();
             if (mFlightController != null) {
+//                mFlightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
+////                mFlightController.setRollPitchControlMode(RollPitchControlMode.ANGLE);
+//                mFlightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
+//                mFlightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
+//                mFlightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);//相对于自己
+//                mFlightController.setFlightOrientationMode(FlightOrientationMode.AIRCRAFT_HEADING, new CommonCallbacks.CompletionCallback() {
+//                    @Override
+//                    public void onResult(DJIError djiError) {
+//                        if (djiError!=null){
+//                            XcFileLog.getInstace().i("setFlightOrientationMode fail:",djiError.getDescription());
+//                        }
+//                    }
+//                });
                 mFlightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
-//                mFlightController.setRollPitchControlMode(RollPitchControlMode.ANGLE);
                 mFlightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
                 mFlightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
                 mFlightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);//相对于自己
-                mFlightController.setFlightOrientationMode(FlightOrientationMode.AIRCRAFT_HEADING, new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(DJIError djiError) {
-                        if (djiError!=null){
-                            XcFileLog.getInstace().i("setFlightOrientationMode fail:",djiError.getDescription());
-                        }
-                    }
-                });
+
                 mFlightController.getSerialNumber(new CommonCallbacks.CompletionCallbackWith<String>() {
                     @Override
                     public void onSuccess(String s) {
@@ -1456,7 +1474,10 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     @Override
                     public void onUpdate(FlightControllerState flightControllerState) {
                         int horizontalSpeed1 = (int) Math.sqrt((double) ((Math.abs(flightControllerState.getVelocityY()) * Math.abs(flightControllerState.getVelocityY())) + (Math.abs(flightControllerState.getVelocityX()) * Math.abs(flightControllerState.getVelocityX()))));
-                        MissionState.getInstance().setGoHomeState(flightControllerState.getGoHomeExecutionState().name());
+                        if (flightControllerState != null && flightControllerState.getGoHomeExecutionState() != null && flightControllerState.getGoHomeExecutionState().name() != null) {
+                            MissionState.getInstance().setGoHomeState(flightControllerState.getGoHomeExecutionState().name());
+                        }
+
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -1960,96 +1981,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 //
 //                    }
 //                });
-                //向上避障
-                mFlightAssistant.getUpwardVisionObstacleAvoidanceEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
-                    @Override
-                    public void onSuccess(Boolean aBoolean) {
-                        upwardsAvoidance = aBoolean;
-                        updataAvoidanceViewStatus();
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-                    }
-                });
-                //向下避障
-                mFlightAssistant.getLandingProtectionEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
-                    @Override
-                    public void onSuccess(Boolean aBoolean) {
-                        landingProtection = aBoolean;
-                        updataAvoidanceViewStatus();
-
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-                    }
-                });
-
-                //水平避障
-                mFlightAssistant.getHorizontalVisionObstacleAvoidanceEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
-                    @Override
-                    public void onSuccess(Boolean aBoolean) {
-                        activeObstacleAvoidance = aBoolean;
-                        updataAvoidanceViewStatus();
-
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
-                //精确着陆
-                mFlightAssistant.getPrecisionLandingEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
-                    @Override
-                    public void onSuccess(Boolean aBoolean) {
-                        precisionLand = aBoolean;
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
-                //视觉定位
-                mFlightAssistant.getVisionAssistedPositioningEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
-                    @Override
-                    public void onSuccess(Boolean aBoolean) {
-                        visionAssistedPosition = aBoolean;
-                    }
-
-                    @Override
-                    public void onFailure(DJIError djiError) {
-
-                    }
-                });
-
-                mFlightAssistant.setVisionDetectionStateUpdatedCallback(new VisionDetectionState.Callback() {
-                    //                视觉系统可以以60度水平视场（FOV）和55度垂直FOV看到飞机前方。水平视场分为四个相等的扇区，此类给出了一个扇区的距离和警告级别。
-                    @Override
-                    public void onUpdate(VisionDetectionState visionDetectionState) {
-//                    double ObstacleDistanceInMeters= visionDetectionState.getObstacleDistanceInMeters();
-                        ObstacleDetectionSector[] mArray = visionDetectionState.getDetectionSectors();
-//                    Log.d("MMMMM","ObstacleDistanceInMeters="+ObstacleDistanceInMeters);
-                        String aa = "";
-                        for (int i = 0; i < mArray.length; i++) {
-//                        检测到的飞机障碍物距离，以米为单位。
-                            aa = "ObstacleDistanceInMeters" + i + "=" + mArray[i].getObstacleDistanceInMeters() + "\nWarningLevel=" + mArray[i].getWarningLevel();
-//                        基于距离的警告级别。
-//                            Log.d("MMMMM", aa);
-                        }
-
-                    }
-                });
-
-                if (isM300Product()) {
-
-                    //rtk
-                    mRTK = mFlightController.getRTK();
-                    addRTKStatus();//rtk实时状态返回
-                    mRTK.setRtkBaseStationListCallback(this);//监听搜索到的基站
-
+                if (mFlightAssistant != null) {
 
                     mFlightAssistant.getVisualObstaclesAvoidanceDistance(Upward, new CommonCallbacks.CompletionCallbackWith<Float>() {
                         @Override
@@ -2119,10 +2051,97 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
                         }
                     });
-                    int loginvalue = UserAccountManager.getInstance().getUserAccountState().value();
-                    webInitializationBean.setUserAccountState(loginvalue + "");
+                    //向上避障
+                    mFlightAssistant.getUpwardVisionObstacleAvoidanceEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                        @Override
+                        public void onSuccess(Boolean aBoolean) {
+                            upwardsAvoidance = aBoolean;
+                            updataAvoidanceViewStatus();
+                        }
+
+                        @Override
+                        public void onFailure(DJIError djiError) {
+                        }
+                    });
+                    //向下避障
+                    mFlightAssistant.getLandingProtectionEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                        @Override
+                        public void onSuccess(Boolean aBoolean) {
+                            landingProtection = aBoolean;
+                            updataAvoidanceViewStatus();
+
+                        }
+
+                        @Override
+                        public void onFailure(DJIError djiError) {
+                        }
+                    });
+
+                    //水平避障
+                    mFlightAssistant.getHorizontalVisionObstacleAvoidanceEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                        @Override
+                        public void onSuccess(Boolean aBoolean) {
+                            activeObstacleAvoidance = aBoolean;
+                            updataAvoidanceViewStatus();
+
+                        }
+
+                        @Override
+                        public void onFailure(DJIError djiError) {
+
+                        }
+                    });
+                    //精确着陆
+                    mFlightAssistant.getPrecisionLandingEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                        @Override
+                        public void onSuccess(Boolean aBoolean) {
+                            precisionLand = aBoolean;
+                        }
+
+                        @Override
+                        public void onFailure(DJIError djiError) {
+
+                        }
+                    });
+                    //视觉定位
+                    mFlightAssistant.getVisionAssistedPositioningEnabled(new CommonCallbacks.CompletionCallbackWith<Boolean>() {
+                        @Override
+                        public void onSuccess(Boolean aBoolean) {
+                            visionAssistedPosition = aBoolean;
+                        }
+
+                        @Override
+                        public void onFailure(DJIError djiError) {
+
+                        }
+                    });
+
+                    mFlightAssistant.setVisionDetectionStateUpdatedCallback(new VisionDetectionState.Callback() {
+                        //                视觉系统可以以60度水平视场（FOV）和55度垂直FOV看到飞机前方。水平视场分为四个相等的扇区，此类给出了一个扇区的距离和警告级别。
+                        @Override
+                        public void onUpdate(VisionDetectionState visionDetectionState) {
+//                    double ObstacleDistanceInMeters= visionDetectionState.getObstacleDistanceInMeters();
+                            ObstacleDetectionSector[] mArray = visionDetectionState.getDetectionSectors();
+//                    Log.d("MMMMM","ObstacleDistanceInMeters="+ObstacleDistanceInMeters);
+                            String aa = "";
+                            for (int i = 0; i < mArray.length; i++) {
+//                        检测到的飞机障碍物距离，以米为单位。
+                                aa = "ObstacleDistanceInMeters" + i + "=" + mArray[i].getObstacleDistanceInMeters() + "\nWarningLevel=" + mArray[i].getWarningLevel();
+//                        基于距离的警告级别。
+//                            Log.d("MMMMM", aa);
+                            }
+
+                        }
+                    });
                 }
+
+                mRTK = mFlightController.getRTK();
+                addRTKStatus();//rtk实时状态返回
+                mRTK.setRtkBaseStationListCallback(this);//监听搜索到的基站
+                int loginvalue = UserAccountManager.getInstance().getUserAccountState().value();
+                webInitializationBean.setUserAccountState(loginvalue + "");
             }
+
 
         }
     }
@@ -2130,7 +2149,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     private boolean isCanOpenPlayBack = true;
 
     private boolean isH20T() {
-        if (camera != null) {
+        if (camera != null&&camera.getDisplayName()!=null) {
             return camera.getDisplayName().equals("Zenmuse H20T");
         }
         return false;
@@ -3408,6 +3427,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
                                 @Override
                                 public void onResponse(Call call, Response response) throws IOException {
+                                    FileUtil.deleteFile(file);
                                     downLoadIndex++;
                                     if (communication_HavePic == null) {
                                         communication_HavePic = new Communication();
@@ -3437,6 +3457,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             }
         }
     }
+
 
     //关闭预览模式
     private void exitPlayback(Communication communication) {
@@ -5642,7 +5663,10 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         if (!TextUtils.isEmpty(errorMsg)) {
             errorMsg = errorMsg.substring(0, errorMsg.length() - 1);
             StringsBean stringsBean = new StringsBean();
-            if (!TextUtils.equals(errorMsg, "解决方案：插入SD卡") && !TextUtils.equals(errorMsg, "解决方案:插入SD卡")) {
+            if (TextUtils.equals(errorMsg, "解决方案：插入SD卡") || TextUtils.equals(errorMsg, "解决方案:插入SD卡")
+                    || TextUtils.equals(errorMsg, "解决方法：请联系相机研发") || TextUtils.equals(errorMsg, "解决方法:请联系相机研发")) {
+
+            } else {
                 stringsBean.setValue(errorMsg);
                 Log.d("ErrorUpdate", errorMsg.substring(0, errorMsg.length() - 1));
                 if (diagnosticsClickTime()) {
@@ -6221,6 +6245,8 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
                 if (djiWaypointV2Error != null) {
                     sendErrorMSG2Server(communication, ERROR, "上传航线失败：" + DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                } else {
+                    uploadWaypointAction(communication);
                 }
                 XcFileLog.getInstace().i("waypoint_plan_V2 upLoadMission:", djiWaypointV2Error == null ? "Success" : DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
             }
@@ -6367,9 +6393,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                             XcFileLog.getInstace().i("waypoint_plan_V2 onActionUploadUpdate error:", DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(actionUploadEvent.getError()));
                             sendErrorMSG2Server(communication, ERROR, "监听到航点动作异常：" + DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(actionUploadEvent.getError()));
                         }
-                        if (actionUploadEvent.getCurrentState().equals(ActionState.READY_TO_UPLOAD)) {
-                            uploadWaypointAction(communication);
-                        }
+//                        if (actionUploadEvent.getCurrentState().equals(ActionState.READY_TO_UPLOAD)) {
+//                            uploadWaypointAction(communication);
+//                        }
                         //上传航线成功，尝试修改状态为READY_TO_EXECUTE就调用起飞方法
 //                        if (actionUploadEvent.getPreviousState() == ActionState.UPLOADING
 //                                && actionUploadEvent.getCurrentState() == ActionState.READY_TO_EXECUTE) {
@@ -6788,6 +6814,13 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         if (waypointV2ActionList == null || waypointV2ActionList.size() == 0) {
             sendErrorMSG2Server(communication, SUCCESS, "waypoint_plan_V2 uploadWaypointAction:success");
         } else {
+            XcFileLog.getInstace().i("uploadAction fail：准备上传航点动作，当前状态是:", waypointV2MissionOperator.getCurrentState() + "");
+            try {
+                TimeUnit.SECONDS.sleep(2);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            XcFileLog.getInstace().i("准备上传航点动作，休眠后当前状态是", waypointV2MissionOperator.getCurrentState() + "");
             waypointV2MissionOperator.uploadWaypointActions(waypointV2ActionList, new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
@@ -6860,7 +6893,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         } else {
             XcFileLog.getInstace().i("waypoint_fly_start_v2 航线开始飞行", "第" + i + "秒，获取到state正常状态成功，状态为" + state);
         }
-        if (isRTKBeingUsed == 1) {
+//        if (isRTKBeingUsed == 1) {
             waypointV2MissionOperator.startMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
@@ -6882,9 +6915,9 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                     }
                 }
             });
-        } else {
-            sendErrorMSG2Server(communication, ERROR, "RTK连接异常,无法起飞");
-        }
+//        } else {
+//            sendErrorMSG2Server(communication, ERROR, "RTK连接异常,无法起飞");
+//        }
 
 
     }
@@ -6990,6 +7023,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     /**
      * 航点动作监听到的喊话
+     *
      * @param voiceBean
      */
     private void wayPointSendTTS2Payload(WayPointsV2Bean.WayPointsBean.WayPointActionBean.VoiceBean voiceBean) {
@@ -7049,6 +7083,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     /**
      * 拼接文本指令
+     *
      * @param communication
      */
     private void sendTTS2Payload(Communication communication) {
