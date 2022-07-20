@@ -108,6 +108,12 @@
             android:screenOrientation="landscape"
             android:windowSoftInputMode="stateAlwaysHidden">
         </activity>
+        <activity
+            android:name=".ui.GalleryActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="stateAlwaysHidden">
+        </activity>
 
         <service
             android:name=".netty_lib.NettyService"

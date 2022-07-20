@@ -12,9 +12,9 @@
             android:background="@color/background_blue">
 
         <TextureView
-                android:id="@+id/video_previewer_surface"
-                android:layout_height="match_parent"
-                android:layout_width="match_parent" />
+            android:id="@+id/video_previewer_surface"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
         <com.compass.ux.view.TabNavitationLayout
                 android:id="@+id/tab_change"
@@ -130,20 +130,20 @@
                 android:textSize="@dimen/x17" />
 
         <TextView
-                android:visibility="visible"
-                android:id="@+id/tv_bind_status"
-                android:paddingLeft="@dimen/x17"
-                android:paddingRight="@dimen/x17"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/x41"
-                android:layout_toRightOf="@+id/tv_appActivation_status"
-                android:layout_marginTop="@dimen/x111"
-                android:layout_marginLeft="@dimen/x41"
-                android:background="@drawable/bg_zoom"
-                android:gravity="center"
-                android:text="UNBOUND"
-                android:textColor="@color/colorWhite"
-                android:textSize="@dimen/x17" />
+            android:id="@+id/tv_bind_status"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/x41"
+            android:layout_marginLeft="@dimen/x41"
+            android:layout_marginTop="@dimen/x111"
+            android:layout_toRightOf="@+id/tv_appActivation_status"
+            android:background="@drawable/bg_zoom"
+            android:gravity="center"
+            android:paddingLeft="@dimen/x17"
+            android:paddingRight="@dimen/x17"
+            android:text="UNBOUND"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/x17"
+            android:visibility="visible" />
 
         <TextView
                 android:visibility="visible"
@@ -160,13 +160,14 @@
                 android:text="？"
                 android:textColor="@color/colorWhite"
                 android:textSize="@dimen/x17" />
+
         <dji.ux.widget.TakeOffWidget
-                android:layout_toRightOf="@+id/tv_account_state"
-                android:visibility="visible"
-                android:layout_marginTop="100dp"
-                android:id="@+id/take_off_widget"
-                android:layout_width="40dp"
-                android:layout_height="40dp" />
+            android:id="@+id/take_off_widget"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="100dp"
+            android:layout_toRightOf="@+id/tv_account_state"
+            android:visibility="visible" />
 
         <dji.ux.widget.ReturnHomeWidget
                 android:layout_toRightOf="@+id/take_off_widget"
@@ -176,22 +177,16 @@
                 android:id="@+id/return_home_widget"
                 android:layout_width="40dp"
                 android:layout_height="40dp" />
+
         <Button
-                android:layout_toRightOf="@+id/return_home_widget"
-                android:layout_marginTop="100dp"
-                android:visibility="visible"
-                android:id="@+id/cancelGoHome"
-                android:text="cancelGoHome"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp" />
-        <Button
-                android:layout_toRightOf="@+id/cancelGoHome"
-                android:layout_marginTop="100dp"
-                android:visibility="visible"
-                android:id="@+id/cancelLanding"
-                android:text="cancelLanding"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp" />
+            android:id="@+id/btn_photo"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginTop="100dp"
+            android:layout_toRightOf="@+id/return_home_widget"
+            android:text="photo"
+            android:visibility="visible" />
+
         <TextView
                 android:visibility="visible"
                 android:id="@+id/tv_LiveVideoFps"
@@ -286,118 +281,118 @@
         </RelativeLayout>
 
         <RelativeLayout
-                android:visibility="visible"
-                android:id="@+id/layout_air_info"
-                android:background="@mipmap/biankuang_icon_home"
-                android:layout_marginBottom="@dimen/x58"
+            android:id="@+id/layout_air_info"
+            android:layout_width="@dimen/x624"
+            android:layout_height="@dimen/x70"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="@dimen/x58"
+            android:background="@mipmap/biankuang_icon_home"
+            android:visibility="visible">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/x30"
+                android:layout_marginTop="@dimen/x10"
+                android:text="水平速度"
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/x15" />
+
+            <TextView
+                android:id="@+id/tv_horizontal_speed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/x135"
+                android:layout_marginTop="@dimen/x8"
+                android:text=""
+                android:textColor="#ffffffff"
+                android:textSize="@dimen/x18" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
-                android:layout_centerHorizontal="true"
-                android:layout_width="@dimen/x624"
-                android:layout_height="@dimen/x70">
+                android:layout_marginLeft="@dimen/x30"
+                android:layout_marginBottom="@dimen/x10"
+                android:text="图传码率"
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/x15" />
 
             <TextView
-                    android:layout_marginLeft="@dimen/x30"
-                    android:layout_marginTop="@dimen/x10"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="水平速度"
-                    android:textColor="@color/colorWhite"
-                    android:textSize="@dimen/x15" />
-
-            <TextView
-                    android:id="@+id/tv_horizontal_speed"
-                    android:layout_marginLeft="@dimen/x135"
-                    android:layout_marginTop="@dimen/x8"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=""
-                    android:textColor="#ffffffff"
-                    android:textSize="@dimen/x18" />
-
-            <TextView
-                    android:layout_alignParentBottom="true"
-                    android:layout_marginLeft="@dimen/x30"
-                    android:layout_marginBottom="@dimen/x10"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="图传码率"
-                    android:textColor="@color/colorWhite"
-                    android:textSize="@dimen/x15" />
-
-            <TextView
-                    android:id="@+id/tv_LiveVideoBitRate"
-                    android:layout_alignParentBottom="true"
-                    android:layout_marginLeft="@dimen/x135"
-                    android:layout_marginBottom="@dimen/x8"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=""
-                    android:textColor="#ffffffff"
-                    android:textSize="@dimen/x18" />
+                android:id="@+id/tv_LiveVideoBitRate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginLeft="@dimen/x135"
+                android:layout_marginBottom="@dimen/x8"
+                android:text=""
+                android:textColor="#ffffffff"
+                android:textSize="@dimen/x18" />
 
             <ImageView
-                    android:id="@+id/iv_apron"
-                    android:layout_marginTop="@dimen/x12"
-                    android:layout_centerHorizontal="true"
-                    android:background="@mipmap/icon_apron_stop"
-                    android:layout_width="@dimen/x25"
-                    android:layout_height="@dimen/x25" />
+                android:id="@+id/iv_apron"
+                android:layout_width="@dimen/x25"
+                android:layout_height="@dimen/x25"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="@dimen/x12"
+                android:background="@mipmap/icon_apron_stop" />
 
             <TextView
-                    android:id="@+id/tv_distance"
-                    android:layout_marginTop="@dimen/x2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="距返航点0.00m"
-                    android:layout_below="@+id/iv_apron"
-                    android:layout_centerHorizontal="true"
-                    android:textColor="#ff000000"
-                    android:textSize="@dimen/x14" />
+                android:id="@+id/tv_distance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/iv_apron"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="@dimen/x2"
+                android:text="距返航点0.00m"
+                android:textColor="#ff000000"
+                android:textSize="@dimen/x14" />
 
             <TextView
 
-                    android:id="@+id/tv_heigth"
-                    android:layout_alignParentRight="true"
-                    android:layout_marginRight="@dimen/x135"
-                    android:layout_marginTop="@dimen/x8"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=""
-                    android:textColor="#ffffffff"
-                    android:textSize="@dimen/x18" />
+                android:id="@+id/tv_heigth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_marginTop="@dimen/x8"
+                android:layout_marginRight="@dimen/x135"
+                android:text=""
+                android:textColor="#ffffffff"
+                android:textSize="@dimen/x18" />
 
             <TextView
-                    android:id="@+id/tv_vertical_speed"
-                    android:layout_alignParentRight="true"
-                    android:layout_alignParentBottom="true"
-                    android:layout_marginRight="@dimen/x135"
-                    android:layout_marginBottom="@dimen/x8"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=""
-                    android:textColor="#ffffffff"
-                    android:textSize="@dimen/x18" />
+                android:id="@+id/tv_vertical_speed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginRight="@dimen/x135"
+                android:layout_marginBottom="@dimen/x8"
+                android:text=""
+                android:textColor="#ffffffff"
+                android:textSize="@dimen/x18" />
 
             <TextView
-                    android:layout_alignParentRight="true"
-                    android:layout_marginRight="@dimen/x30"
-                    android:layout_marginTop="@dimen/x10"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="飞行高度"
-                    android:textColor="@color/colorWhite"
-                    android:textSize="@dimen/x15" />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_marginTop="@dimen/x10"
+                android:layout_marginRight="@dimen/x30"
+                android:text="飞行高度"
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/x15" />
 
             <TextView
-                    android:layout_alignParentRight="true"
-                    android:layout_alignParentBottom="true"
-                    android:layout_marginRight="@dimen/x30"
-                    android:layout_marginBottom="@dimen/x10"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="垂直速度"
-                    android:textColor="@color/colorWhite"
-                    android:textSize="@dimen/x15" />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginRight="@dimen/x30"
+                android:layout_marginBottom="@dimen/x10"
+                android:text="垂直速度"
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/x15" />
         </RelativeLayout>
     </RelativeLayout>
 <com.compass.ux.view.CircleViewByImage

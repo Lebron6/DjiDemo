@@ -669,69 +669,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
         layout_previewer_container = (RelativeLayout) findViewById(R.id.layout_previewer_container);
         ivAvoidance = (ImageView) findViewById(R.id.iv_obstacle_avoidance);
-//        cancelGoHome = findViewById(R.id.cancelGoHome);
-//        cancelGoHome.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (mFlightController != null) {
-//                    mFlightController.cancelGoHome(new CommonCallbacks.CompletionCallback() {
-//                        @Override
-//                        public void onResult(DJIError djiError) {
-//                            if (djiError == null) {
-//                                Log.e("取消返航", "success");
-//                            } else {
-//                                Log.e("取消返航", "fail:" + djiError.getDescription());
-//
-//                            }
-//                        }
-//                    });
-//                }
-//            }
-//        });
-//        cancelLanding = findViewById(R.id.cancelLanding);
-//        cancelLanding.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (mFlightController != null) {
-////                    mFlightController.startGoHome(new CommonCallbacks.CompletionCallback() {
-////                        @Override
-////                        public void onResult(DJIError djiError) {
-////                            if (djiError == null) {
-////                                Log.e("开始返航", "success");
-////                            } else {
-////                                Log.e("开始返航", "fail:" + djiError.getDescription());
-////                            }
-////                        }
-////                    });
-//                    mFlightController.cancelLanding(
-//                            new CommonCallbacks.CompletionCallback() {
-//                                @Override
-//                                public void onResult(DJIError djiError) {
-//                                    if (djiError == null) {
-//                                        Log.e("取消着落", "success");
-//                                    } else {
-//                                        Log.e("取消着落", "fail:" + djiError.getDescription());
-//                                    }
-//                                }
-//                            }
-//                    );
-//                }
-//                if (mFlightController != null) {
-//                    mFlightController.cancelLanding(
-//                            new CommonCallbacks.CompletionCallback() {
-//                                @Override
-//                                public void onResult(DJIError djiError) {
-//                                    if (djiError == null) {
-//                                        Log.e("取消着落", "success");
-//                                    } else {
-//                                        Log.e("取消着落", "fail:" + djiError.getDescription());
-//                                    }
-//                                }
-//                            }
-//                    );
-//                }
-//            }
-//        });
+
         mVideoSurface = (TextureView) findViewById(R.id.video_previewer_surface);
         mVideoSurface.setSurfaceTextureListener(textureListener);
 
@@ -740,6 +678,13 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             @Override
             public void onClick(View v) {
 //                onViewClick(mVideoSurface);
+            }
+        });
+        Button btn_photo = findViewById(R.id.btn_photo);
+        btn_photo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(ConnectionActivity.this, GalleryActivity.class));
             }
         });
         layout_map_tools = findViewById(R.id.layout_map_tools);
@@ -983,27 +928,15 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             return;
         }
         LiveStreamManager liveStreamManager = DJISDKManager.getInstance().getLiveStreamManager();
-//        if (liveStreamManager.isStreaming()) {
         liveStreamManager.stopStream();
-//        }
         liveStreamManager.setLiveUrl(liveShowUrl);
-        /**
-         * CDN加速
-         */
-//        liveStreamManager.setLiveUrl("rtmp://aodianyun.luopan88.com/luopan/11");
-//        liveStreamManager.setLiveUrl("rtmp://36.154.125.50:10085/hls/6a2R5927R?sign=eM2Rc9h7Rz");
-//
-//
-//        DJISDKManager.getInstance().getLiveStreamManager().setLiveUrl("rtmp://47.102.102.224:1935/live/wrj");
         //关闭音频
         liveStreamManager.setAudioStreamingEnabled(false);
         liveStreamManager.setAudioMuted(false);
         liveStreamManager.setVideoEncodingEnabled(true);
-//                DJISDKManager.getInstance().getLiveStreamManager().setLiveVideoBitRateMode(LiveVideoBitRateMode.MANUAL);
-//        liveStreamManager.setLiveVideoBitRate(20);//码率越高，FPS就会越高
+//        liveStreamManager.setLiveVideoBitRate(2f);//码率越高，FPS就会越高
         liveStreamManager.setLiveVideoBitRateMode(AUTO);
         liveStreamManager.setLiveVideoResolution(VIDEO_RESOLUTION_1920_1080);//分辨率低，FPS越高
-//        DJISDKManager.getInstance().getLiveStreamManager().stopStream();
         liveStreamManager.setVideoSource(LiveStreamManager.LiveStreamVideoSource.Primary);
         liveStreamManager.setStartTime();
 
@@ -2149,7 +2082,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
     private boolean isCanOpenPlayBack = true;
 
     private boolean isH20T() {
-        if (camera != null&&camera.getDisplayName()!=null) {
+        if (camera != null && camera.getDisplayName() != null) {
             return camera.getDisplayName().equals("Zenmuse H20T");
         }
         return false;
@@ -3541,13 +3474,13 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
         if (mMediaManager != null) {
             if ((currentFileListState == MediaManager.FileListState.SYNCING) || (currentFileListState == MediaManager.FileListState.DELETING)) {
                 DJILog.e(TAG, "Media Manager is busy.");
-                sendErrorMSG2Server(communication, ERROR, "文件正在同步,请退出相册后重试:" + "Media Manager is busy");
+                sendErrorMSG2Server(communication, ERROR, "文件正在同步,请退出相册后重试:" + "Media Manager is busy" + currentFileListState);
             } else {
 
                 mMediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.SDCARD, djiError -> {
                     if (null == djiError) {
                         List<MediaFile> fileList = mMediaManager.getSDCardFileListSnapshot();
-                        if (fileList != null) {
+                        if (fileList != null && fileList.size() > 0) {
                             Collections.sort(fileList, (lhs, rhs) -> {
                                 if (lhs.getTimeCreated() < rhs.getTimeCreated()) {
                                     return 1;
@@ -6721,10 +6654,10 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
                                             .rotation(new Rotation.Builder()
                                                     .mode(RotationMode.ABSOLUTE_ANGLE)
                                                     .pitch(Float.parseFloat(wayPointAction.getPitch() == null ? "0" : wayPointAction.getPitch()))
-                                                    .roll(0)
-//                                                        .yaw(Float.parseFloat(wayPointActionBean.getYaw() == null ? "0" : wayPointActionBean.getYaw()))
-                                                    .yaw(0)
-                                                    .time(2)
+//                                                    .roll(0)
+//                                                        .yaw(Float.parseFloat(wayPointAction.getPitch() == null ? "0" : wayPointAction.getPitch()))
+//                                                    .yaw(0)
+                                                    .time(3)
                                                     .build())
                                             .build())
                                     .build();
@@ -6894,27 +6827,27 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
             XcFileLog.getInstace().i("waypoint_fly_start_v2 航线开始飞行", "第" + i + "秒，获取到state正常状态成功，状态为" + state);
         }
 //        if (isRTKBeingUsed == 1) {
-            waypointV2MissionOperator.startMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
-                @Override
-                public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
+        waypointV2MissionOperator.startMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
+            @Override
+            public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
 
-                    if (djiWaypointV2Error != null) {
-                        XcFileLog.getInstace().i("waypoint_fly_start_v2 startMission:", DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
-                        sendErrorMSG2Server(communication, ERROR, "开始航线飞行失败：" + DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
-                    } else {
-                        sendErrorMSG2Server(communication, SUCCESS, "起飞成功");
-                        XcFileLog.getInstace().i("waypoint_fly_start_v2 startMission:", "success");
-                        if (!TextUtils.isEmpty(name)) {
-                            MissionState.getInstance().setMissionName(name);
-                        }
-                        if (waypointV2List != null && waypointV2List.size() > 0) {
-                            MissionState.getInstance().setWaypointSize(waypointV2List.size());
-                        }
-                        showToast(djiWaypointV2Error == null ? "起飞成功" : djiWaypointV2Error.getDescription());
-
+                if (djiWaypointV2Error != null) {
+                    XcFileLog.getInstace().i("waypoint_fly_start_v2 startMission:", DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                    sendErrorMSG2Server(communication, ERROR, "开始航线飞行失败：" + DJIWaypointV2ErrorMessageUtils.getDJIWaypointV2ErrorMsg(djiWaypointV2Error));
+                } else {
+                    sendErrorMSG2Server(communication, SUCCESS, "起飞成功");
+                    XcFileLog.getInstace().i("waypoint_fly_start_v2 startMission:", "success");
+                    if (!TextUtils.isEmpty(name)) {
+                        MissionState.getInstance().setMissionName(name);
                     }
+                    if (waypointV2List != null && waypointV2List.size() > 0) {
+                        MissionState.getInstance().setWaypointSize(waypointV2List.size());
+                    }
+                    showToast(djiWaypointV2Error == null ? "起飞成功" : djiWaypointV2Error.getDescription());
+
                 }
-            });
+            }
+        });
 //        } else {
 //            sendErrorMSG2Server(communication, ERROR, "RTK连接异常,无法起飞");
 //        }
@@ -6944,7 +6877,7 @@ public class ConnectionActivity extends NettyActivity implements MissionControl.
 
     //暂停航线
     private void pauseWaypointV2(Communication communication) {
-        if (waypointV2MissionOperator.getCurrentState().equals(WaypointV2MissionState.EXECUTING)) {
+        if (waypointV2MissionOperator != null ) {
             waypointV2MissionOperator.interruptMission(new CommonCallbacks.CompletionCallback<DJIWaypointV2Error>() {
                 @Override
                 public void onResult(DJIWaypointV2Error djiWaypointV2Error) {
